@@ -1,0 +1,132 @@
+#include "init_checker.h"
+
+#include "../ast/ast.h"
+
+void init_checker::visit(std::shared_ptr<type_declaration> decl) {
+	// mark all fields as initialized
+	// if they arnt, that will be picked up elsewhere
+	for (const auto& field : decl->fields) {
+		initialized.insert(field);
+		field->initialized = true;
+	}
+	for (const auto& constructor : decl->constructors) {
+		constructor->accept(*this);
+	}
+	for (const auto& member : decl->fields) {
+		member->accept(*this);
+	}
+	for (const auto& method : decl->methods) {
+		method->accept(*this);
+	}
+	for (const auto& op : decl->operators) {
+		op->accept(*this);
+	}
+}
+void init_checker::visit(std::shared_ptr<constructor_declaration> ctor_decl) {
+	// mark all parameters as initialized
+	for (const auto& param : ctor_decl->parameters) {
+		initialized.insert(param);
+		param->initialized = true;
+	}
+	ctor_decl->body->accept(*this);
+}
+void init_checker::visit(std::shared_ptr<function_declaration> func) {
+	// mark all parameters as initialized
+	for (const auto& param : func->parameters) {
+		initialized.insert(param);
+		param->initialized = true;
+	}
+	func->body->accept(*this);
+}
+void init_checker::visit(std::shared_ptr<variable_declaration> var) {
+	if (var->has_initializer()) {
+		var->initializer->accept(*this);
+		initialized.insert(var);
+		var->initialized = true;
+	}
+}
+void init_checker::visit(std::shared_ptr<assignment_expression> expr) {
+	expr->right->accept(*this);
+
+	if (auto id = std::dynamic_pointer_cast<identifier_expression>(expr->left)) {
+		initialized.insert(id->declaration);
+		id->declaration->initialized = true;
+	}
+}
+void init_checker::visit(std::shared_ptr<identifier_expression> expr) {
+	if (!expr->declaration) {
+		// if it hasnt been resolved, it means its probably invalid, so we can ignore it
+		return;
+	}
+	// assuming identifier is variable access
+	if (initialized.find(expr->declaration) == initialized.end()) {
+		ERROR(ERR_UNINITIALIZED_VARIABLE, expr->position, expr->identifier.c_str());
+		return;
+	}
+}
+void init_checker::visit(std::shared_ptr<block_statement> block) {
+	auto before = initialized;
+	for (auto& stmt : block->body) {
+		stmt->accept(*this);
+	}
+	initialized = before;
+}
+void init_checker::visit(std::shared_ptr<if_statement> if_stmt) {
+	if_stmt->condition->accept(*this);
+
+	auto before = initialized;
+	auto then_set = initialized;
+	auto then_block = std::dynamic_pointer_cast<block_statement>(if_stmt->then_block);
+	traverse_block(then_block, false);
+	then_set = initialized;
+
+	auto else_set = before;
+	if (if_stmt->else_block) {
+		initialized = before;
+		if (auto else_block = std::dynamic_pointer_cast<block_statement>(if_stmt->else_block)) {
+			traverse_block(else_block, false);
+		}
+		else {
+			// usually an else-if statement, so we can accept as normal
+			if_stmt->else_block->accept(*this);
+		}
+		else_set = initialized;
+	}
+
+	// keep only variables that were initialized in both branches
+	std::unordered_set<std::shared_ptr<variable_declaration>> intersection;
+	for (auto var : then_set) {
+		if (else_set.count(var)) intersection.insert(var);
+	}
+	initialized = intersection;
+}
+void init_checker::visit(std::shared_ptr<for_loop> for_loop) {
+	// may never run, assume initializations could never occur
+	for_loop->condition->accept(*this);
+
+	auto before = initialized;
+	auto block = std::dynamic_pointer_cast<block_statement>(for_loop->body);
+	traverse_block(block, false);
+
+	initialized = before;
+}
+void init_checker::visit(std::shared_ptr<while_loop> while_loop) {
+	// may never run, assume initializations could never occur
+	while_loop->condition->accept(*this);
+
+	auto before = initialized;
+	auto block = std::dynamic_pointer_cast<block_statement>(while_loop->body);
+	traverse_block(block, false);
+
+	initialized = before;
+}
+
+void init_checker::traverse_block(std::shared_ptr<block_statement>& block, bool restore) {
+	auto before = initialized;
+	for (auto& stmt : block->body) {
+		stmt->accept(*this);
+	}
+	if (restore) {
+		initialized = before;
+	}
+}

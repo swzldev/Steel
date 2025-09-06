@@ -1,0 +1,85 @@
+#pragma once
+
+enum token_type {
+	TT_UNKNOWN,
+	TT_IDENTIFIER,
+
+	// Literals
+	TT_BOOLEAN_LITERAL,
+	TT_INTEGER_LITERAL,
+	TT_FLOAT_LITERAL,
+	TT_CHAR_LITERAL,
+	TT_STRING_LITERAL,
+
+	// Grammars
+	TT_SEMICOLON,
+	TT_COLON,
+	TT_COMMA,
+	TT_LPAREN,
+	TT_RPAREN,
+	TT_LBRACE,
+	TT_RBRACE,
+	TT_LBRACKET,
+	TT_RBRACKET,
+	TT_HAT,
+	TT_AMPERSAND,
+	TT_HASH,
+	TT_DOLLAR,
+
+	// Keywords (types)
+	TT_I16,
+	TT_I32,
+	TT_I64,
+	TT_FLOAT,
+	TT_DOUBLE,
+	TT_CHAR,
+	TT_STRING,
+	TT_BYTE,
+	TT_BOOL,
+	TT_VOID,
+	// Keywords (data)
+	TT_STRUCT,
+	TT_CLASS,
+	TT_INTERFACE,
+	// Keywords (control-flow)
+	TT_IF,
+	TT_ELSE,
+	TT_WHILE,
+	TT_FOR,
+	TT_RETURN,
+	// Keywords (built-in variables)
+	TT_TRUE,
+	TT_FALSE,
+	TT_NULL,
+	TT_THIS,
+	TT_BASE,
+	// Keywords (modules)
+	TT_MODULE,
+	TT_IMPORT,
+	// Keywords (modifiers)
+	TT_CONST,
+	TT_STATIC,
+	TT_EXPORT,
+
+	// Operators
+	TT_ASSIGN,
+	TT_EQUAL,
+	TT_NOT_EQUAL,
+	TT_ADD,
+	TT_SUBTRACT,
+	TT_MULTIPLY,
+	TT_DIVIDE,
+	TT_MODULO,
+	TT_INCREMENT,
+	TT_DECREMENT,
+	TT_AND,
+	TT_OR,
+	TT_NOT,
+	TT_LESS,
+	TT_LESS_EQ,
+	TT_GREATER,
+	TT_GREATER_EQ,
+	TT_ACCESS,
+
+	TT_EOF,
+};

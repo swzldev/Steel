@@ -1,0 +1,36 @@
+#pragma once
+
+class compilation_unit;
+
+class declaration;
+class function_declaration;
+class constructor_declaration;
+class variable_declaration;
+class type_declaration;
+class module_declaration;
+class conversion_declaration;
+class operator_declaration;
+
+class block_statement;
+class import_statement;
+class inline_if;
+class return_statement;
+class return_if;
+class if_statement;
+class for_loop;
+class while_loop;
+
+class expression;
+class expression_statement;
+class binary_expression;
+class assignment_expression;
+class member_expression;
+class unary_expression;
+class index_expression;
+class identifier_expression;
+class this_expression;
+class cast_expression;
+class initializer_list;
+class function_call;
+class constructor_call;
+class literal;
