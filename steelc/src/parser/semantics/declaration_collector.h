@@ -17,14 +17,14 @@ public:
 	}
 
 	// declarations
-	void visit(std::shared_ptr<class function_declaration> func) override;
-	void visit(std::shared_ptr<class constructor_declaration> constructor) override;
-	void visit(std::shared_ptr<class variable_declaration> var) override;
-	void visit(std::shared_ptr<class type_declaration> decl) override;
-	void visit(std::shared_ptr<class module_declaration> mod) override;
+	void visit(std::shared_ptr<function_declaration> func) override;
+	void visit(std::shared_ptr<constructor_declaration> constructor) override;
+	void visit(std::shared_ptr<variable_declaration> var) override;
+	void visit(std::shared_ptr<type_declaration> decl) override;
+	void visit(std::shared_ptr<module_declaration> mod) override;
 
 	// top-level statements
-	void visit(std::shared_ptr<class import_statement> import_stmt) override;
+	void visit(std::shared_ptr<import_statement> import_stmt) override;
 
 private:
 	symbol_table* sym_table;

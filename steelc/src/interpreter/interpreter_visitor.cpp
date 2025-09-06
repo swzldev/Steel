@@ -438,6 +438,12 @@ void interpreter_visitor::visit(std::shared_ptr<if_statement> if_stmt) {
 		if_stmt->else_block->accept(*this);
 	}
 }
+void interpreter_visitor::visit(std::shared_ptr<inline_if> inline_if) {
+	inline_if->condition->accept(*this);
+	if (expression_result->as_bool()) {
+		inline_if->statement->accept(*this);
+	}
+}
 void interpreter_visitor::visit(std::shared_ptr<for_loop> for_loop) {
 	push_scope();
 	if (for_loop->initializer) {
@@ -473,6 +479,18 @@ void interpreter_visitor::visit(std::shared_ptr<return_statement> ret_stmt) {
 	}
 	else {
 		throw function_return(runtime_value(data_type(DT_VOID), ""));
+	}
+}
+void interpreter_visitor::visit(std::shared_ptr<return_if> ret_stmt) {
+	ret_stmt->condition->accept(*this);
+	if (expression_result->as_bool()) {
+		if (ret_stmt->value) {
+			ret_stmt->value->accept(*this);
+			throw function_return(*expression_result);
+		}
+		else {
+			throw function_return(runtime_value(data_type(DT_VOID), ""));
+		}
 	}
 }
 

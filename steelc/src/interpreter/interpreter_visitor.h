@@ -16,28 +16,30 @@ public:
 		: this_object(nullptr) {
 	}
 
-	void begin(std::shared_ptr<class function_declaration> entry_point);
+	void begin(std::shared_ptr<function_declaration> entry_point);
 
-	virtual void visit(std::shared_ptr<class function_declaration> func) override;
-	virtual void visit(std::shared_ptr<class variable_declaration> var) override;
-	virtual void visit(std::shared_ptr<class type_declaration> decl) override;
-	virtual void visit(std::shared_ptr<class expression_statement> expr) override;
-	virtual void visit(std::shared_ptr<class binary_expression> expr) override;
-	virtual void visit(std::shared_ptr<class assignment_expression> expr) override;
-	virtual void visit(std::shared_ptr<class member_expression> expr) override;
-	virtual void visit(std::shared_ptr<class unary_expression> expr) override;
-	virtual void visit(std::shared_ptr<class index_expression> expr) override;
-	virtual void visit(std::shared_ptr<class identifier_expression> expr) override;
-	virtual void visit(std::shared_ptr<class this_expression> expr) override;
-	virtual void visit(std::shared_ptr<class initializer_list> init) override;
-	virtual void visit(std::shared_ptr<class function_call> func_call) override;
-	virtual void visit(std::shared_ptr<class constructor_call> constructor_call) override;
-	virtual void visit(std::shared_ptr<class literal> literal) override;
-	virtual void visit(std::shared_ptr<class block_statement> block) override;
-	virtual void visit(std::shared_ptr<class if_statement> if_stmt) override;
-	virtual void visit(std::shared_ptr<class for_loop> for_loop) override;
-	virtual void visit(std::shared_ptr<class while_loop> while_loop) override;
-	virtual void visit(std::shared_ptr<class return_statement> ret_stmt) override;
+	virtual void visit(std::shared_ptr<function_declaration> func) override;
+	virtual void visit(std::shared_ptr<variable_declaration> var) override;
+	virtual void visit(std::shared_ptr<type_declaration> decl) override;
+	virtual void visit(std::shared_ptr<expression_statement> expr) override;
+	virtual void visit(std::shared_ptr<binary_expression> expr) override;
+	virtual void visit(std::shared_ptr<assignment_expression> expr) override;
+	virtual void visit(std::shared_ptr<member_expression> expr) override;
+	virtual void visit(std::shared_ptr<unary_expression> expr) override;
+	virtual void visit(std::shared_ptr<index_expression> expr) override;
+	virtual void visit(std::shared_ptr<identifier_expression> expr) override;
+	virtual void visit(std::shared_ptr<this_expression> expr) override;
+	virtual void visit(std::shared_ptr<initializer_list> init) override;
+	virtual void visit(std::shared_ptr<function_call> func_call) override;
+	virtual void visit(std::shared_ptr<constructor_call> constructor_call) override;
+	virtual void visit(std::shared_ptr<literal> literal) override;
+	virtual void visit(std::shared_ptr<block_statement> block) override;
+	virtual void visit(std::shared_ptr<if_statement> if_stmt) override;
+	virtual void visit(std::shared_ptr<inline_if> if_stmt) override;
+	virtual void visit(std::shared_ptr<for_loop> for_loop) override;
+	virtual void visit(std::shared_ptr<while_loop> while_loop) override;
+	virtual void visit(std::shared_ptr<return_statement> ret_stmt) override;
+	virtual void visit(std::shared_ptr<return_if> ret_stmt) override;
 
 private:
 	std::vector<std::map<std::string, std::shared_ptr<runtime_value>>> variables;

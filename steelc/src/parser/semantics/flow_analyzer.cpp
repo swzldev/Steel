@@ -52,6 +52,7 @@ void flow_analyzer::visit(std::shared_ptr<return_statement> ret_stmt) {
 		return;
 	}
 
+	// CHECK TYPE HERE AS CONTEXT IS NEEDED
 	auto& func_type = current_function->return_type;
 	if (ret_stmt->value) {
 		// check if function is void
@@ -70,8 +71,6 @@ void flow_analyzer::visit(std::shared_ptr<return_statement> ret_stmt) {
 			ERROR(ERR_FUNCTION_RETURN_TYPE_MISMATCH, ret_stmt->position, current_function->identifier.c_str(), func_type->type_name().c_str(), ret_stmt->value->type()->type_name().c_str());
 			return;
 		}
-
-		current_returns = true; // function returns a value
 	}
 	else {
 		// ensure function is void
@@ -80,8 +79,8 @@ void flow_analyzer::visit(std::shared_ptr<return_statement> ret_stmt) {
 			return;
 		}
 
-		current_returns = true; // function returns void
 	}
+	current_returns = true;
 }
 void flow_analyzer::visit(std::shared_ptr<return_if> ret_stmt) {
 	if (!current_function && !current_constructor) {
@@ -94,6 +93,7 @@ void flow_analyzer::visit(std::shared_ptr<return_if> ret_stmt) {
 		return;
 	}
 
+	// CHECK TYPE HERE AS CONTEXT IS NEEDED
 	auto& func_type = current_function->return_type;
 	if (ret_stmt->value) {
 		// check if function is void
@@ -112,8 +112,6 @@ void flow_analyzer::visit(std::shared_ptr<return_if> ret_stmt) {
 			ERROR(ERR_FUNCTION_RETURN_TYPE_MISMATCH, ret_stmt->position, current_function->identifier.c_str(), func_type->type_name().c_str(), ret_stmt->value->type()->type_name().c_str());
 			return;
 		}
-
-		current_returns = false; // function returns a value
 	}
 	else {
 		// ensure function is void
@@ -122,8 +120,8 @@ void flow_analyzer::visit(std::shared_ptr<return_if> ret_stmt) {
 			return;
 		}
 
-		current_returns = false; // function returns void
 	}
+	current_returns = false; // may not return
 }
 void flow_analyzer::visit(std::shared_ptr<if_statement> if_stmt) {
 	// check for an always true condition

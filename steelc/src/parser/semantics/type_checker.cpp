@@ -245,6 +245,14 @@ void type_checker::visit(std::shared_ptr<if_statement> if_stmt) {
 		if_stmt->else_block->accept(*this);
 	}
 }
+void type_checker::visit(std::shared_ptr<inline_if> inline_if) {
+	inline_if->condition->accept(*this);
+	if (!inline_if->condition->type()->is_primitive() || inline_if->condition->type()->primitive != DT_BOOL) {
+		ERROR(ERR_IF_CONDITION_NOT_BOOLEAN, inline_if->position);
+		return;
+	}
+	inline_if->statement->accept(*this);
+}
 void type_checker::visit(std::shared_ptr<for_loop> for_loop) {
 	if (for_loop->initializer) {
 		for_loop->initializer->accept(*this);

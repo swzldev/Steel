@@ -14,16 +14,16 @@ public:
 		: compilation_pass(unit) {
 	}
 
-	void visit(std::shared_ptr<class type_declaration> decl) override;
-	void visit(std::shared_ptr<class constructor_declaration> ctor_decl) override;
-	void visit(std::shared_ptr<class function_declaration> func_decl) override;
-	void visit(std::shared_ptr<class variable_declaration> var) override;
-	void visit(std::shared_ptr<class assignment_expression> expr) override;
-	void visit(std::shared_ptr<class identifier_expression> expr) override;
-	void visit(std::shared_ptr<class block_statement> block) override;
-	void visit(std::shared_ptr<class if_statement> if_stmt) override;
-	void visit(std::shared_ptr<class for_loop> for_loop) override;
-	void visit(std::shared_ptr<class while_loop> while_loop) override;
+	void visit(std::shared_ptr<type_declaration> decl) override;
+	void visit(std::shared_ptr<constructor_declaration> ctor_decl) override;
+	void visit(std::shared_ptr<function_declaration> func_decl) override;
+	void visit(std::shared_ptr<variable_declaration> var) override;
+	void visit(std::shared_ptr<assignment_expression> expr) override;
+	void visit(std::shared_ptr<identifier_expression> expr) override;
+	void visit(std::shared_ptr<block_statement> block) override;
+	void visit(std::shared_ptr<if_statement> if_stmt) override;
+	void visit(std::shared_ptr<for_loop> for_loop) override;
+	void visit(std::shared_ptr<while_loop> while_loop) override;
 
 private:
 	std::unordered_set<std::shared_ptr<variable_declaration>> initialized;

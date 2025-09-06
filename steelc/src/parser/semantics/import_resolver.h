@@ -16,7 +16,7 @@ public:
 		: unit(unit), module_manager(module_manager), compilation_pass(unit) {
 	}
 
-	void visit(std::shared_ptr<class import_statement> import_stmt) override;
+	void visit(std::shared_ptr<import_statement> import_stmt) override;
 
 private:
 	std::shared_ptr<class compilation_unit> unit;

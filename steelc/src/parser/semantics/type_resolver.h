@@ -17,13 +17,13 @@ public:
 		resolver.current_module = module_manager.get_global_module();
 	}
 
-	void visit(std::shared_ptr<class function_declaration> func) override;
-	void visit(std::shared_ptr<class constructor_declaration> constructor) override;
-	void visit(std::shared_ptr<class variable_declaration> var) override;
-	void visit(std::shared_ptr<class type_declaration> decl) override;
-	void visit(std::shared_ptr<class module_declaration> decl) override;
-	void visit(std::shared_ptr<class function_call> func_call) override;
-	void visit(std::shared_ptr<class constructor_call> constructor_call) override;
+	void visit(std::shared_ptr<function_declaration> func) override;
+	void visit(std::shared_ptr<constructor_declaration> constructor) override;
+	void visit(std::shared_ptr<variable_declaration> var) override;
+	void visit(std::shared_ptr<type_declaration> decl) override;
+	void visit(std::shared_ptr<module_declaration> decl) override;
+	void visit(std::shared_ptr<function_call> func_call) override;
+	void visit(std::shared_ptr<constructor_call> constructor_call) override;
 
 private:
 	symbol_resolver resolver;
