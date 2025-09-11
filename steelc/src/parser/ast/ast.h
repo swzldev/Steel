@@ -22,6 +22,7 @@
 #include "expressions/binary_expression.h"
 #include "expressions/assignment_expression.h"
 #include "expressions/member_expression.h"
+#include "expressions/address_of_expression.h"
 #include "expressions/unary_expression.h"
 #include "expressions/index_expression.h"
 #include "expressions/identifier_expression.h"

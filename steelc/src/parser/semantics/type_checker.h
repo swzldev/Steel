@@ -16,6 +16,7 @@ public:
 	void visit(std::shared_ptr<variable_declaration> var) override;
 	void visit(std::shared_ptr<binary_expression> expr) override;
 	void visit(std::shared_ptr<assignment_expression> expr) override;
+	void visit(std::shared_ptr<address_of_expression> expr) override;
 	void visit(std::shared_ptr<unary_expression> expr) override;
 	void visit(std::shared_ptr<index_expression> expr) override;
 	void visit(std::shared_ptr<cast_expression> expr) override;

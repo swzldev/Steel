@@ -25,6 +25,7 @@ class expression_statement;
 class binary_expression;
 class assignment_expression;
 class member_expression;
+class address_of_expression;
 class unary_expression;
 class index_expression;
 class identifier_expression;

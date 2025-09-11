@@ -26,7 +26,11 @@ enum token_type {
 	TT_HASH,
 	TT_DOLLAR,
 
+	TT_FUNC,
+	TT_LET,
+	TT_CONST,
 	// Keywords (types)
+	TT_TYPE,
 	TT_I16,
 	TT_I32,
 	TT_I64,
@@ -57,7 +61,6 @@ enum token_type {
 	TT_MODULE,
 	TT_IMPORT,
 	// Keywords (modifiers)
-	TT_CONST,
 	TT_STATIC,
 	TT_EXPORT,
 
@@ -80,6 +83,7 @@ enum token_type {
 	TT_GREATER,
 	TT_GREATER_EQ,
 	TT_ACCESS,
+	TT_ARROW,
 
 	TT_EOF,
 };

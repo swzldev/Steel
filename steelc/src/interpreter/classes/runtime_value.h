@@ -21,9 +21,13 @@ public:
     runtime_value(const data_type& t)
         : type(t), value("") {
     }
+    runtime_value(std::shared_ptr<runtime_value> pointee)
+        : type(DT_POINTER), value(std::to_string((long long)pointee.get())), pointee(pointee) {
+    }
 
     data_type type;
     std::string value;
+	std::shared_ptr<runtime_value> pointee;
     std::unordered_map<std::string, std::shared_ptr<runtime_value>> members;
 
     inline bool is_int()       const { return type.primitive == DT_I32; }
@@ -32,6 +36,7 @@ public:
     inline bool is_string()    const { return type.primitive == DT_STRING; }
     inline bool is_bool()      const { return type.primitive == DT_BOOL; }
     inline bool is_void()      const { return type.primitive == DT_VOID; }
+	inline bool is_pointer()   const { return type.primitive == DT_POINTER; }
     inline bool is_unknown()   const { return type.primitive == DT_UNKNOWN; }
     inline bool is_number()    const { return is_int() || is_float(); }
 
@@ -52,6 +57,11 @@ public:
         if (is_string()) return value;
         if (is_char()) return std::string(1, as_char());
         if (is_int() || is_float() || is_bool()) return value;
+		if (is_pointer()) {
+			std::ostringstream oss;
+			oss << "0x" << std::hex << std::stoll(value);
+			return oss.str();
+		}
         return value;
     }
     bool as_bool() const {

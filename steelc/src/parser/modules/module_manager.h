@@ -18,7 +18,6 @@ public:
 	std::shared_ptr<module_info> get_global_module();
 	std::shared_ptr<module_info> get_parent(std::shared_ptr<module_info> module);
 
-	std::vector<std::shared_ptr<class function_declaration>> builtin_functions;
 	std::shared_ptr<class function_declaration> main_declaration;
 
 private:

@@ -14,19 +14,15 @@ class custom_type : public data_type {
 public:
 	custom_type(std::shared_ptr<const type_declaration> declaration, std::string identifier)
 		: declaration(declaration), identifier(identifier) {
-		assign_id();
 	}
 	custom_type(std::string identifier)
 		: declaration(nullptr), identifier(identifier) {
-		// this is used for types that we know exist but
-		// are not at the stage where the declaration is matched
-		assign_id();
 	}
 
 	bool operator==(const data_type& other) const override {
 		if (auto custom = dynamic_cast<const custom_type*>(&other)) {
-			// compare typeid
-			return id == custom->type_id();
+			// compare typename
+			return identifier == custom->identifier;
 		}
 		return false;
 	}
@@ -47,18 +43,6 @@ public:
 		return identifier;
 	}
 
-	unsigned int type_id() const {
-		return id;
-	}
-
 	std::shared_ptr<const type_declaration> declaration;
 	std::string identifier;
-
-private:
-	inline void assign_id() {
-		static unsigned int next_id = 100;
-		id = next_id++;
-	}
-
-	unsigned int id;
 };

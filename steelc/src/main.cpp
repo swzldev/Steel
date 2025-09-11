@@ -50,7 +50,7 @@ static void print_errors(const std::vector<error>& errors) {
 			int line_num_width = std::to_string(src->size()).size();
 
 			for (int i = start_line; i <= end_line; ++i) {
-				const auto& code_line = (*src)[i - 1];
+				const auto& code_line = (*src)[(size_t)i - 1];
 				std::cerr << "\033[2m" << std::setw(line_num_width) << i << " | " << "\033[0m" << code_line << "\n";
 				if (i == error.pos.line) {
 					std::cerr << std::setw(line_num_width) << " " << " | "
@@ -79,7 +79,7 @@ int main(int argc, char** argv) {
 	}
 
 	//stproj_file proj = stproj_file::load(argv[1]);
-	stproj_file proj = stproj_file::load(R"(C:\Users\maxmt\source\repos\Steel-msvc\SteelCompiler\demo\demo.stproj)");
+	stproj_file proj = stproj_file::load(R"(C:\Users\maxmt\source\repos\Steel\steelc\demo\demo.stproj)");
 	compiler compiler;
 	compiler.compile(proj.sources);
 
@@ -93,23 +93,6 @@ int main(int argc, char** argv) {
 	}
 
 	interpreter interpreter(compiler.module_manager);
-	// add built-ins
-	interpreter.add_builtin_function(
-		"Print",
-		to_data_type(TT_VOID),
-		{ std::make_shared<variable_declaration>(to_data_type(TT_STRING), "message") }
-	);
-	interpreter.add_builtin_function(
-		"Print",
-		to_data_type(TT_VOID),
-		{ std::make_shared<variable_declaration>(to_data_type(TT_I32), "message") }
-	);
-	interpreter.add_builtin_function(
-		"Print",
-		to_data_type(TT_VOID),
-		{ std::make_shared<variable_declaration>(to_data_type(TT_FLOAT), "message") }
-	);
-
 	interpreter.begin_execution();
 
 	std::cin.get();

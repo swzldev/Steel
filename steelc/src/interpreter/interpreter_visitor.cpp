@@ -7,7 +7,7 @@
 #include "../parser/ast/ast.h"
 #include "../parser/types/custom_types.h"
 
-void interpreter_visitor::begin(std::shared_ptr<class function_declaration> entry_point) {
+void interpreter_visitor::begin(std::shared_ptr<function_declaration> entry_point) {
 	std::cout << "Starting execution...\n" << std::endl;
 
 	enter_function(entry_point, {});
@@ -29,7 +29,7 @@ void interpreter_visitor::visit(std::shared_ptr<variable_declaration> var) {
 				auto obj = std::make_shared<runtime_value>(*var->type, "");
 				// assign initializer values to fields
 				for (size_t i = 0; i < init_list->values.size(); i++) {
-					auto member_decl = custom->declaration->fields[i];
+					auto& member_decl = custom->declaration->fields[i];
 					init_list->values[i]->accept(*this);
 					obj->set_member(member_decl->identifier, std::make_shared<runtime_value>(*expression_result));
 				}
@@ -42,7 +42,7 @@ void interpreter_visitor::visit(std::shared_ptr<variable_declaration> var) {
 			if (ctor_call->type_decl) {
 				auto obj = std::make_shared<runtime_value>(*ctor_call->type_decl->type());
 				// find matching constructor
-				auto ctor_decl = ctor_call->declaration;
+				auto& ctor_decl = ctor_call->declaration;
 				if (ctor_decl) {
 					// push scope for constructor
 					push_scope();
@@ -282,6 +282,10 @@ void interpreter_visitor::visit(std::shared_ptr<member_expression> expr) {
 	}
 	expression_result = member_ptr;
 }
+void interpreter_visitor::visit(std::shared_ptr<address_of_expression> expr) {
+	expr->value->accept(*this);
+	expression_result = std::make_shared<runtime_value>(expression_result);
+}
 void interpreter_visitor::visit(std::shared_ptr<unary_expression> expr) {
 	expr->operand->accept(*this);
 	auto operand = std::make_shared<runtime_value>(*expression_result);
@@ -363,6 +367,13 @@ void interpreter_visitor::visit(std::shared_ptr<this_expression> expr) {
 		return;
 	}
 	expression_result = this_object;
+}
+void interpreter_visitor::visit(std::shared_ptr<cast_expression> expr) {
+	expr->expression->accept(*this);
+	if (expr->expression->type()->is_pointer()) {
+		// this is janky, but the whole interpreter is just for testing anyway
+		expression_result = std::make_shared<runtime_value>(data_type(DT_I32), expression_result->as_string());
+	}
 }
 void interpreter_visitor::visit(std::shared_ptr<initializer_list> init_list) {
 	// handle initializer list for custom types

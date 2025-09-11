@@ -98,7 +98,11 @@ void declaration_collector::visit(std::shared_ptr<variable_declaration> var) {
 		return;
 	}
 
-	// check modifiers
+	// const variables must have an initializer
+	if (var->is_const && !var->initializer) {
+		ERROR(ERR_CONST_NO_INITIALIZER, var->position);
+		return;
+	}
 
 	if (!current_function && !current_constructor && !current_type) {
 		if (!sym_table->add_variable(var)) {

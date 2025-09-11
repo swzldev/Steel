@@ -10,11 +10,11 @@ class variable_declaration : public declaration, public std::enable_shared_from_
 public:
 	ENABLE_ACCEPT(variable_declaration)
 
-	variable_declaration(type_ptr type, std::string identifier)
-		: type(type), identifier(identifier), initializer(nullptr) {
+	variable_declaration(bool is_const, type_ptr type, std::string identifier)
+		: is_const(is_const), type(type), identifier(identifier), initializer(nullptr) {
 	}
-	variable_declaration(type_ptr type, std::string identifier, std::shared_ptr<expression> initializer)
-		: type(type), identifier(identifier), initializer(initializer), initialized(initializer) {
+	variable_declaration(bool is_const, type_ptr type, std::string identifier, std::shared_ptr<expression> initializer)
+		: is_const(is_const), type(type), identifier(identifier), initializer(initializer), initialized(initializer) {
 	}
 
 	std::string string(int indent) const override {
@@ -40,5 +40,6 @@ public:
 	std::string identifier;
 	std::shared_ptr<expression> initializer;
 	bool initialized = false;
+	bool is_const = false;
 	bool is_parameter = false;
 };

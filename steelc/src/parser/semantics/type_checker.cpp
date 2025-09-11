@@ -7,6 +7,26 @@
 #include "../types/core.h"
 
 void type_checker::visit(std::shared_ptr<variable_declaration> var) {
+	// set variable type if unknown
+	if (var->type == data_type::unknown) {
+		if (var->has_initializer()) {
+			var->initializer->accept(*this);
+			var->type = var->initializer->type();
+		}
+		else {
+			ERROR(ERR_CANNOT_INFER_TYPE_NO_INIT, var->position, var->identifier.c_str());
+			return;
+		}
+	}
+	else {
+		// if variable type is custom, ensure it is defined
+		if (auto custom = std::dynamic_pointer_cast<custom_type>(var->type)) {
+			if (!custom->declaration) {
+				ERROR(ERR_TYPE_NOT_DEFINED, var->position, custom->type_name().c_str());
+				return;
+			}
+		}
+	}
 	// ensure initializer is valid
 	if (var->has_initializer()) {
 		var->initializer->accept(*this);
@@ -45,7 +65,7 @@ void type_checker::visit(std::shared_ptr<variable_declaration> var) {
 		}
 		// standard variable assignment
 		else {
-			auto var_type = var->type;
+			auto& var_type = var->type;
 			auto init_type = var->initializer->type();
 			if (*var_type != *init_type && !is_valid_conversion(init_type, var_type, true, var->initializer->position)) {
 				ERROR(ERR_TYPE_ASSIGNMENT_MISMATCH, var->position, var->type->type_name().c_str(), var->initializer->type()->type_name().c_str());
@@ -108,9 +128,30 @@ void type_checker::visit(std::shared_ptr<assignment_expression> expr) {
 	auto left_type = expr->left->type();
 	auto right_type = expr->right->type();
 
+	// cannot assign to a const variable
+	if (auto left_var = std::dynamic_pointer_cast<identifier_expression>(expr->left)) {
+		if (left_var->declaration->is_const) {
+			ERROR(ERR_CONST_ASSIGNMENT, expr->position, left_var->declaration->identifier.c_str());
+			return;
+		}
+	}
+
+	// cannot assign to an rvalue
+	if (expr->left->is_rvalue()) {
+		ERROR(ERR_ASSIGNMENT_TO_RVALUE, expr->position);
+		return;
+	}
+
 	// mismatch assignment
 	if (*left_type != *right_type && !is_valid_conversion(right_type, left_type, true, expr->right->position)) {
 		ERROR(ERR_TYPE_ASSIGNMENT_MISMATCH, expr->position, left_type->type_name().c_str(), right_type->type_name().c_str());
+		return;
+	}
+}
+void type_checker::visit(std::shared_ptr<address_of_expression> expr) {
+	expr->value->accept(*this);
+	if (!std::dynamic_pointer_cast<identifier_expression>(expr->value)) {
+		ERROR(ERR_ADDRESS_OF_RVALUE, expr->position);
 		return;
 	}
 }
@@ -160,8 +201,7 @@ void type_checker::visit(std::shared_ptr<cast_expression> expr) {
 	expr->expression->accept(*this);
 
 	auto from = expr->expression->type();
-	if (!from) return; // early out if type cannot be resolved, there must be an error in a previous pass
-	auto to = expr->cast_type;
+	auto& to = expr->cast_type;
 
 	if (!is_valid_conversion(from, to, false, expr->position)) {
 		ERROR(ERR_NO_CONVERSION_EXISTS, expr->position, from->type_name().c_str(), to->type_name().c_str());
@@ -174,6 +214,9 @@ void type_checker::visit(std::shared_ptr<function_call> func_call) {
 		arg->accept(*this);
 		arg_types.push_back(arg->type());
 	}
+
+	// TEMPORARY
+	if (func_call->identifier == "Print") return;
 
 	// check any candidates match arguments provided
 	bool matches = false;
@@ -201,7 +244,7 @@ void type_checker::visit(std::shared_ptr<function_call> func_call) {
 			ERROR(ERR_NO_MATCHING_METHOD, func_call->position, func_call->identifier.c_str());
 		}
 		else {
-			ERROR(ERR_UNKNOWN_FUNCTION, func_call->position, func_call->identifier.c_str());
+			ERROR(ERR_NO_MATCHING_FUNCTION, func_call->position, func_call->identifier.c_str());
 		}
 		return;
 	}
@@ -278,17 +321,17 @@ void type_checker::visit(std::shared_ptr<while_loop> while_loop) {
 }
 
 bool type_checker::is_valid_conversion(type_ptr from, type_ptr to, bool implicit, position pos) {
-	const auto& builtin_conversions = get_core_conversions(from);
+	const auto& builtin_conversions = get_core_conversions(from->primitive);
 	for (const auto& conv : builtin_conversions) {
 		if (*conv.to == *to) {
-			if (!implicit && conv.implicit) {
+			if (!implicit && !conv.implicit) {
+				return true;
+			}
+			else if (!implicit && conv.implicit) {
 				WARN(WARN_CAST_UNNEEDED, pos, from->type_name().c_str(), to->type_name().c_str());
 				return true;
 			}
-			else if (implicit && conv.implicit) {
-				return true;
-			}
-			else {
+			else /* implicit && !conv.implicit */ {
 				ERROR(ERR_CONVERSION_EXPLICIT_CAST_REQUIRED, pos, from->type_name().c_str(), to->type_name().c_str());
 				return false;
 			}

@@ -30,7 +30,9 @@ set(SOURCES
     src/parser/types/core.cpp
     src/parser/types/custom_types.cpp
     src/stproj/stproj_file.cpp
-)
+    src/parser/ast/expressions/address_of_expression.h
+    
+ )
 
 # Add source to this project's executable.
 add_executable (steelc ${SOURCES})

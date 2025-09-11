@@ -38,7 +38,7 @@ enum primitive_type {
 typedef unsigned int data_type_modifiers;
 enum data_type_modifier {
 	DTM_NONE = 0,
-	DTM_CONST = 2 << 0,
+	DTM_CONST = 1 << 0,
 };
 
 class data_type {

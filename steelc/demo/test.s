@@ -1,9 +1,9 @@
 import Core.Math;
 
-i32 Main() {
-	i32 x = 21;
+func Main() -> i32 {
+	const x = 4;
 
-	x = 5 if false;
+	x = Add(x, 5);
 
 	return x;
 }

@@ -20,6 +20,7 @@ public:
 	virtual void visit(std::shared_ptr<binary_expression> expr);
 	virtual void visit(std::shared_ptr<assignment_expression> expr);
 	virtual void visit(std::shared_ptr<member_expression> expr);
+	virtual void visit(std::shared_ptr<address_of_expression> expr);
 	virtual void visit(std::shared_ptr<unary_expression> expr);
 	virtual void visit(std::shared_ptr<index_expression> expr);
 	virtual void visit(std::shared_ptr<identifier_expression> expr);

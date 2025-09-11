@@ -56,6 +56,9 @@ void ast_visitor::visit(std::shared_ptr<assignment_expression> expr) {
 void ast_visitor::visit(std::shared_ptr<member_expression> expr) {
 	expr->object->accept(*this);
 }
+void ast_visitor::visit(std::shared_ptr<address_of_expression> expr) {
+	expr->value->accept(*this);
+}
 void ast_visitor::visit(std::shared_ptr<unary_expression> expr) {
 	expr->operand->accept(*this);
 }

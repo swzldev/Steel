@@ -18,8 +18,8 @@ public:
 	void parse();
 	ast_ptr parse_declaration();
 	ast_ptr parse_constructor_declaration(token& identifier_token);
-	ast_ptr parse_function_declaration(type_ptr type, token& identifier_token);
-	ast_ptr parse_variable_declaration(type_ptr type, token& identifier_token);
+	ast_ptr parse_function_declaration();
+	ast_ptr parse_variable_declaration(bool is_const);
 	ast_ptr parse_type_declaration(token& kind_token);
 	ast_ptr parse_constructor_call(token& type_token);
 	type_ptr parse_type();
@@ -46,14 +46,12 @@ private:
 	std::vector<token>& tokens;
 	size_t current = 0;
 
-	std::unordered_set<std::string> declared_typenames;
-
 	std::string text_literal_to_string(token& literal_token);
 
 	token& peek();
 	token& previous();
 	token& consume();
-	bool match_typename();
+	bool match_primitive();
 	bool match_modifier();
 	bool match(int count, ...);
 	bool match(token_type type);

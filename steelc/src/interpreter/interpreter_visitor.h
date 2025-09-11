@@ -5,8 +5,8 @@
 #include <vector>
 #include <memory>
 
-#include "classes/runtime_value.h"
 #include "classes/function_return.h"
+#include "classes/runtime_value.h"
 #include "../parser/ast/ast_visitor.h"
 #include "../parser/symbolics/symbol_table.h"
 
@@ -25,10 +25,12 @@ public:
 	virtual void visit(std::shared_ptr<binary_expression> expr) override;
 	virtual void visit(std::shared_ptr<assignment_expression> expr) override;
 	virtual void visit(std::shared_ptr<member_expression> expr) override;
+	virtual void visit(std::shared_ptr<address_of_expression> expr) override;
 	virtual void visit(std::shared_ptr<unary_expression> expr) override;
 	virtual void visit(std::shared_ptr<index_expression> expr) override;
 	virtual void visit(std::shared_ptr<identifier_expression> expr) override;
 	virtual void visit(std::shared_ptr<this_expression> expr) override;
+	virtual void visit(std::shared_ptr<cast_expression> expr) override;
 	virtual void visit(std::shared_ptr<initializer_list> init) override;
 	virtual void visit(std::shared_ptr<function_call> func_call) override;
 	virtual void visit(std::shared_ptr<constructor_call> constructor_call) override;

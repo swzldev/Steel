@@ -93,6 +93,13 @@ enum error_code {
     ERR_UNTERMINATED_COMMENT,
     ERR_TYPENAME_EXPECTED,
     ERR_DUPLICATE_TYPE_MODIFIER,
+    ERR_ADDRESS_OF_RVALUE,
+    ERR_CANNOT_INFER_TYPE_NO_INIT,
+    ERR_ARROW_EXPECTED,
+    ERR_VAR_NAME_EXPECTED,
+    ERR_CONST_NO_INITIALIZER,
+    ERR_CONST_ASSIGNMENT,
+    ERR_ASSIGNMENT_TO_RVALUE,
 };
 
 enum warning_code {
@@ -103,6 +110,10 @@ enum warning_code {
     WARN_VARIABLE_ASSIGNED_UNUSED,
     WARN_UNREACHABLE_CODE,
     WARN_CAST_UNNEEDED,
+};
+
+enum advice_code {
+    
 };
 
 struct error_catalog {
@@ -195,6 +206,13 @@ struct error_catalog {
             {"S098", "Unterminated mutli-line comment"},
             {"S099", "Type name expected"},
             {"S100", "Duplicate type modifier"},
+            {"S101", "Cannot get memory address of non-variable"},
+            {"S102", "Variable type cannot be inferred without an initializer"},
+            {"S103", "'->' Expected"},
+            {"S104", "Variable name expected"},
+            {"S105", "A const variable must have an initializer"},
+            {"S106", "A const variable can only be assigned a value at initialization"},
+            {"S107", "A constant value cannot be assigned"},
         };
         return errors[code - 1];
     }

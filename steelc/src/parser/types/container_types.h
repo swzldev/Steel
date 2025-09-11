@@ -15,6 +15,10 @@ public:
 
 	bool operator==(const data_type& other) const override;
 
+	std::string type_name() const override {
+		return base_type->type_name() + "[]";
+	}
+
 	type_ptr base_type;
 };
 
@@ -25,6 +29,10 @@ public:
 	}
 
 	bool operator==(const data_type& other) const override;
+
+	std::string type_name() const override {
+		return base_type->type_name() + "*";
+	}
 
 	type_ptr base_type;
 };

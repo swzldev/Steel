@@ -33,7 +33,6 @@ public:
 
 protected:
     void report_error_token(error_code code_enum, token tk, ...) {
-        __debugbreak();
         va_list args;
         va_start(args, tk);
         add_error(code_enum, tk.pos.line, tk.pos.column, args);

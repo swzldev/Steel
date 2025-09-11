@@ -15,7 +15,7 @@ type_ptr to_data_type(token_type tt);
 type_ptr to_data_type(primitive_type pt);
 type_ptr to_data_type(const std::string& type_name);
 
-type_ptr make_ptr(type_ptr base_type);
+type_ptr make_pointer(type_ptr base_type);
 type_ptr make_array(type_ptr base_type);
 type_ptr make_array(type_ptr base_type, size_t size);
 

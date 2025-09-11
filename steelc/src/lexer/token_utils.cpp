@@ -56,6 +56,10 @@ token_type get_op(const std::string& tk) {
 
 const std::map<std::string, token_type>& get_keywords() {
 	static const std::map<std::string, token_type> keywords = {
+		{"func", TT_FUNC},
+		{"let", TT_LET},
+		{"const", TT_CONST},
+		{"type", TT_TYPE},
 		{"i16", TT_I16},
 		{"i32", TT_I32},
 		{"i64", TT_I64},
@@ -81,7 +85,6 @@ const std::map<std::string, token_type>& get_keywords() {
 		{"base", TT_BASE},
 		{"module", TT_MODULE},
 		{"import", TT_IMPORT},
-		{"const", TT_CONST},
 		{"static", TT_STATIC},
 		{"export", TT_EXPORT},
 		{"and", TT_AND},
@@ -99,6 +102,7 @@ const std::vector<std::pair<std::string, token_type>>& get_operators() {
 		{"!=", TT_NOT_EQUAL},
 		{"<=", TT_LESS_EQ},
 		{">=", TT_GREATER_EQ},
+		{"->", TT_ARROW},
 		{"<", TT_LESS},
 		{">", TT_GREATER},
 		{"%", TT_MODULO},

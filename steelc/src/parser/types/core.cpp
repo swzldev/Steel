@@ -1,6 +1,6 @@
 #include "core.h"
 
-std::vector<conversion_declaration> get_core_conversions(type_ptr from) {
+std::vector<conversion_declaration> get_core_conversions(primitive_type from) {
     static std::vector<conversion_declaration> builtin_conversions = {
         {DT_I32, DT_FLOAT, true},
         {DT_FLOAT, DT_I32, true},
@@ -9,13 +9,14 @@ std::vector<conversion_declaration> get_core_conversions(type_ptr from) {
         {DT_CHAR, DT_STRING},
         {DT_BOOL, DT_I32},
         {DT_I32, DT_BOOL},
+        {DT_POINTER, DT_I32},
     };
     if (!from) {
         return builtin_conversions;
     }
     std::vector<conversion_declaration> filtered_conversions;
     for (const auto& conv : builtin_conversions) {
-        if (*conv.from == *from) {
+        if (conv.from->primitive == from) {
             filtered_conversions.push_back(conv);
         }
     }

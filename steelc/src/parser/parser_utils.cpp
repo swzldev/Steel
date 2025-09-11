@@ -76,7 +76,7 @@ std::shared_ptr<class data_type> to_data_type(const std::string& type_name) {
 	return std::make_shared<custom_type>(type_name);
 }
 
-type_ptr make_ptr(type_ptr base_type) {
+type_ptr make_pointer(type_ptr base_type) {
 	return std::make_shared<pointer_type>(base_type);
 }
 type_ptr make_array(type_ptr base_type) {

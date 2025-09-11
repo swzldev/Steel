@@ -16,8 +16,3 @@ void interpreter::begin_execution() {
 
 	visitor.begin(main_func);
 }
-
-void interpreter::add_builtin_function(const std::string& identifier, type_ptr return_type, const std::vector<std::shared_ptr<variable_declaration>>& parameters) {
-	function_declaration decl = { return_type, identifier, parameters, {} };
-	module_manager.builtin_functions.push_back(std::make_shared<function_declaration>(decl));
-}
