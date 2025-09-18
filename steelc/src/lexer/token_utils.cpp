@@ -57,6 +57,8 @@ token_type get_op(const std::string& tk) {
 const std::map<std::string, token_type>& get_keywords() {
 	static const std::map<std::string, token_type> keywords = {
 		{"func", TT_FUNC},
+		{"constructor", TT_CONSTRUCTOR},
+		{"override", TT_OVERRIDE},
 		{"let", TT_LET},
 		{"const", TT_CONST},
 		{"type", TT_TYPE},

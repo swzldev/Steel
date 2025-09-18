@@ -8,6 +8,8 @@
 
 using type_ptr = std::shared_ptr<class data_type>;
 
+enum primitive_type;
+
 enum data_type_modifier to_type_modifier(token_type tt);
 enum primitive_type to_primitive(token_type tt);
 type_ptr to_data_type(token& tk);
@@ -19,8 +21,8 @@ type_ptr make_pointer(type_ptr base_type);
 type_ptr make_array(type_ptr base_type);
 type_ptr make_array(type_ptr base_type, size_t size);
 
-bool is_numeric(enum primitive_type primitive);
+bool is_numeric(primitive_type primitive);
 
-int primitive_size_of(enum primitive_type primitive);
+int primitive_size_of(primitive_type primitive);
 
-std::string to_string(enum primitive_type primitive);
+std::string to_string(primitive_type primitive);

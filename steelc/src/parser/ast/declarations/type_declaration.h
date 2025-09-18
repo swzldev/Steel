@@ -5,7 +5,6 @@
 #include <vector>
 
 #include "declaration.h"
-#include "constructor_declaration.h"
 #include "variable_declaration.h"
 #include "function_declaration.h"
 #include "operator_declaration.h"
@@ -55,12 +54,11 @@ public:
 	}
 
 	type_ptr type() const {
-		auto t = cached_type.lock();
-		if (!t) {
-			t = std::make_shared<custom_type>(shared_from_this(), identifier);
-			cached_type = t;
+		auto type = custom_type::get(identifier);
+		if (!type->declaration) {
+			type->declaration = shared_from_this();
 		}
-		return t;
+		return type;
 	}
 	std::string type_name() const {
 		return identifier;
@@ -72,11 +70,9 @@ public:
 
 	std::string identifier;
 	custom_type_type type_kind;
-	std::vector<std::shared_ptr<constructor_declaration>> constructors;
+	std::vector<type_ptr> base_types;
+	std::vector<std::shared_ptr<function_declaration>> constructors;
 	std::vector<std::shared_ptr<variable_declaration>> fields;
 	std::vector<std::shared_ptr<function_declaration>> methods;
 	std::vector<std::shared_ptr<operator_declaration>> operators;
-
-private:
-	mutable std::weak_ptr<custom_type> cached_type;
 };

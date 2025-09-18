@@ -3,28 +3,27 @@
 #include "../ast/ast.h"
 
 void flow_analyzer::visit(std::shared_ptr<function_declaration> func) {
-	current_function = func;
+	if (func->is_abstract()) {
+		return;
+	}
+
+	if (func->is_constructor) {
+		current_constructor = func;
+	}
+	else {
+		current_function = func;
+	}
+
 	current_returns = false;
 	func->body->accept(*this);
+
 	current_function = nullptr;
+	current_constructor = nullptr;
+	
 
 	// check if we dont return on all code paths, and the function is not void
 	if (!current_returns && func->return_type->is_primitive() && func->return_type->primitive != DT_VOID) {
 		ERROR(ERR_NOT_ALL_PATHS_RETURN_VALUE, func->position);
-	}
-}
-void flow_analyzer::visit(std::shared_ptr<constructor_declaration> constructor) {
-	current_constructor = constructor;
-	current_returns = false;
-	constructor->body->accept(*this);
-	current_constructor = nullptr;
-}
-void flow_analyzer::visit(std::shared_ptr<constructor_call> ctor_call) {
-	// if the constructor call declaration is the same as we are in,
-	// it would result in a stack overflow
-	if (current_constructor && ctor_call->declaration == current_constructor) {
-		ERROR(ERR_CONSTRUCTOR_CALLS_ITSELF, ctor_call->position);
-		return;
 	}
 }
 void flow_analyzer::visit(std::shared_ptr<block_statement> block) {
@@ -64,11 +63,11 @@ void flow_analyzer::visit(std::shared_ptr<return_statement> ret_stmt) {
 		ret_stmt->value->accept(*this);
 		// ensure types match
 		if (!ret_stmt->value->type()) {
-			ERROR(ERR_FUNCTION_RETURN_TYPE_MISMATCH, ret_stmt->position, current_function->identifier.c_str(), func_type->type_name().c_str(), "<Unknown Type>");
+			ERROR(ERR_FUNCTION_RETURN_TYPE_MISMATCH, ret_stmt->position, current_function->identifier.c_str(), func_type->name().c_str(), "<Unknown Type>");
 			return;
 		}
 		else if (*func_type != *ret_stmt->value->type()) {
-			ERROR(ERR_FUNCTION_RETURN_TYPE_MISMATCH, ret_stmt->position, current_function->identifier.c_str(), func_type->type_name().c_str(), ret_stmt->value->type()->type_name().c_str());
+			ERROR(ERR_FUNCTION_RETURN_TYPE_MISMATCH, ret_stmt->position, current_function->identifier.c_str(), func_type->name().c_str(), ret_stmt->value->type()->name().c_str());
 			return;
 		}
 	}
@@ -105,11 +104,11 @@ void flow_analyzer::visit(std::shared_ptr<return_if> ret_stmt) {
 		ret_stmt->value->accept(*this);
 		// ensure types match
 		if (!ret_stmt->value->type()) {
-			ERROR(ERR_FUNCTION_RETURN_TYPE_MISMATCH, ret_stmt->position, current_function->identifier.c_str(), func_type->type_name().c_str(), "<Unknown Type>");
+			ERROR(ERR_FUNCTION_RETURN_TYPE_MISMATCH, ret_stmt->position, current_function->identifier.c_str(), func_type->name().c_str(), "<Unknown Type>");
 			return;
 		}
 		else if (*func_type != *ret_stmt->value->type()) {
-			ERROR(ERR_FUNCTION_RETURN_TYPE_MISMATCH, ret_stmt->position, current_function->identifier.c_str(), func_type->type_name().c_str(), ret_stmt->value->type()->type_name().c_str());
+			ERROR(ERR_FUNCTION_RETURN_TYPE_MISMATCH, ret_stmt->position, current_function->identifier.c_str(), func_type->name().c_str(), ret_stmt->value->type()->name().c_str());
 			return;
 		}
 	}

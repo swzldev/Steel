@@ -33,7 +33,6 @@ public:
 	virtual void visit(std::shared_ptr<cast_expression> expr) override;
 	virtual void visit(std::shared_ptr<initializer_list> init) override;
 	virtual void visit(std::shared_ptr<function_call> func_call) override;
-	virtual void visit(std::shared_ptr<constructor_call> constructor_call) override;
 	virtual void visit(std::shared_ptr<literal> literal) override;
 	virtual void visit(std::shared_ptr<block_statement> block) override;
 	virtual void visit(std::shared_ptr<if_statement> if_stmt) override;

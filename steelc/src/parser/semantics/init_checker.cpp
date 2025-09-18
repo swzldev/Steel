@@ -22,21 +22,15 @@ void init_checker::visit(std::shared_ptr<type_declaration> decl) {
 		op->accept(*this);
 	}
 }
-void init_checker::visit(std::shared_ptr<constructor_declaration> ctor_decl) {
-	// mark all parameters as initialized
-	for (const auto& param : ctor_decl->parameters) {
-		initialized.insert(param);
-		param->initialized = true;
-	}
-	ctor_decl->body->accept(*this);
-}
 void init_checker::visit(std::shared_ptr<function_declaration> func) {
 	// mark all parameters as initialized
 	for (const auto& param : func->parameters) {
 		initialized.insert(param);
 		param->initialized = true;
 	}
-	func->body->accept(*this);
+	if (func->body) {
+		func->body->accept(*this);
+	}
 }
 void init_checker::visit(std::shared_ptr<variable_declaration> var) {
 	if (var->has_initializer()) {

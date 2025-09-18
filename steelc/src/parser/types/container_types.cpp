@@ -13,3 +13,12 @@ bool pointer_type::operator==(const data_type& other) const {
 	}
 	return false;
 }
+
+bool generic_type::operator==(const data_type& other) const {
+	if (auto other_gen = dynamic_cast<const generic_type*>(&other)) {
+		if (substitution && other_gen->substitution) {
+			return *substitution == *(other_gen->substitution);
+		}
+	}
+	return false;
+}

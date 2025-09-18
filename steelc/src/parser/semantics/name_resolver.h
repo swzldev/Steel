@@ -20,7 +20,6 @@ public:
 	}
 
 	void visit(std::shared_ptr<function_declaration> func) override;
-	void visit(std::shared_ptr<constructor_declaration> constructor) override;
 	void visit(std::shared_ptr<variable_declaration> var) override;
 	void visit(std::shared_ptr<type_declaration> decl) override;
 	void visit(std::shared_ptr<module_declaration> decl) override;
@@ -29,7 +28,6 @@ public:
 	void visit(std::shared_ptr<this_expression> expr) override;
 	void visit(std::shared_ptr<member_expression> expr) override;
 	void visit(std::shared_ptr<function_call> func_call) override;
-	void visit(std::shared_ptr<constructor_call> constructor_call) override;
 	void visit(std::shared_ptr<block_statement> block) override;
 	void visit(std::shared_ptr<if_statement> if_stmt) override;
 	void visit(std::shared_ptr<for_loop> for_loop) override;
@@ -43,7 +41,7 @@ private:
 	module_manager& module_manager;
 	symbol_table* sym_table;
 
-	std::shared_ptr<class function_declaration> current_func;
-	std::shared_ptr<class constructor_declaration> current_ctor;
-	std::shared_ptr<class type_declaration> current_type;
+	std::shared_ptr<function_declaration> current_func;
+	std::shared_ptr<function_declaration> current_ctor;
+	std::shared_ptr<type_declaration> current_type;
 };

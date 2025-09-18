@@ -33,6 +33,9 @@ enum primitive_type {
 	DT_ARRAY,
 	DT_POINTER,
 	DT_REFERENCE,
+
+	// special type for generic type params
+	DT_GENERIC,
 };
 
 typedef unsigned int data_type_modifiers;
@@ -70,7 +73,7 @@ public:
 	virtual bool is_primitive() const;
 	virtual bool is_indexable() const;
 	virtual int size_of() const;
-	virtual std::string type_name() const;
+	virtual std::string name() const;
 
 	primitive_type primitive; 
 	data_type_modifiers modifiers;

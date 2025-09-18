@@ -3,7 +3,6 @@
 #include "compilation_unit.h"
 #include "declarations/declaration.h"
 #include "declarations/function_declaration.h"
-#include "declarations/constructor_declaration.h"
 #include "declarations/variable_declaration.h"
 #include "declarations/type_declaration.h"
 #include "declarations/module_declaration.h"
@@ -30,8 +29,8 @@
 #include "expressions/cast_expression.h"
 #include "expressions/initializer_list.h"
 #include "expressions/function_call.h"
-#include "expressions/constructor_call.h"
 #include "expressions/literal.h"
+#include "generics/generic_parameter.h"
 
 template<typename T, typename... Args>
 inline std::shared_ptr<T> make_ast(token& ast_token, Args... args) {

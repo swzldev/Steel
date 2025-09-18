@@ -17,11 +17,10 @@ public:
 
 	void parse();
 	ast_ptr parse_declaration();
-	ast_ptr parse_constructor_declaration(token& identifier_token);
-	ast_ptr parse_function_declaration();
+	ast_ptr parse_constructor_declaration(token& typename_token);
+	ast_ptr parse_function_declaration(bool is_constructor, bool is_override);
 	ast_ptr parse_variable_declaration(bool is_const);
 	ast_ptr parse_type_declaration(token& kind_token);
-	ast_ptr parse_constructor_call(token& type_token);
 	type_ptr parse_type();
 	ast_ptr parse_parameter();
 	ast_ptr parse_statement();
@@ -40,6 +39,7 @@ public:
 	// helper functions
 	std::vector<std::shared_ptr<expression>> parse_expression_list(token_type end = TT_RPAREN);
 	std::vector<std::shared_ptr<variable_declaration>> parse_parameter_list(token_type end = TT_RPAREN);
+	std::vector<std::shared_ptr<generic_parameter>> parse_generics();
 
 private:
 	std::shared_ptr<compilation_unit> unit;

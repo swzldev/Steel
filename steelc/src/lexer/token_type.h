@@ -27,6 +27,8 @@ enum token_type {
 	TT_DOLLAR,
 
 	TT_FUNC,
+	TT_CONSTRUCTOR,
+	TT_OVERRIDE,
 	TT_LET,
 	TT_CONST,
 	// Keywords (types)

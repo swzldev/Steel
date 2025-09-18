@@ -8,11 +8,9 @@ void ast_visitor::visit(std::shared_ptr<compilation_unit> program) {
 	}
 }
 void ast_visitor::visit(std::shared_ptr<function_declaration> func) {
-	func->body->accept(*this);
-}
-
-void ast_visitor::visit(std::shared_ptr<constructor_declaration> constructor) {
-	constructor->body->accept(*this);
+	if (func->body) {
+		func->body->accept(*this);
+	}
 }
 void ast_visitor::visit(std::shared_ptr<variable_declaration> var) {
 
@@ -85,11 +83,6 @@ void ast_visitor::visit(std::shared_ptr<function_call> func_call) {
 		arg->accept(*this);
 	}
 }
-void ast_visitor::visit(std::shared_ptr<constructor_call> constructor_call) {
-	for (auto& arg : constructor_call->args) {
-		arg->accept(*this);
-	}
-}
 void ast_visitor::visit(std::shared_ptr<literal> literal) {
 
 }
@@ -138,4 +131,7 @@ void ast_visitor::visit(std::shared_ptr<return_if> ret_stmt) {
 	if (ret_stmt->value) {
 		ret_stmt->value->accept(*this);
 	}
+}
+void ast_visitor::visit(std::shared_ptr<generic_parameter> param) {
+
 }

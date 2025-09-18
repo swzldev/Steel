@@ -15,7 +15,6 @@ public:
 	}
 
 	void visit(std::shared_ptr<type_declaration> decl) override;
-	void visit(std::shared_ptr<constructor_declaration> ctor_decl) override;
 	void visit(std::shared_ptr<function_declaration> func_decl) override;
 	void visit(std::shared_ptr<variable_declaration> var) override;
 	void visit(std::shared_ptr<assignment_expression> expr) override;

@@ -20,7 +20,7 @@ public:
 	std::string string(int indent) const override {
 		std::string ind = indent_s(indent);
 		std::string result = ind + "Variable Declaration:\n";
-		result += ind + " Type: " + type->type_name() + "\n";
+		result += ind + " Type: " + type->name() + "\n";
 		result += ind + " Identifier: " + identifier + "\n";
 		result += ind + " Initializer:\n";
 		if (initializer) {

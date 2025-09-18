@@ -132,13 +132,17 @@ lookup_result symbol_table::get_type(const std::string& name) const {
 	}
     return { LOOKUP_NO_MATCH };
 }
-std::vector<std::shared_ptr<function_declaration>> symbol_table::get_function_candidates(const std::string& name, size_t arity) const {
+std::vector<std::shared_ptr<function_declaration>> symbol_table::get_function_candidates(const std::string& name, size_t arity, size_t generics) const {
     std::vector<std::shared_ptr<function_declaration>> candidates;
     // local lookup
     for (const auto& func : functions) {
-        if (func.first == name && func.second->parameters.size() == arity) {
-            candidates.push_back(func.second);
+        if (func.first != name || func.second->parameters.size() != arity) {
+            continue;
         }
+		if (generics > 0 && func.second->generics.size() != generics) {
+			continue;
+		}
+        candidates.push_back(func.second);
     }
     return candidates;
 }

@@ -73,7 +73,7 @@ type_ptr to_data_type(primitive_type pt) {
 }
 
 std::shared_ptr<class data_type> to_data_type(const std::string& type_name) {
-	return std::make_shared<custom_type>(type_name);
+	return custom_type::get(type_name);
 }
 
 type_ptr make_pointer(type_ptr base_type) {

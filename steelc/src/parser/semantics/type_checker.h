@@ -14,6 +14,7 @@ public:
 	}
 
 	void visit(std::shared_ptr<variable_declaration> var) override;
+	void visit(std::shared_ptr<type_declaration> decl) override;
 	void visit(std::shared_ptr<binary_expression> expr) override;
 	void visit(std::shared_ptr<assignment_expression> expr) override;
 	void visit(std::shared_ptr<address_of_expression> expr) override;
@@ -21,7 +22,6 @@ public:
 	void visit(std::shared_ptr<index_expression> expr) override;
 	void visit(std::shared_ptr<cast_expression> expr) override;
 	void visit(std::shared_ptr<function_call> func_call) override;
-	void visit(std::shared_ptr<constructor_call> constructor_call) override;
 	void visit(std::shared_ptr<if_statement> if_stmt) override;
 	void visit(std::shared_ptr<inline_if> inline_if) override;
 	void visit(std::shared_ptr<for_loop> for_loop) override;

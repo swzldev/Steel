@@ -15,8 +15,6 @@ public:
 	}
 
 	void visit(std::shared_ptr<function_declaration> func) override;
-	void visit(std::shared_ptr<constructor_declaration> constructor) override;
-	void visit(std::shared_ptr<constructor_call> ctor_call) override;
 	void visit(std::shared_ptr<block_statement> block) override;
 	void visit(std::shared_ptr<return_statement> ret_stmt) override;
 	void visit(std::shared_ptr<return_if> ret_stmt) override;
@@ -26,7 +24,7 @@ public:
 
 private:
 	std::shared_ptr<function_declaration> current_function;
-	std::shared_ptr<constructor_declaration> current_constructor;
+	std::shared_ptr<function_declaration> current_constructor;
 	bool in_loop;
 
 	bool current_returns;

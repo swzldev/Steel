@@ -4,7 +4,6 @@ class compilation_unit;
 
 class declaration;
 class function_declaration;
-class constructor_declaration;
 class variable_declaration;
 class type_declaration;
 class module_declaration;
@@ -33,5 +32,6 @@ class this_expression;
 class cast_expression;
 class initializer_list;
 class function_call;
-class constructor_call;
 class literal;
+
+class generic_parameter;

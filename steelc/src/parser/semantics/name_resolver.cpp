@@ -7,34 +7,27 @@
 #include "../types/custom_types.h"
 
 void name_resolver::visit(std::shared_ptr<function_declaration> func) {
-	sym_table->push_scope();
-	current_func = func;
-	// add parameters to the current scope
-	for (const auto& param : func->parameters) {
-		if (sym_table->has_variable(param->identifier)) {
-			ERROR(ERR_DUPLICATE_PARAMETER, func->position, param->identifier.c_str());
-			continue;
+	if (func->body) {
+		sym_table->push_scope();
+		if (func->is_constructor) {
+			current_ctor = func;
 		}
-		sym_table->add_variable(param);
-	}
-	visit_block(func->body);
-	current_func = nullptr;
-	sym_table->pop_scope();
-}
-void name_resolver::visit(std::shared_ptr<constructor_declaration> constructor) {
-	sym_table->push_scope();
-	current_ctor = constructor;
-	// add parameters to the current scope
-	for (const auto& param : constructor->parameters) {
-		if (sym_table->has_variable(param->identifier)) {
-			ERROR(ERR_DUPLICATE_PARAMETER, constructor->position, param->identifier.c_str());
-			continue;
+		else {
+			current_func = func;
 		}
-		sym_table->add_variable(param);
+		// add parameters to the current scope
+		for (const auto& param : func->parameters) {
+			if (sym_table->has_variable(param->identifier)) {
+				ERROR(ERR_DUPLICATE_PARAMETER, func->position, param->identifier.c_str());
+				continue;
+			}
+			sym_table->add_variable(param);
+		}
+		visit_block(func->body);
+		current_func = nullptr;
+		current_ctor = nullptr;
+		sym_table->pop_scope();
 	}
-	visit_block(constructor->body);
-	current_ctor = nullptr;
-	sym_table->pop_scope();
 }
 void name_resolver::visit(std::shared_ptr<variable_declaration> var) {
 	// only check local variables here - globals are already handled
@@ -102,7 +95,7 @@ void name_resolver::visit(std::shared_ptr<member_expression> expr) {
 	auto type = expr->object->type();
 	auto custom = std::dynamic_pointer_cast<custom_type>(type);
 	if (!custom || !custom->declaration) {
-		ERROR(ERR_MEMBER_ACCESS_ON_NONCOMPOSITE, expr->position, type->type_name().c_str());
+		ERROR(ERR_MEMBER_ACCESS_ON_NONCOMPOSITE, expr->position, type->name().c_str());
 		return;
 	}
 
@@ -115,7 +108,7 @@ void name_resolver::visit(std::shared_ptr<member_expression> expr) {
 		}
 	}
 	if (!found) {
-		ERROR(ERR_NO_MEMBER_WITH_NAME, expr->position, custom->type_name().c_str(), expr->member.c_str());
+		ERROR(ERR_NO_MEMBER_WITH_NAME, expr->position, custom->name().c_str(), expr->member.c_str());
 		return;
 	}
 }
@@ -128,7 +121,7 @@ void name_resolver::visit(std::shared_ptr<function_call> func_call) {
 			auto type = member->object->type();
 			auto custom = std::dynamic_pointer_cast<custom_type>(type);
 			if (!custom || !custom->declaration) {
-				ERROR(ERR_MEMBER_ACCESS_ON_NONCOMPOSITE, func_call->position, type->type_name().c_str());
+				ERROR(ERR_MEMBER_ACCESS_ON_NONCOMPOSITE, func_call->position, type->name().c_str());
 				return;
 			}
 
@@ -139,27 +132,12 @@ void name_resolver::visit(std::shared_ptr<function_call> func_call) {
 	}
 	else {
 		// lookup function - dont check for return type as its unknown in a call
-		auto func_candidates = resolver.get_function_candidates(func_call->identifier, func_call->args.size());
+		auto func_candidates = resolver.get_function_candidates(func_call->identifier, func_call->args.size(), func_call->generic_args.size());
 		func_call->declaration_candidates = func_candidates;
 	}
 
 	// resolve args as normal
 	for (auto& arg : func_call->args) {
-		arg->accept(*this);
-	}
-}
-void name_resolver::visit(std::shared_ptr<constructor_call> constructor_call) {
-	auto type_decl = resolver.get_type(constructor_call->type_name);
-	if (type_decl.error != LOOKUP_OK) {
-		if (type_decl.error == LOOKUP_COLLISION) {
-			ERROR(ERR_NAME_COLLISION, constructor_call->position, constructor_call->type_name.c_str());
-			return;
-		}
-		ERROR(ERR_UNKNOWN_TYPE, constructor_call->position, constructor_call->type_name.c_str());
-		return;
-	}
-	constructor_call->type_decl = std::get<std::shared_ptr<type_declaration>>(type_decl.value);
-	for (auto& arg : constructor_call->args) {
 		arg->accept(*this);
 	}
 }

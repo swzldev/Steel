@@ -77,8 +77,8 @@ ast_ptr parser::parse_declaration() {
 		token& kind_token = previous();
 		return parse_type_declaration(kind_token);
 	}
-	else if (match(TT_FUNC)) {
-		return parse_function_declaration();
+	else if (match(TT_FUNC) || match(TT_OVERRIDE)) {
+		return parse_function_declaration(false, previous().type == TT_OVERRIDE);
 	}
 	else if (match(TT_CONST) || match(TT_LET)) {
 		bool is_const = previous().type == TT_CONST;
@@ -89,36 +89,35 @@ ast_ptr parser::parse_declaration() {
 	}
 	return nullptr;
 }
-ast_ptr parser::parse_constructor_declaration(token& identifier_token) {
-	if (!match(TT_LPAREN)) {
-		ERROR_TOKEN(ERR_LPAREN_EXPECTED, peek());
-		return nullptr;
-	}
-
-	std::vector<std::shared_ptr<variable_declaration>> parameters = parse_parameter_list(TT_RPAREN);
-
-	if (!match(TT_RPAREN)) {
-		ERROR_TOKEN(ERR_RPAREN_EXPECTED, peek());
-		return nullptr;
-	}
-
-	if (check(TT_SEMICOLON)) {
-		ERROR_TOKEN(ERR_FORWARD_DECL_UNSUPPORTED, peek());
-		return nullptr;
-	}
-
-	ast_ptr body = parse_block();
-	if (body) {
-		return make_ast<constructor_declaration>(identifier_token, parameters, body);
+ast_ptr parser::parse_constructor_declaration(token& typename_token) {
+	ast_ptr constructor = parse_function_declaration(true, false);
+	auto func_decl = std::dynamic_pointer_cast<function_declaration>(constructor);
+	if (func_decl) {
+		func_decl->identifier = typename_token.value;
+		func_decl->is_constructor = true;
+		return func_decl;
 	}
 	return nullptr;
 }
-ast_ptr parser::parse_function_declaration() {
-	if (!match(TT_IDENTIFIER)) {
-		ERROR_TOKEN(ERR_ID_EXPECTED, peek());
-		return nullptr;
+ast_ptr parser::parse_function_declaration(bool is_constructor, bool is_override) {
+	token identifier_token;
+	if (!is_constructor) {
+		if (!match(TT_IDENTIFIER)) {
+			ERROR_TOKEN(ERR_ID_EXPECTED, peek());
+			return nullptr;
+		}
+		identifier_token = previous();
 	}
-	token& identifier_token = previous();
+	
+	std::vector<std::shared_ptr<generic_parameter>> generics;
+	if (!is_override && !is_constructor) {
+		if (match(TT_LESS)) {
+			generics = parse_generics();
+			if (generics.empty()) {
+				ERROR_TOKEN(ERR_ONE_GENERIC_REQUIRED, previous());
+			}
+		}
+	}
 
 	if (!match(TT_LPAREN)) {
 		ERROR_TOKEN(ERR_LPAREN_EXPECTED, peek());
@@ -132,25 +131,31 @@ ast_ptr parser::parse_function_declaration() {
 		return nullptr;
 	}
 
-	if (check(TT_SEMICOLON)) {
-		ERROR_TOKEN(ERR_FORWARD_DECL_UNSUPPORTED, peek());
-		return nullptr;
+	type_ptr ret_type;
+	if (!is_override && !is_constructor) {
+		if (!match(TT_ARROW)) {
+			ERROR_TOKEN(ERR_ARROW_EXPECTED, peek());
+			return nullptr;
+		}
+
+		ret_type = parse_type();
+		if (!ret_type) {
+			ERROR_TOKEN(ERR_TYPENAME_EXPECTED, peek());
+			return nullptr;
+		}
 	}
 
-	if (!match(TT_ARROW)) {
-		ERROR_TOKEN(ERR_ARROW_EXPECTED, peek());
-		return nullptr;
-	}
-
-	type_ptr ret_type = parse_type();
-	if (!ret_type) {
-		ERROR_TOKEN(ERR_TYPENAME_EXPECTED, peek());
-		return nullptr;
+	if (match(TT_SEMICOLON)) {
+		return make_ast<function_declaration>(identifier_token, ret_type, identifier_token.value, parameters, nullptr, is_override);
 	}
 
 	ast_ptr body = parse_block();
 	if (body) {
-		auto decl = make_ast<function_declaration>(identifier_token, ret_type, identifier_token.value, parameters, body);
+		auto decl = make_ast<function_declaration>(identifier_token, ret_type, identifier_token.value, parameters, body, is_override);
+		if (!generics.empty()) {
+			decl->is_generic = true;
+			decl->generics = generics;
+		}
 		return decl;
 	}
 	return nullptr;
@@ -203,20 +208,41 @@ ast_ptr parser::parse_type_declaration(token& kind_token) {
 	custom_type_type type_kind = kind_token.type == TT_STRUCT ? CT_STRUCT : kind_token.type == TT_CLASS ? CT_CLASS : CT_INTERFACE;
 	auto type_decl = make_ast<type_declaration>(identifier_token, type_kind, identifier_token.value);
 
+	std::vector<type_ptr> base_types;
+	if (match(TT_COLON)) {
+		do {
+			if (!match(TT_IDENTIFIER)) {
+				ERROR_TOKEN(ERR_ID_EXPECTED, peek());
+				return nullptr;
+			}
+			auto type = to_data_type(previous());
+			base_types.push_back(type);
+		} while (match(TT_COMMA));
+	}
+	type_decl->base_types = base_types;
+
 	if (!match(TT_LBRACE)) {
 		ERROR_TOKEN(ERR_LBRACE_EXPECTED, peek());
 		return nullptr;
 	}
 
 	while (!is_at_end() && !check(TT_RBRACE)) {
-		if (match(TT_FUNC)) {
-			ast_ptr method = parse_function_declaration();
+		if (match(TT_CONSTRUCTOR)) {
+			ast_ptr constructor = parse_constructor_declaration(identifier_token);
+			if (constructor) type_decl->constructors.push_back(std::dynamic_pointer_cast<function_declaration>(constructor));
+		}
+		else if (match(TT_FUNC) || match(TT_OVERRIDE)) {
+			ast_ptr method = parse_function_declaration(false, previous().type == TT_OVERRIDE);
 			if (method) type_decl->methods.push_back(std::dynamic_pointer_cast<function_declaration>(method));
 		}
 		// THIS IS BROKEN (FIX!!)
 		else if (match(TT_IDENTIFIER)) {
 			ast_ptr member = parse_variable_declaration(false);
 			if (member) type_decl->fields.push_back(std::dynamic_pointer_cast<variable_declaration>(member));
+		}
+		else {
+			ERROR_TOKEN(ERR_MEMBER_DECLARATION_EXPECTED, peek());
+			advance();
 		}
 	}
 	if (!match(TT_RBRACE)) {
@@ -225,19 +251,6 @@ ast_ptr parser::parse_type_declaration(token& kind_token) {
 	}
 
 	return type_decl;
-}
-ast_ptr parser::parse_constructor_call(token& type_token) {
-	if (!match(TT_LPAREN)) {
-		ERROR_TOKEN(ERR_LPAREN_EXPECTED, peek());
-		return nullptr;
-	}
-	std::vector<std::shared_ptr<expression>> args = parse_expression_list();
-	if (!match(TT_RPAREN)) {
-		ERROR_TOKEN(ERR_RPAREN_EXPECTED, peek());
-		return nullptr;
-	}
-
-	return make_ast<constructor_call>(type_token, type_token.value, args);
 }
 type_ptr parser::parse_type() {
 	// parse through modifiers, e.g. 'const'
@@ -553,6 +566,24 @@ ast_ptr parser::parse_primary_expression() {
 		// for member/expression based functions,
 		// we handle that in the postfix handler
 		token& identifier_token = previous();
+		// only support type generics for now
+		std::vector<type_ptr> generic_args;
+		if (match(TT_LESS)) {
+			do {
+				type_ptr gen_type = parse_type();
+				if (gen_type) {
+					generic_args.push_back(gen_type);
+				}
+				else {
+					ERROR_TOKEN(ERR_TYPENAME_EXPECTED, peek());
+					return nullptr;
+				}
+			} while (match(TT_COMMA));
+			if (!match(TT_GREATER)) {
+				ERROR_TOKEN(ERR_ANGLE_RIGHT_EXPECTED, peek());
+				return nullptr;
+			}
+		}
 		if (match(TT_LPAREN)) {
 			std::vector<std::shared_ptr<expression>> args = parse_expression_list();
 			if (!match(TT_RPAREN)) {
@@ -561,7 +592,9 @@ ast_ptr parser::parse_primary_expression() {
 			}
 			// identifier - function call
 			else {
-				expr = make_ast<function_call>(identifier_token, identifier_token.value, args);
+				auto func = make_ast<function_call>(identifier_token, identifier_token.value, args);
+				func->generic_args = generic_args;
+				expr = func;
 			}
 		}
 		else {
@@ -710,9 +743,11 @@ std::vector<std::shared_ptr<expression>> parser::parse_expression_list(token_typ
 	}
 	return expressions;
 }
+
 std::vector<std::shared_ptr<variable_declaration>> parser::parse_parameter_list(token_type end) {
 	std::vector<std::shared_ptr<variable_declaration>> parameters;
-	while (!is_at_end() && !check(end)) {
+	if (check(end)) return parameters;
+	do {
 		ast_ptr param = parse_parameter();
 		if (param) {
 			parameters.push_back(std::dynamic_pointer_cast<variable_declaration>(param));
@@ -721,11 +756,30 @@ std::vector<std::shared_ptr<variable_declaration>> parser::parse_parameter_list(
 			ERROR_TOKEN(ERR_PARAMETER_EXPECTED, peek());
 			return parameters;
 		}
-		if (match(TT_COMMA)) {
-			continue; // continue to next parameter
+	} while (!is_at_end() && !check(end) && match(TT_COMMA));
+	return parameters;
+}
+std::vector<std::shared_ptr<generic_parameter>> parser::parse_generics() {
+	std::vector<std::shared_ptr<generic_parameter>> generics;
+	while (true) {
+		if (match(TT_IDENTIFIER)) {
+			token& id_token = previous();
+			auto generic = make_ast<generic_parameter>(id_token, id_token.value);
+			generics.push_back(generic);
+
+			if (!match(TT_COMMA) && !check(TT_GREATER)) {
+				ERROR_TOKEN(ERR_ANGLE_RIGHT_EXPECTED, peek());
+				return generics;
+			}
+		}
+		else if (!match(TT_GREATER)) {
+			ERROR_TOKEN(ERR_ANGLE_RIGHT_EXPECTED, peek());
+			return generics;
+		}
+		else {
+			return generics;
 		}
 	}
-	return parameters;
 }
 
 std::string parser::text_literal_to_string(token& literal_token) {

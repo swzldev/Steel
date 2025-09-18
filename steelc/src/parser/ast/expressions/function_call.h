@@ -57,4 +57,5 @@ public:
 	std::vector<std::shared_ptr<expression>> args;
 	std::vector<std::shared_ptr<function_declaration>> declaration_candidates;
 	std::shared_ptr<function_declaration> declaration;
+	std::vector<type_ptr> generic_args;
 };

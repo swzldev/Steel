@@ -3,21 +3,54 @@
 #include "../ast/ast.h"
 
 void declaration_collector::visit(std::shared_ptr<function_declaration> func) {
-	// functions cannot be nested
+	// functions and constructors cannot be nested
 	if (current_function || current_constructor) {
-		ERROR(ERR_NESTED_FUNCTION_NOT_ALLOWED, func->position);
+		if (func->is_constructor) {
+			ERROR(ERR_NESTED_CONSTRUCTOR_NOT_ALLOWED, func->position);
+		}
+		else {
+			ERROR(ERR_NESTED_FUNCTION_NOT_ALLOWED, func->position);
+		}
 		return;
 	}
 
+	// constructor-specific logic
+	if (func->is_constructor) {
+		// constructors cannot be defined outside of a type declaration
+		if (!current_type) {
+			ERROR(ERR_CONSTRUCTOR_OUTSIDE_TYPE, func->position);
+			return;
+		}
+		func->return_type = current_type->type();
+
+		// check if constructor is already defined
+		for (const auto& existing_constructor : current_type->constructors) {
+			if (existing_constructor != func && existing_constructor->parameters == func->parameters) {
+				ERROR(ERR_CONSTRUCTOR_OVERLOAD_EXISTS, func->position);
+				return;
+			}
+		}
+
+		current_constructor = func;
+		if (func->body) {
+			func->body->accept(*this);
+		}
+		current_constructor = nullptr;
+		return;
+	}
+
+	// function-specific logic
 	// check modifiers
 	if (true) {}
 
-	// void parameters are not allowed
-	for (const auto& param : func->parameters) {
-		if (param->type->is_primitive() && param->type->primitive == DT_VOID) {
-			ERROR(ERR_PARAM_VOID_TYPE, func->position);
+	// check for duplicate generic names
+	std::unordered_set<std::string> generic_names;
+	for (const auto& generic : func->generics) {
+		if (generic_names.find(generic->identifier) != generic_names.end()) {
+			ERROR(ERR_DUPLICATE_GENERIC, generic->position, generic->identifier.c_str());
 			return;
 		}
+		generic_names.insert(generic->identifier);
 	}
 
 	// if were in a type it must be a method
@@ -51,42 +84,19 @@ void declaration_collector::visit(std::shared_ptr<function_declaration> func) {
 		}
 	}
 
-	current_function = func;
-	func->body->accept(*this);
-	current_function = nullptr;
-}
-void declaration_collector::visit(std::shared_ptr<constructor_declaration> constructor) {
-	// constructors cannot be nested
-	if (current_constructor || current_function) {
-		ERROR(ERR_NESTED_CONSTRUCTOR_NOT_ALLOWED, constructor->position);
-		return;
-	}
-
-	// constructors cannot be defined outside of a type declaration
-	if (!current_type) {
-		ERROR(ERR_CONSTRUCTOR_OUTSIDE_TYPE, constructor->position);
-		return;
-	}
-
-	// void parameters are not allowed
-	for (const auto& param : constructor->parameters) {
+	// void parameters are not allowed in functions & constructors
+	for (const auto& param : func->parameters) {
 		if (param->type->is_primitive() && param->type->primitive == DT_VOID) {
-			ERROR(ERR_PARAM_VOID_TYPE, constructor->position);
+			ERROR(ERR_PARAM_VOID_TYPE, func->position);
 			return;
 		}
 	}
 
-	// check if constructor is already defined
-	for (const auto& existing_constructor : current_type->constructors) {
-		if (existing_constructor != constructor && existing_constructor->parameters == constructor->parameters) {
-			ERROR(ERR_CONSTRUCTOR_OVERLOAD_EXISTS, constructor->position);
-			return;
-		}
+	if (func->body) {
+		current_function = func;
+		func->body->accept(*this);
+		current_function = nullptr;
 	}
-
-	current_constructor = constructor;
-	constructor->body->accept(*this);
-	current_constructor = nullptr;
 }
 void declaration_collector::visit(std::shared_ptr<variable_declaration> var) {
 	// NOTE: only global variables should be picked up here
@@ -127,6 +137,16 @@ void declaration_collector::visit(std::shared_ptr<type_declaration> decl) {
 	// structs cannot contain methods
 	if (decl->type_kind == CT_STRUCT && !decl->methods.empty()) {
 		ERROR(ERR_STRUCT_CONTAINS_METHOD, decl->position);
+		return;
+	}
+
+	// structs and interfaces cannot be derived
+	if (decl->type_kind == CT_STRUCT && !decl->base_types.empty()) {
+		ERROR(ERR_STRUCT_IS_DERIVED, decl->position);
+		return;
+	}
+	else if (decl->type_kind == CT_INTERFACE && !decl->base_types.empty()) {
+		ERROR(ERR_INTERFACE_IS_DERIVED, decl->position);
 		return;
 	}
 

@@ -22,7 +22,7 @@ void type_checker::visit(std::shared_ptr<variable_declaration> var) {
 		// if variable type is custom, ensure it is defined
 		if (auto custom = std::dynamic_pointer_cast<custom_type>(var->type)) {
 			if (!custom->declaration) {
-				ERROR(ERR_TYPE_NOT_DEFINED, var->position, custom->type_name().c_str());
+				ERROR(ERR_TYPE_NOT_DEFINED, var->position, custom->name().c_str());
 				return;
 			}
 		}
@@ -68,7 +68,85 @@ void type_checker::visit(std::shared_ptr<variable_declaration> var) {
 			auto& var_type = var->type;
 			auto init_type = var->initializer->type();
 			if (*var_type != *init_type && !is_valid_conversion(init_type, var_type, true, var->initializer->position)) {
-				ERROR(ERR_TYPE_ASSIGNMENT_MISMATCH, var->position, var->type->type_name().c_str(), var->initializer->type()->type_name().c_str());
+				ERROR(ERR_TYPE_ASSIGNMENT_MISMATCH, var->position, var->type->name().c_str(), var->initializer->type()->name().c_str());
+				return;
+			}
+		}
+	}
+}
+void type_checker::visit(std::shared_ptr<type_declaration> decl) {
+	std::unordered_map<std::shared_ptr<function_declaration>, bool> interface_funcs;
+	if (decl->type_kind == CT_CLASS) {
+		bool first = true;
+		bool derives_class = false;
+		for (const auto& base : decl->base_types) {
+			if (auto custom = std::dynamic_pointer_cast<custom_type>(base)) {
+				if (custom->declaration->type_kind == CT_CLASS) {
+					if (derives_class) {
+						ERROR(ERR_MULTIPLE_BASE_CLASSES, decl->position);
+						return;
+					}
+					if (!first) {
+						ERROR(ERR_BASE_CLASS_NOT_FIRST, decl->position, base->name());
+						return;
+					}
+					derives_class = true;
+				}
+				else if (custom->declaration->type_kind == CT_INTERFACE) {
+					// add all interface methods to map
+					for (const auto& method : custom->declaration->methods) {
+						interface_funcs[method] = false;
+					}
+				}
+			}
+			if (first) first = false;
+		}
+	}
+
+	for (const auto& constructor : decl->constructors) {
+		constructor->accept(*this);
+	}
+	for (const auto& member : decl->fields) {
+		member->accept(*this);
+	}
+	for (const auto& method : decl->methods) {
+		// accept method as normal
+		method->accept(*this);
+
+		// methods in interfaces should have no body
+		if (decl->type_kind == CT_INTERFACE && method->body) {
+			ERROR(ERR_INTERFACE_METHOD_HAS_BODY, method->position);
+			return;
+		}
+
+		if (method->is_override) {
+			bool found = false;
+			// check if it matches an interface function
+			for (auto& [iface_method, implemented] : interface_funcs) {
+				if (method->matches(iface_method, false)) {
+					implemented = true;
+					method->overridden_function = iface_method;
+					// ensure return type of method is set to match the interface
+					method->return_type = iface_method->return_type;
+					found = true;
+					break;
+				}
+			}
+			if (!found) {
+				ERROR(ERR_OVERRIDE_NOT_FOUND, method->position, method->identifier.c_str());
+				return;
+			}
+		}
+	}
+	for (const auto& op : decl->operators) {
+		op->accept(*this);
+	}
+
+	// ensure all interface methods are implemented
+	if (decl->type_kind == CT_CLASS) {
+		for (const auto& iface_method : interface_funcs) {
+			if (!iface_method.second) {
+				ERROR(ERR_INTERFACE_METHOD_NOT_IMPLEMENTED, decl->position, decl->identifier.c_str(), iface_method.first->identifier.c_str());
 				return;
 			}
 		}
@@ -96,7 +174,7 @@ void type_checker::visit(std::shared_ptr<binary_expression> expr) {
 		// if at least one side is custom, we can check user-defined operators
 		if (auto left_custom = std::dynamic_pointer_cast<custom_type>(left_type)) {
 			if (!left_custom->declaration) {
-				ERROR(ERR_TYPE_NOT_DEFINED, expr->position, left_custom->type_name().c_str());
+				ERROR(ERR_TYPE_NOT_DEFINED, expr->position, left_custom->name().c_str());
 				return;
 			}
 			for (const auto& op : left_custom->declaration->operators) {
@@ -108,7 +186,7 @@ void type_checker::visit(std::shared_ptr<binary_expression> expr) {
 		}
 		if (auto right_custom = std::dynamic_pointer_cast<custom_type>(right_type)) {
 			if (!right_custom->declaration) {
-				ERROR(ERR_TYPE_NOT_DEFINED, expr->position, right_custom->type_name().c_str());
+				ERROR(ERR_TYPE_NOT_DEFINED, expr->position, right_custom->name().c_str());
 				return;
 			}
 			for (const auto& op : right_custom->declaration->operators) {
@@ -144,7 +222,7 @@ void type_checker::visit(std::shared_ptr<assignment_expression> expr) {
 
 	// mismatch assignment
 	if (*left_type != *right_type && !is_valid_conversion(right_type, left_type, true, expr->right->position)) {
-		ERROR(ERR_TYPE_ASSIGNMENT_MISMATCH, expr->position, left_type->type_name().c_str(), right_type->type_name().c_str());
+		ERROR(ERR_TYPE_ASSIGNMENT_MISMATCH, expr->position, left_type->name().c_str(), right_type->name().c_str());
 		return;
 	}
 }
@@ -204,7 +282,7 @@ void type_checker::visit(std::shared_ptr<cast_expression> expr) {
 	auto& to = expr->cast_type;
 
 	if (!is_valid_conversion(from, to, false, expr->position)) {
-		ERROR(ERR_NO_CONVERSION_EXISTS, expr->position, from->type_name().c_str(), to->type_name().c_str());
+		ERROR(ERR_NO_CONVERSION_EXISTS, expr->position, from->name().c_str(), to->name().c_str());
 		return;
 	}
 }
@@ -220,12 +298,28 @@ void type_checker::visit(std::shared_ptr<function_call> func_call) {
 
 	// check any candidates match arguments provided
 	bool matches = false;
+	bool is_constructor_call = false;
 	for (const auto& candidate : func_call->declaration_candidates) {
+		if (candidate->is_generic) {
+			// we need to substitute generic types here
+
+		}
+
+		// if one is a constructor we can assume all others are (i think)
+		if (!is_constructor_call && candidate->is_constructor) {
+			is_constructor_call = true;
+		}
+
 		auto expected_types = candidate->get_expected_types();
 		if (expected_types.size() != arg_types.size()) {
 			ERROR(ERR_INTERNAL_ERROR, func_call->position, "Type Checker", "Argument count for candidate doesnt match");
 			continue; // argument count doesn't match
 		}
+
+		// check all args match for each candidate
+		// there should be at least one perfect match otherwise
+		// we give an error
+		// note currently there is no support for implicit conversions here
 		bool all_match = true;
 		for (size_t i = 0; i < expected_types.size(); ++i) {
 			if (*expected_types[i] != *arg_types[i]) {
@@ -240,40 +334,16 @@ void type_checker::visit(std::shared_ptr<function_call> func_call) {
 		}
 	}
 	if (!matches) {
-		if (func_call->is_method()) {
+		if (is_constructor_call) {
+			ERROR(ERR_NO_MATCHING_CONSTRUCTOR, func_call->position, func_call->identifier.c_str());
+			return;
+		}
+		else if (func_call->is_method()) {
 			ERROR(ERR_NO_MATCHING_METHOD, func_call->position, func_call->identifier.c_str());
 		}
 		else {
 			ERROR(ERR_NO_MATCHING_FUNCTION, func_call->position, func_call->identifier.c_str());
 		}
-		return;
-	}
-}
-void type_checker::visit(std::shared_ptr<constructor_call> constructor_call) {
-	auto& type_decl = constructor_call->type_decl;
-	for (const auto& constructor : type_decl->constructors) {
-		auto expected_types = constructor->get_expected_types();
-		auto arg_types = constructor_call->get_arg_types();
-
-		if (expected_types.size() != arg_types.size()) {
-			continue; // argument count doesn't match
-		}
-
-		bool all_match = true;
-		for (size_t i = 0; i < expected_types.size(); ++i) {
-			if (*expected_types[i] != *arg_types[i]) {
-				all_match = false;
-				break;
-			}
-		}
-
-		if (all_match) {
-			constructor_call->declaration = constructor;
-			break;
-		}
-	}
-	if (!constructor_call->declaration) {
-		ERROR(ERR_NO_MATCHING_CONSTRUCTOR, constructor_call->position, constructor_call->type_name.c_str());
 		return;
 	}
 }
@@ -328,11 +398,11 @@ bool type_checker::is_valid_conversion(type_ptr from, type_ptr to, bool implicit
 				return true;
 			}
 			else if (!implicit && conv.implicit) {
-				WARN(WARN_CAST_UNNEEDED, pos, from->type_name().c_str(), to->type_name().c_str());
+				WARN(WARN_CAST_UNNEEDED, pos, from->name().c_str(), to->name().c_str());
 				return true;
 			}
 			else /* implicit && !conv.implicit */ {
-				ERROR(ERR_CONVERSION_EXPLICIT_CAST_REQUIRED, pos, from->type_name().c_str(), to->type_name().c_str());
+				ERROR(ERR_CONVERSION_EXPLICIT_CAST_REQUIRED, pos, from->name().c_str(), to->name().c_str());
 				return false;
 			}
 		}

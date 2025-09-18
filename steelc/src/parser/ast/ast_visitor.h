@@ -10,7 +10,6 @@ class ast_visitor {
 public:
 	virtual void visit(std::shared_ptr<compilation_unit> program);
 	virtual void visit(std::shared_ptr<function_declaration> func);
-	virtual void visit(std::shared_ptr<constructor_declaration> constructor);
 	virtual void visit(std::shared_ptr<variable_declaration> var);
 	virtual void visit(std::shared_ptr<type_declaration> decl);
 	virtual void visit(std::shared_ptr<module_declaration> mod);
@@ -28,7 +27,6 @@ public:
 	virtual void visit(std::shared_ptr<cast_expression> expr);
 	virtual void visit(std::shared_ptr<initializer_list> init);
 	virtual void visit(std::shared_ptr<function_call> func_call);
-	virtual void visit(std::shared_ptr<constructor_call> constructor_call);
 	virtual void visit(std::shared_ptr<literal> literal);
 	virtual void visit(std::shared_ptr<import_statement> import_stmt);
 	virtual void visit(std::shared_ptr<block_statement> block);
@@ -38,4 +36,5 @@ public:
 	virtual void visit(std::shared_ptr<while_loop> while_loop);
 	virtual void visit(std::shared_ptr<return_statement> ret_stmt);
 	virtual void visit(std::shared_ptr<return_if> ret_stmt);
+	virtual void visit(std::shared_ptr<generic_parameter> param);
 };

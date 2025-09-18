@@ -37,37 +37,6 @@ void interpreter_visitor::visit(std::shared_ptr<variable_declaration> var) {
 				return;
 			}
 		}
-		// handle constructor call for custom types
-		if (auto ctor_call = std::dynamic_pointer_cast<constructor_call>(var->initializer)) {
-			if (ctor_call->type_decl) {
-				auto obj = std::make_shared<runtime_value>(*ctor_call->type_decl->type());
-				// find matching constructor
-				auto& ctor_decl = ctor_call->declaration;
-				if (ctor_decl) {
-					// push scope for constructor
-					push_scope();
-					set_this(obj);
-					// add constructor parameters to scope
-					for (size_t i = 0; i < ctor_decl->parameters.size(); i++) {
-						ctor_call->args[i]->accept(*this);
-						add_var(ctor_decl->parameters[i]->identifier, std::make_shared<runtime_value>(*expression_result));
-					}
-					// execute constructor body
-					try {
-						ctor_decl->body->accept(*this);
-					}
-					catch (const function_return&) {}
-					remove_this();
-					pop_scope();
-				}
-				// initialize fields to default if not set
-				for (auto& member : ctor_call->type_decl->fields) {
-					obj->set_member(member->identifier, std::make_shared<runtime_value>(*member->type, ""));
-				}
-				add_var(var->identifier, obj);
-				return;
-			}
-		}
 		var->initializer->accept(*this);
 		add_var(var->identifier, std::make_shared<runtime_value>(*expression_result));
 	}
@@ -393,6 +362,24 @@ void interpreter_visitor::visit(std::shared_ptr<function_call> func_call) {
 		remove_this();
 		return;
 	}
+	if (func_call->declaration && func_call->declaration->is_constructor) {
+		// Allocate object of the correct type
+		auto custom = std::dynamic_pointer_cast<custom_type>(func_call->declaration->return_type);
+		auto obj = std::make_shared<runtime_value>(*custom, "");
+
+		// Set 'this' context for constructor
+		set_this(obj);
+
+		// Call the constructor function
+		enter_function(func_call->declaration, func_call->args);
+
+		// Remove 'this' context
+		remove_this();
+
+		// Return the constructed object
+		expression_result = obj;
+		return;
+	}
 	if (func_call->identifier == "Print") {
 		func_call->args[0]->accept(*this);
 		auto val = std::make_shared<runtime_value>(*expression_result);
@@ -402,33 +389,6 @@ void interpreter_visitor::visit(std::shared_ptr<function_call> func_call) {
 		return;
 	}
 	enter_function(func_call->declaration, func_call->args);
-}
-void interpreter_visitor::visit(std::shared_ptr<constructor_call> ctor_call) {
-	auto& custom_type_decl = ctor_call->type_decl;
-	if (custom_type_decl) {
-		auto obj = std::make_shared<runtime_value>(data_type(DT_UNKNOWN), "");
-		for (auto& member : custom_type_decl->fields) {
-			obj->set_member(member->identifier, std::make_shared<runtime_value>(*member->type, ""));
-		}
-		auto& ctor_decl = ctor_call->declaration;
-		if (ctor_decl != nullptr) {
-			push_scope();
-			set_this(obj);
-			for (size_t i = 0; i < ctor_decl->parameters.size(); i++) {
-				ctor_call->args[i]->accept(*this);
-				add_var(ctor_decl->parameters[i]->identifier, std::make_shared<runtime_value>(*expression_result));
-			}
-			try {
-				ctor_decl->body->accept(*this);
-			}
-			catch (const function_return&) {}
-			remove_this();
-			pop_scope();
-		}
-		expression_result = obj;
-		return;
-	}
-	expression_result = std::make_shared<runtime_value>(data_type(DT_UNKNOWN), "");
 }
 void interpreter_visitor::visit(std::shared_ptr<literal> literal) {
 	expression_result = std::make_shared<runtime_value>(literal->primitive, literal->value);

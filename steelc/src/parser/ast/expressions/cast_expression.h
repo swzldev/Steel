@@ -16,7 +16,7 @@ public:
 	std::string string(int indent) const override {
 		std::string ind = indent_s(indent);
 		std::string result = ind + "Cast Expression:\n";
-		result += ind + " Cast Type: " + cast_type->type_name() + "\n";
+		result += ind + " Cast Type: " + cast_type->name() + "\n";
 		result += ind + " Expression: " + expression->string(indent + 1) + "\n";
 		return result;
 	}

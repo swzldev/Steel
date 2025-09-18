@@ -18,7 +18,6 @@ public:
 
 	// declarations
 	void visit(std::shared_ptr<function_declaration> func) override;
-	void visit(std::shared_ptr<constructor_declaration> constructor) override;
 	void visit(std::shared_ptr<variable_declaration> var) override;
 	void visit(std::shared_ptr<type_declaration> decl) override;
 	void visit(std::shared_ptr<module_declaration> mod) override;
@@ -31,7 +30,7 @@ private:
 	module_manager& module_manager;
 
 	std::shared_ptr<function_declaration> current_function;
-	std::shared_ptr<constructor_declaration> current_constructor;
+	std::shared_ptr<function_declaration> current_constructor;
 	std::shared_ptr<type_declaration> current_type;
 	std::shared_ptr<module_info> current_module;
 };

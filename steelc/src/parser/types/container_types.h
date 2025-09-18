@@ -15,8 +15,8 @@ public:
 
 	bool operator==(const data_type& other) const override;
 
-	std::string type_name() const override {
-		return base_type->type_name() + "[]";
+	std::string name() const override {
+		return base_type->name() + "[]";
 	}
 
 	type_ptr base_type;
@@ -30,9 +30,29 @@ public:
 
 	bool operator==(const data_type& other) const override;
 
-	std::string type_name() const override {
-		return base_type->type_name() + "*";
+	std::string name() const override {
+		return base_type->name() + "*";
 	}
 
 	type_ptr base_type;
+};
+
+class generic_type : public data_type {
+public:
+	generic_type(const std::string& identifier)
+		: identifier(identifier), data_type(DT_GENERIC) {
+	}
+
+	std::string identifier;
+
+	bool operator==(const data_type& other) const override;
+	
+	std::string name() const override {
+		if (substitution) {
+			return substitution->name();
+		}
+		return identifier;
+	}
+
+	type_ptr substitution = nullptr;
 };

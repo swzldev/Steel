@@ -28,8 +28,8 @@ public:
 	std::string string(int indent) const override {
 		std::string ind = indent_s(indent);
 		std::string result = ind + "Conversion Declaration:\n";
-		result += ind + " From Type: " + from->type_name() + "\n";
-		result += ind + " To Type: " + to->type_name() + "\n";
+		result += ind + " From Type: " + from->name() + "\n";
+		result += ind + " To Type: " + to->name() + "\n";
 		result += ind + " Implicit: " + std::string(implicit ? "true" : "false") + "\n";
 		if (body) {
 			result += ind + " Body:\n";

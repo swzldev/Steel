@@ -139,18 +139,30 @@ lookup_result symbol_resolver::get_type(const std::string& name) const {
 
 	return { LOOKUP_NO_MATCH };
 }
-std::vector<std::shared_ptr<function_declaration>> symbol_resolver::get_function_candidates(const std::string& name, size_t arity) const {
-	std::shared_ptr<module_info> module = current_module;
+std::vector<std::shared_ptr<function_declaration>> symbol_resolver::get_function_candidates(const std::string& name, size_t arity, size_t generics) const {
 	std::vector<std::shared_ptr<function_declaration>> candidates;
 
+	// check if its a constructor
+	const auto& result = get_type(name);
+	if (result.error == LOOKUP_OK) {
+		auto& type = std::get<std::shared_ptr<type_declaration>>(result.value);
+		for (const auto& ctor : type->constructors) {
+			if (ctor->parameters.size() == arity) {
+				candidates.push_back(ctor);
+			}
+		}
+		return candidates;
+	}
+
 	// search through module hierarchy
+	std::shared_ptr<module_info> module = current_module;
 	for (; module != nullptr; module = module->parent_module) {
-		auto funcs = module->symbols.get_function_candidates(name, arity);
+		auto funcs = module->symbols.get_function_candidates(name, arity, generics);
 		candidates.insert(candidates.end(), funcs.begin(), funcs.end());
 	}
 	// search imports
 	for (const auto& import : import_tbl->get_imports()) {
-		auto funcs = import->symbols.get_function_candidates(name, arity);
+		auto funcs = import->symbols.get_function_candidates(name, arity, generics);
 		candidates.insert(candidates.end(), funcs.begin(), funcs.end());
 	}
 

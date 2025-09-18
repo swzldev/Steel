@@ -29,7 +29,7 @@ int data_type::size_of() const {
 	return primitive_size_of(primitive);
 }
 
-std::string data_type::type_name() const {
+std::string data_type::name() const {
 	if (primitive == DT_UNKNOWN) {
 		return "<Unknown Type>";
 	}
