@@ -5,12 +5,17 @@
 #include "../ast/ast.h"
 #include "../types/custom_types.h"
 #include "../types/core.h"
+#include "../types/type_utils.h"
 
 void type_checker::visit(std::shared_ptr<variable_declaration> var) {
+	// accept initializer early to prevent double visits
+	if (var->has_initializer()) {
+		var->initializer->accept(*this);
+	}
+
 	// set variable type if unknown
 	if (var->type == data_type::unknown) {
 		if (var->has_initializer()) {
-			var->initializer->accept(*this);
 			var->type = var->initializer->type();
 		}
 		else {
@@ -29,7 +34,6 @@ void type_checker::visit(std::shared_ptr<variable_declaration> var) {
 	}
 	// ensure initializer is valid
 	if (var->has_initializer()) {
-		var->initializer->accept(*this);
 		if (auto init_list = std::dynamic_pointer_cast<initializer_list>(var->initializer)) {
 			if (var->type->is_array()) {
 				// array
@@ -90,6 +94,7 @@ void type_checker::visit(std::shared_ptr<type_declaration> decl) {
 						ERROR(ERR_BASE_CLASS_NOT_FIRST, decl->position, base->name());
 						return;
 					}
+					decl->base_class = custom->declaration;
 					derives_class = true;
 				}
 				else if (custom->declaration->type_kind == CT_INTERFACE) {
@@ -286,6 +291,38 @@ void type_checker::visit(std::shared_ptr<cast_expression> expr) {
 		return;
 	}
 }
+void type_checker::visit(std::shared_ptr<member_expression> expr) {
+	expr->object->accept(*this);
+	auto type = expr->object->type();
+	if (type == data_type::unknown) {
+		// object resolution error, ignore for simplicity
+		return;
+	}
+
+	auto custom = std::dynamic_pointer_cast<custom_type>(type);
+	if (!custom || !custom->declaration) {
+		ERROR(ERR_MEMBER_ACCESS_ON_NONCOMPOSITE, expr->position, type->name().c_str());
+		return;
+	}
+
+	auto& type_decl = custom->declaration;
+	bool found = false;
+	do {
+		for (const auto& member : custom->declaration->fields) {
+			if (member->identifier == expr->member) {
+				expr->declaration = member;
+				found = true;
+				break;
+			}
+		}
+		type_decl = type_decl->base_class;
+	} while (type_decl != nullptr);
+
+	if (!found) {
+		ERROR(ERR_NO_MEMBER_WITH_NAME, expr->position, custom->name().c_str(), expr->member.c_str());
+		return;
+	}
+}
 void type_checker::visit(std::shared_ptr<function_call> func_call) {
 	std::vector<type_ptr> arg_types;
 	for (const auto& arg : func_call->args) {
@@ -293,21 +330,43 @@ void type_checker::visit(std::shared_ptr<function_call> func_call) {
 		arg_types.push_back(arg->type());
 	}
 
+	// we need to resolve candidates here if the function call
+	// is a method, as it cant be done in the name resolver pass
+	if (func_call->is_method()) {
+		if (auto member = std::dynamic_pointer_cast<member_expression>(func_call->callee)) {
+			// resolve the object
+			member->object->accept(*this);
+
+			auto type = member->object->type();
+			if (type == data_type::unknown) {
+				// object resolution error, ignore for simplicity
+				return;
+			}
+
+			auto custom = std::dynamic_pointer_cast<custom_type>(type);
+			if (!custom || !custom->declaration) {
+				ERROR(ERR_MEMBER_ACCESS_ON_NONCOMPOSITE, func_call->position, type->name().c_str());
+				return;
+			}
+
+			// find method - dont check for return type as its unknown in a call
+			auto method_candidates = get_method_candidates(custom->declaration, func_call->identifier, func_call->args.size());
+			func_call->declaration_candidates = method_candidates;
+		}
+		else {
+			// maybe we throw an error? cant remember if this is a possible case
+		}
+	}
+
 	// TEMPORARY
 	if (func_call->identifier == "Print") return;
 
 	// check any candidates match arguments provided
 	bool matches = false;
-	bool is_constructor_call = false;
 	for (const auto& candidate : func_call->declaration_candidates) {
 		if (candidate->is_generic) {
 			// we need to substitute generic types here
 
-		}
-
-		// if one is a constructor we can assume all others are (i think)
-		if (!is_constructor_call && candidate->is_constructor) {
-			is_constructor_call = true;
 		}
 
 		auto expected_types = candidate->get_expected_types();
@@ -334,7 +393,7 @@ void type_checker::visit(std::shared_ptr<function_call> func_call) {
 		}
 	}
 	if (!matches) {
-		if (is_constructor_call) {
+		if (func_call->is_constructor()) {
 			ERROR(ERR_NO_MATCHING_CONSTRUCTOR, func_call->position, func_call->identifier.c_str());
 			return;
 		}

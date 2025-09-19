@@ -48,8 +48,11 @@ public:
 		return true; // function calls always return a temporary value
 	}
 
-	bool is_method() const {
+	inline bool is_method() const {
 		return callee != nullptr;
+	}
+	inline bool is_constructor() const {
+		return ctor_type != nullptr;
 	}
 
 	std::string identifier;
@@ -58,4 +61,5 @@ public:
 	std::vector<std::shared_ptr<function_declaration>> declaration_candidates;
 	std::shared_ptr<function_declaration> declaration;
 	std::vector<type_ptr> generic_args;
+	std::shared_ptr<type_declaration> ctor_type = nullptr;
 };

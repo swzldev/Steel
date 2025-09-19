@@ -60,7 +60,7 @@ public:
 		}
 		return type;
 	}
-	std::string type_name() const {
+	std::string name() const {
 		return identifier;
 	}
 
@@ -71,6 +71,7 @@ public:
 	std::string identifier;
 	custom_type_type type_kind;
 	std::vector<type_ptr> base_types;
+	std::shared_ptr<const type_declaration> base_class;
 	std::vector<std::shared_ptr<function_declaration>> constructors;
 	std::vector<std::shared_ptr<variable_declaration>> fields;
 	std::vector<std::shared_ptr<function_declaration>> methods;

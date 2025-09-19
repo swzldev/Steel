@@ -1,23 +1,25 @@
 import Core.Math;
 
-interface IOtherInterface {
-	func OtherImplement() -> i32;
-}
-
 interface IInterface {
-	func Implement() -> i32;
+	func GetNumber() -> i32;
 }
 
-class MyClass : IInterface, IOtherInterface {
-	override Implement() {
-		return 42;
+class MyBase {
+	
+}
+
+class MyClass : IInterface {
+
+	override GetNumber() {
+		return 10;
 	}
-	override OtherImplement() {
-		return 24;
-	}
+}
+
+func MakeObject() -> MyClass {
+	return MyClass();
 }
 
 func Main() -> i32 {
-	const [MyClass] obj = MyClass();
-	return obj.OtherImplement();
+	const obj = MyClass();
+	return obj.GetNumber();
 }

@@ -86,21 +86,22 @@ int symbol_table::add_method(std::shared_ptr<type_declaration> type, std::shared
     return true;
 }
 bool symbol_table::add_type(std::shared_ptr<type_declaration> type) {
-	if (types.find(type->type_name()) != types.end()) {
+	if (types.find(type->name()) != types.end()) {
 		return false;
 	}
-	types[type->type_name()] = type;
+	types[type->name()] = type;
 	return true;
 }
 
-lookup_result symbol_table::get_variable(std::shared_ptr<type_declaration> type, const std::string& name) const {
-    // search through fields first
-    if (type != nullptr) {
+lookup_result symbol_table::get_variable(std::shared_ptr<const type_declaration> type, const std::string& name) const {
+    // search up fields hierachy
+    while (type != nullptr) {
         for (auto& field : type->fields) {
             if (field->identifier == name) {
                 return { field };
             }
         }
+        type = type->base_class;
     }
     // search globally
     for (auto it = scopes.rbegin(); it != scopes.rend(); ++it) {

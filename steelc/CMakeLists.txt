@@ -35,7 +35,7 @@ set(SOURCES
  )
 
 # Add source to this project's executable.
-add_executable (steelc ${SOURCES} "src/parser/ast/generics/generic_parameter.h"  )
+add_executable (steelc ${SOURCES} "src/parser/ast/generics/generic_parameter.h"   "src/parser/types/type_utils.h" "src/parser/types/type_utils.cpp")
 
 target_include_directories(steelc PRIVATE lib)
 

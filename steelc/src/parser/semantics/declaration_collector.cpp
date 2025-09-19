@@ -124,7 +124,7 @@ void declaration_collector::visit(std::shared_ptr<variable_declaration> var) {
 void declaration_collector::visit(std::shared_ptr<type_declaration> decl) {
 	// check if type is already defined
 	if (!sym_table->add_type(decl)) {
-		ERROR(ERR_TYPE_ALREADY_DEFINED, decl->position, decl->type_name().c_str());
+		ERROR(ERR_TYPE_ALREADY_DEFINED, decl->position, decl->name().c_str());
 		return;
 	}
 

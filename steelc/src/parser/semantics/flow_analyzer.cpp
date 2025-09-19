@@ -46,6 +46,13 @@ void flow_analyzer::visit(std::shared_ptr<return_statement> ret_stmt) {
 		return;
 	}
 
+	// we can immediately set current_returns, this is because
+	// the checks below are purely type related, and will
+	// produce their own errors, therefore for simplicity
+	// we shouldnt add a "doesnt return" error on top as
+	// TECHNICALLY it does just not in the right way
+	current_returns = true;
+
 	if (current_constructor && ret_stmt->returns_value()) {
 		ERROR(ERR_CONSTRUCTOR_RETURNS_VALUE, ret_stmt->position);
 		return;
@@ -62,12 +69,13 @@ void flow_analyzer::visit(std::shared_ptr<return_statement> ret_stmt) {
 
 		ret_stmt->value->accept(*this);
 		// ensure types match
-		if (!ret_stmt->value->type()) {
-			ERROR(ERR_FUNCTION_RETURN_TYPE_MISMATCH, ret_stmt->position, current_function->identifier.c_str(), func_type->name().c_str(), "<Unknown Type>");
+		auto ret_type = ret_stmt->value->type();
+		if (ret_type == data_type::unknown) {
+			// assume error has already been reported
 			return;
 		}
-		else if (*func_type != *ret_stmt->value->type()) {
-			ERROR(ERR_FUNCTION_RETURN_TYPE_MISMATCH, ret_stmt->position, current_function->identifier.c_str(), func_type->name().c_str(), ret_stmt->value->type()->name().c_str());
+		else if (!ret_type || *func_type != *ret_type) {
+			ERROR(ERR_FUNCTION_RETURN_TYPE_MISMATCH, ret_stmt->position, current_function->identifier.c_str(), func_type->name().c_str(), "<Unknown Type>");
 			return;
 		}
 	}
@@ -79,7 +87,6 @@ void flow_analyzer::visit(std::shared_ptr<return_statement> ret_stmt) {
 		}
 
 	}
-	current_returns = true;
 }
 void flow_analyzer::visit(std::shared_ptr<return_if> ret_stmt) {
 	if (!current_function && !current_constructor) {

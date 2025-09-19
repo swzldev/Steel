@@ -90,50 +90,24 @@ void name_resolver::visit(std::shared_ptr<this_expression> expr) {
 	}
 	expr->parent_type = current_type->type();
 }
-void name_resolver::visit(std::shared_ptr<member_expression> expr) {
-	expr->object->accept(*this);
-	auto type = expr->object->type();
-	auto custom = std::dynamic_pointer_cast<custom_type>(type);
-	if (!custom || !custom->declaration) {
-		ERROR(ERR_MEMBER_ACCESS_ON_NONCOMPOSITE, expr->position, type->name().c_str());
-		return;
-	}
-
-	bool found = false;
-	for (const auto& member : custom->declaration->fields) {
-		if (member->identifier == expr->member) {
-			expr->declaration = member;
-			found = true;
-			break;
-		}
-	}
-	if (!found) {
-		ERROR(ERR_NO_MEMBER_WITH_NAME, expr->position, custom->name().c_str(), expr->member.c_str());
-		return;
-	}
-}
 void name_resolver::visit(std::shared_ptr<function_call> func_call) {
 	if (func_call->is_method()) {
-		if (auto member = std::dynamic_pointer_cast<member_expression>(func_call->callee)) {
-			// resolve the object
-			member->object->accept(*this);
-
-			auto type = member->object->type();
-			auto custom = std::dynamic_pointer_cast<custom_type>(type);
-			if (!custom || !custom->declaration) {
-				ERROR(ERR_MEMBER_ACCESS_ON_NONCOMPOSITE, func_call->position, type->name().c_str());
-				return;
-			}
-
-			// find method - dont check for return type as its unknown in a call
-			auto method_candidates = resolver.get_method_candidates(custom->declaration, func_call->identifier, func_call->args.size());
-			func_call->declaration_candidates = method_candidates;
-		}
+		// only try to resolve the callee, not the method
+		func_call->callee->accept(*this);
 	}
 	else {
-		// lookup function - dont check for return type as its unknown in a call
-		auto func_candidates = resolver.get_function_candidates(func_call->identifier, func_call->args.size(), func_call->generic_args.size());
-		func_call->declaration_candidates = func_candidates;
+		// check if its a constructor call
+		auto result = resolver.get_type(func_call->identifier);
+		if (result.error == LOOKUP_OK) {
+			auto ctor_candidates = resolver.get_ctor_candidates(func_call->identifier, func_call->args.size());
+			func_call->declaration_candidates = ctor_candidates;
+			func_call->ctor_type = std::get<std::shared_ptr<type_declaration>>(result.value);
+		}
+		else {
+			// lookup function as normal
+			auto func_candidates = resolver.get_function_candidates(func_call->identifier, func_call->args.size(), func_call->generic_args.size());
+			func_call->declaration_candidates = func_candidates;
+		}
 	}
 
 	// resolve args as normal

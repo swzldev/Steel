@@ -142,18 +142,6 @@ lookup_result symbol_resolver::get_type(const std::string& name) const {
 std::vector<std::shared_ptr<function_declaration>> symbol_resolver::get_function_candidates(const std::string& name, size_t arity, size_t generics) const {
 	std::vector<std::shared_ptr<function_declaration>> candidates;
 
-	// check if its a constructor
-	const auto& result = get_type(name);
-	if (result.error == LOOKUP_OK) {
-		auto& type = std::get<std::shared_ptr<type_declaration>>(result.value);
-		for (const auto& ctor : type->constructors) {
-			if (ctor->parameters.size() == arity) {
-				candidates.push_back(ctor);
-			}
-		}
-		return candidates;
-	}
-
 	// search through module hierarchy
 	std::shared_ptr<module_info> module = current_module;
 	for (; module != nullptr; module = module->parent_module) {
@@ -168,11 +156,18 @@ std::vector<std::shared_ptr<function_declaration>> symbol_resolver::get_function
 
 	return candidates;
 }
-std::vector<std::shared_ptr<function_declaration>> symbol_resolver::get_method_candidates(std::shared_ptr<const type_declaration> type, const std::string& name, size_t arity) const {
+std::vector<std::shared_ptr<function_declaration>> symbol_resolver::get_ctor_candidates(const std::string& name, size_t arity) {
 	std::vector<std::shared_ptr<function_declaration>> candidates;
-	for (const auto& method : type->methods) {
-		if (method->identifier == name && method->parameters.size() == arity) {
-			candidates.push_back(method);
+
+	const auto& result = get_type(name);
+	if (result.error != LOOKUP_OK) {
+		return candidates;
+	}
+
+	auto& type = std::get<std::shared_ptr<type_declaration>>(result.value);
+	for (const auto& ctor : type->constructors) {
+		if (ctor->parameters.size() == arity) {
+			candidates.push_back(ctor);
 		}
 	}
 	return candidates;
