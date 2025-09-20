@@ -4,9 +4,17 @@
 
 #include "../ast/ast.h"
 #include "../types/custom_types.h"
+#include "../types/container_types.h"
 #include "../types/core.h"
 #include "../types/type_utils.h"
 
+void type_checker::visit(std::shared_ptr<function_declaration> func) {
+	current_function = func;
+	if (func->body) {
+		func->body->accept(*this);
+	}
+	current_function = nullptr;
+}
 void type_checker::visit(std::shared_ptr<variable_declaration> var) {
 	// accept initializer early to prevent double visits
 	if (var->has_initializer()) {
@@ -105,6 +113,21 @@ void type_checker::visit(std::shared_ptr<type_declaration> decl) {
 				}
 			}
 			if (first) first = false;
+		}
+
+		// check for a circular inheritance chain
+		std::unordered_set<std::string> visited;
+		std::string chain;
+		std::shared_ptr<const type_declaration> current = decl;
+		while (current) {
+			chain += current->identifier;
+			if (visited.count(current->identifier)) {
+				ERROR(ERR_CIRCULAR_INHERITANCE, decl->position, decl->name().c_str(), chain.c_str());
+				return;
+			}
+			if (current->base_class) chain += " -> ";
+			visited.insert(current->identifier);
+			current = current->base_class;
 		}
 	}
 
@@ -238,6 +261,13 @@ void type_checker::visit(std::shared_ptr<address_of_expression> expr) {
 		return;
 	}
 }
+void type_checker::visit(std::shared_ptr<deref_expression> expr) {
+	expr->value->accept(*this);
+	if (!expr->value->type()->is_pointer()) {
+		ERROR(ERR_DEREFERENCE_OF_RVALUE, expr->position);
+		return;
+	}
+}
 void type_checker::visit(std::shared_ptr<unary_expression> expr) {
 	expr->operand->accept(*this);
 	auto operand_type = expr->operand->type();
@@ -267,6 +297,8 @@ void type_checker::visit(std::shared_ptr<unary_expression> expr) {
 		}
 		break;
 	}
+}
+void type_checker::visit(std::shared_ptr<identifier_expression> expr) {
 }
 void type_checker::visit(std::shared_ptr<index_expression> expr) {
 	expr->base->accept(*this);
@@ -299,13 +331,14 @@ void type_checker::visit(std::shared_ptr<member_expression> expr) {
 		return;
 	}
 
-	auto custom = std::dynamic_pointer_cast<custom_type>(type);
-	if (!custom || !custom->declaration) {
+	auto custom = member_access_allowed(type);
+	if (!custom) {
+		// should change this error really as it could be composite with no members like a Foo** etc.
 		ERROR(ERR_MEMBER_ACCESS_ON_NONCOMPOSITE, expr->position, type->name().c_str());
 		return;
 	}
 
-	auto& type_decl = custom->declaration;
+	std::shared_ptr<const type_declaration> type_decl = custom->declaration;
 	bool found = false;
 	do {
 		for (const auto& member : custom->declaration->fields) {
@@ -343,8 +376,9 @@ void type_checker::visit(std::shared_ptr<function_call> func_call) {
 				return;
 			}
 
-			auto custom = std::dynamic_pointer_cast<custom_type>(type);
-			if (!custom || !custom->declaration) {
+			auto custom = member_access_allowed(type);
+			if (!custom) {
+				// should change this error really as it could be composite with no members like a Foo** etc.
 				ERROR(ERR_MEMBER_ACCESS_ON_NONCOMPOSITE, func_call->position, type->name().c_str());
 				return;
 			}
@@ -448,7 +482,88 @@ void type_checker::visit(std::shared_ptr<while_loop> while_loop) {
 		return;
 	}
 }
+void type_checker::visit(std::shared_ptr<return_statement> ret) {
+	auto& func_type = current_function->return_type;
+	if (ret->value) {
+		// check if its a constructor
+		if (current_function->is_constructor) {
+			ERROR(ERR_CONSTRUCTOR_RETURNS_VALUE, ret->position);
+			return;
+		}
 
+		// check if function is void
+		if (func_type->is_primitive() && func_type->primitive == DT_VOID) {
+			ERROR(ERR_VOID_FUNCTION_RETURNS_VALUE, ret->position, current_function->identifier.c_str());
+			return;
+		}
+
+		ret->value->accept(*this);
+		// ensure types match
+		auto ret_type = ret->value->type();
+		if (ret_type == data_type::unknown) {
+			// assume error has already been reported
+			return;
+		}
+		else if (!ret_type || *func_type != *ret_type) {
+			ERROR(ERR_FUNCTION_RETURN_TYPE_MISMATCH, ret->position, current_function->identifier.c_str(), func_type->name().c_str(), ret_type->name().c_str());
+			return;
+		}
+	}
+	else if (!current_function->is_constructor) {
+		// ensure function is void
+		if (!func_type->is_primitive() || func_type->primitive != DT_VOID) {
+			ERROR(ERR_FUNCTION_MUST_RETURN_VALUE, ret->position, current_function->identifier.c_str());
+			return;
+		}
+	}
+}
+void type_checker::visit(std::shared_ptr<return_if> ret) {
+	auto& func_type = current_function->return_type;
+	if (ret->value) {
+		// check if its a constructor
+		if (current_function->is_constructor) {
+			ERROR(ERR_CONSTRUCTOR_RETURNS_VALUE, ret->position);
+			return;
+		}
+
+		// check if function is void
+		if (func_type->is_primitive() && func_type->primitive == DT_VOID) {
+			ERROR(ERR_VOID_FUNCTION_RETURNS_VALUE, ret->position, current_function->identifier.c_str());
+			return;
+		}
+
+		ret->value->accept(*this);
+		// ensure types match
+		auto ret_type = ret->value->type();
+		if (ret_type == data_type::unknown) {
+			// assume error has already been reported
+			return;
+		}
+		else if (!ret_type || *func_type != *ret_type) {
+			ERROR(ERR_FUNCTION_RETURN_TYPE_MISMATCH, ret->position, current_function->identifier.c_str(), func_type->name().c_str(), ret_type->name().c_str());
+			return;
+		}
+	}
+	else if (!current_function->is_constructor) {
+		// ensure function is void
+		if (!func_type->is_primitive() || func_type->primitive != DT_VOID) {
+			ERROR(ERR_FUNCTION_MUST_RETURN_VALUE, ret->position, current_function->identifier.c_str());
+			return;
+		}
+	}
+}
+
+std::shared_ptr<custom_type> type_checker::member_access_allowed(type_ptr type) {
+	// check if its a pointer, if it is we can dereference it automatically (ONCE)
+	// -> operator does not exist in steel
+	auto custom = std::dynamic_pointer_cast<custom_type>(type);
+	if (!custom && type->is_pointer()) {
+		if (auto pointed = std::dynamic_pointer_cast<custom_type>(std::dynamic_pointer_cast<pointer_type>(type)->base_type)) {
+			custom = pointed;
+		}
+	}
+	return custom;
+}
 bool type_checker::is_valid_conversion(type_ptr from, type_ptr to, bool implicit, position pos) {
 	const auto& builtin_conversions = get_core_conversions(from->primitive);
 	for (const auto& conv : builtin_conversions) {
@@ -466,5 +581,34 @@ bool type_checker::is_valid_conversion(type_ptr from, type_ptr to, bool implicit
 			}
 		}
 	}
-	return false;
+	return is_valid_upcast(from, to, pos);
+}
+bool type_checker::is_valid_upcast(type_ptr from, type_ptr to, position pos) {
+	if (!from->is_pointer() || !to->is_pointer()) {
+		// both must be pointers for a valid upcast
+		return false;
+	}
+	auto from_ptr = std::dynamic_pointer_cast<pointer_type>(from);
+	auto to_ptr = std::dynamic_pointer_cast<pointer_type>(to);
+	auto from_base = std::dynamic_pointer_cast<custom_type>(from_ptr->base_type);
+	auto to_base = std::dynamic_pointer_cast<custom_type>(to_ptr->base_type);
+	if (!from_base || !to_base) {
+		// both must be custom types and only single level pointers
+		return false;
+	}
+
+	// check up the inheritance chain of from_base to see if we reach to_base
+	std::unordered_set<std::string> inherited;
+	std::shared_ptr<const type_declaration> current = from_base->declaration;
+	while (current) {
+		if (inherited.count(current->identifier)) {
+			// circular inheritance chain, should have been caught earlier
+			break;
+		}
+		for (const auto& base : current->base_types) {
+			inherited.insert(base->name());
+		}
+		current = current->base_class;
+	}
+	return inherited.count(to_base->name()) > 0;
 }

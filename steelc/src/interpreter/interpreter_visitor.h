@@ -26,6 +26,7 @@ public:
 	virtual void visit(std::shared_ptr<assignment_expression> expr) override;
 	virtual void visit(std::shared_ptr<member_expression> expr) override;
 	virtual void visit(std::shared_ptr<address_of_expression> expr) override;
+	virtual void visit(std::shared_ptr<deref_expression> expr) override;
 	virtual void visit(std::shared_ptr<unary_expression> expr) override;
 	virtual void visit(std::shared_ptr<index_expression> expr) override;
 	virtual void visit(std::shared_ptr<identifier_expression> expr) override;
@@ -52,12 +53,15 @@ private:
 
 	std::shared_ptr<runtime_value> expression_result;
 	std::shared_ptr<runtime_value> this_object;
+	std::vector<std::shared_ptr<runtime_value>> this_stack;
 
+	void build_vftable(std::shared_ptr<runtime_value> obj, std::shared_ptr<custom_type> type);
 	void set_this(std::shared_ptr<runtime_value> obj);
 	void remove_this();
 
 	std::vector<std::shared_ptr<function_declaration>> function_stack;
 	void enter_function(std::shared_ptr<function_declaration> func, std::vector<std::shared_ptr<expression>> args);
+	void enter_method(std::shared_ptr<function_declaration> func, std::vector<std::shared_ptr<expression>> args, std::shared_ptr<runtime_value> object);
 
 	void throw_exception(std::string message, position pos);
 };

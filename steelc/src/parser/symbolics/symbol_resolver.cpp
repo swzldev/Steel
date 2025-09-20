@@ -1,8 +1,18 @@
 #include "symbol_resolver.h"
 
-lookup_result symbol_resolver::get_variable(std::shared_ptr<type_declaration> type, const std::string& name) const {
+lookup_result symbol_resolver::get_variable(std::shared_ptr<const type_declaration> type, const std::string& name) const {
 	std::shared_ptr<module_info> module = current_module;
 	lookup_result hierarchy_result = { LOOKUP_NO_MATCH };
+
+	// search type provided first
+	while (type != nullptr) {
+		for (const auto& member : type->fields) {
+			if (member->identifier == name) {
+				return { member };
+			}
+		}
+		type = type->base_class;
+	}
 
 	// search through module hierarchy
 	for (; module != nullptr; module = module->parent_module) {

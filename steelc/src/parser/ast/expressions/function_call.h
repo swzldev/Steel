@@ -40,6 +40,9 @@ public:
 
 	type_ptr type() const override {
 		if (!declaration) {
+			if (ctor_type) {
+				return ctor_type->type();
+			}
 			return data_type::unknown;
 		}
 		return declaration->return_type;

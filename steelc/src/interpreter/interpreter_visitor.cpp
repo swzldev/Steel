@@ -255,6 +255,10 @@ void interpreter_visitor::visit(std::shared_ptr<address_of_expression> expr) {
 	expr->value->accept(*this);
 	expression_result = std::make_shared<runtime_value>(expression_result);
 }
+void interpreter_visitor::visit(std::shared_ptr<deref_expression> expr) {
+	expr->value->accept(*this);
+	expression_result = expression_result->pointee;
+}
 void interpreter_visitor::visit(std::shared_ptr<unary_expression> expr) {
 	expr->operand->accept(*this);
 	auto operand = std::make_shared<runtime_value>(*expression_result);
@@ -357,26 +361,42 @@ void interpreter_visitor::visit(std::shared_ptr<function_call> func_call) {
 		// resolve the object
 		member_expr->object->accept(*this);
 		auto obj_ptr = std::make_shared<runtime_value>(*expression_result);
-		set_this(obj_ptr);
-		enter_function(func_call->declaration, func_call->args);
-		remove_this();
+
+		// if obj_ptr is a pointer, dereference to get the actual object
+		if (obj_ptr->is_pointer() && obj_ptr->pointee) {
+			obj_ptr = obj_ptr->pointee;
+		}
+
+		// look up the method in the object's vftable
+		auto vft_it = obj_ptr->vftable.find(func_call->identifier);
+		if (vft_it == obj_ptr->vftable.end() || !vft_it->second->body) {
+			if (obj_ptr->is_pointer()) {
+				throw_exception("Method call on pointer", func_call->position);
+				return;
+			}
+			throw_exception("Virtual method not implemented: " + func_call->identifier, func_call->position);
+			return;
+		}
+
+		// call the resolved method
+		enter_method(vft_it->second, func_call->args, obj_ptr);
 		return;
 	}
 	if (func_call->declaration && func_call->declaration->is_constructor) {
-		// Allocate object of the correct type
+		// allocate object of the correct type
 		auto custom = std::dynamic_pointer_cast<custom_type>(func_call->declaration->return_type);
 		auto obj = std::make_shared<runtime_value>(*custom, "");
+		if (custom && custom->declaration) {
+			for (auto& member : custom->declaration->fields) {
+				obj->set_member(member->identifier, std::make_shared<runtime_value>(*member->type, ""));
+			}
+			build_vftable(obj, custom);
+		}
 
-		// Set 'this' context for constructor
-		set_this(obj);
+		// call the constructor function
+		enter_method(func_call->declaration, func_call->args, obj);
 
-		// Call the constructor function
-		enter_function(func_call->declaration, func_call->args);
-
-		// Remove 'this' context
-		remove_this();
-
-		// Return the constructed object
+		// return the constructed object
 		expression_result = obj;
 		return;
 	}
@@ -498,20 +518,47 @@ std::shared_ptr<runtime_value> interpreter_visitor::get_var(const std::string& i
 	return nullptr; // unreachable, but avoids compiler warning
 }
 void interpreter_visitor::set_var(const std::string& identifier, std::shared_ptr<runtime_value> value) {
-	for (auto it = variables.rbegin(); it != variables.rend(); ++it) {
-		if (it->count(identifier)) {
-			(*it)[identifier] = value;
+	if (this_object) {
+		auto member_ptr = this_object->get_member(identifier);
+		if (member_ptr) {
+			this_object->set_member(identifier, value);
 			return;
 		}
+	}
+	auto var = get_var(identifier);
+	if (var) {
+		*var = *value;
+		return;
 	}
 	throw_exception("Variable \"" + identifier + "\" not found", position{ 0, 0 });
 }
 
+void interpreter_visitor::build_vftable(std::shared_ptr<runtime_value> obj, std::shared_ptr<custom_type> type) {
+	if (!type->declaration) return;
+
+	// handle inheritance
+	for (const auto& base_type : type->declaration->base_types) {
+		auto base_custom = std::dynamic_pointer_cast<custom_type>(base_type);
+		if (base_custom) {
+			build_vftable(obj, base_custom);
+		}
+	}
+	// add override methods to vftable
+	for (auto& method : type->declaration->methods) {
+		obj->vftable[method->identifier] = method;
+	}
+}
 void interpreter_visitor::set_this(std::shared_ptr<runtime_value> obj) {
+	this_stack.push_back(this_object);
 	this_object = obj;
 }
 void interpreter_visitor::remove_this() {
-	this_object = nullptr;
+	this_stack.pop_back();
+	if (this_stack.empty()) {
+		this_object = nullptr;
+		return;
+	}
+	this_object = this_stack.back();
 }
 
 void interpreter_visitor::enter_function(std::shared_ptr<function_declaration> func, std::vector<std::shared_ptr<expression>> args) {
@@ -530,6 +577,34 @@ void interpreter_visitor::enter_function(std::shared_ptr<function_declaration> f
 	catch (const function_return& ret) {
 		expression_result = std::make_shared<runtime_value>(ret.value);
 	}
+	pop_scope();
+	function_stack.pop_back();
+}
+void interpreter_visitor::enter_method(std::shared_ptr<function_declaration> func, std::vector<std::shared_ptr<expression>> args, std::shared_ptr<runtime_value> object) {
+	function_stack.push_back(func);
+	push_scope();
+	// add function parameters to scope
+	for (int i = 0; i < func->parameters.size(); i++) {
+		args[i]->accept(*this);
+		add_var(func->parameters[i]->identifier, std::make_shared<runtime_value>(*expression_result));
+	}
+
+	set_this(object);
+
+	try {
+		if (!func->body) {
+			throw_exception("Function has no body", position{ 0, 0 });
+			return;
+		}
+		func->body->accept(*this);
+		// no return encountered, set to void
+		expression_result = std::make_shared<runtime_value>(data_type(DT_VOID), "");
+	}
+	catch (const function_return& ret) {
+		expression_result = std::make_shared<runtime_value>(ret.value);
+	}
+
+	remove_this();
 	pop_scope();
 	function_stack.pop_back();
 }

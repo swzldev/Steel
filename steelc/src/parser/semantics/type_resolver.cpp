@@ -17,6 +17,7 @@ void type_resolver::visit(std::shared_ptr<function_declaration> func) {
 
 	// resolve return type
 	if (!func->is_constructor) {
+		// (if its a constructor we already know its return type)
 		resolve_type(func->return_type, func);
 	}
 
@@ -87,7 +88,7 @@ void type_resolver::resolve_type(type_ptr& type, ast_ptr resolvee) {
 				ERROR(ERR_NAME_COLLISION, resolvee->position, type_name.c_str());
 				return;
 			}
-			ERROR(ERR_UNKNOWN_TYPE, resolvee->position, type_name);
+			ERROR(ERR_UNKNOWN_TYPE, resolvee->position, type_name.c_str());
 			return;
 		}
 		custom->declaration = std::get<std::shared_ptr<type_declaration>>(decl.value);

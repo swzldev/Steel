@@ -111,6 +111,9 @@ enum error_code {
     ERR_BASE_CLASS_NOT_FIRST,
     ERR_OVERRIDE_NOT_FOUND,
     ERR_INTERFACE_METHOD_NOT_IMPLEMENTED,
+    ERR_COLON_EXPECTED,
+    ERR_CIRCULAR_INHERITANCE,
+    ERR_DEREFERENCE_OF_RVALUE,
 };
 
 enum warning_code {
@@ -235,6 +238,9 @@ struct error_catalog {
 			{"S116", "The base class '%s' must be first in the implementation list"},
             {"S117", "No overridden method '%s' found in any base class or interface"},
             {"S118", "Class '%s' does not implement interface method '%s'"},
+            {"S119", "':' expected"},
+            {"S120", "Circular inheritance detected. Class '%s' eventually inherits from itself: %s"},
+            {"S121", "Only pointers can be dereferenced"},
         };
         return errors[code - 1];
     }

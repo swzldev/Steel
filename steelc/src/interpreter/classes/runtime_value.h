@@ -7,6 +7,7 @@
 #include <unordered_map>
 #include <memory>
 
+#include "../parser/ast/ast_fwd.h"
 #include "../parser/types/types.h"
 #include "../parser/types/custom_types.h"
 
@@ -29,6 +30,7 @@ public:
     std::string value;
 	std::shared_ptr<runtime_value> pointee;
     std::unordered_map<std::string, std::shared_ptr<runtime_value>> members;
+    std::unordered_map<std::string, std::shared_ptr<function_declaration>> vftable;
 
     inline bool is_int()       const { return type.primitive == DT_I32; }
     inline bool is_float()     const { return type.primitive == DT_FLOAT; }

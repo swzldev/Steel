@@ -10,6 +10,8 @@
 #include "symbolics/symbol_table.h"
 #include "../lexer/token.h"
 
+constexpr auto ENABLE_GENERICS = false;
+
 class parser : public compilation_pass {
 public:
 	parser(std::shared_ptr<compilation_unit> unit, std::vector<token>& tokens)
@@ -21,7 +23,6 @@ public:
 	ast_ptr parse_function_declaration(bool is_constructor, bool is_override);
 	ast_ptr parse_variable_declaration(bool is_const);
 	ast_ptr parse_type_declaration(token& kind_token);
-	type_ptr parse_type();
 	ast_ptr parse_parameter();
 	ast_ptr parse_statement();
 	ast_ptr parse_block();
@@ -37,6 +38,7 @@ public:
 	ast_ptr parse_initializer_list();
 
 	// helper functions
+	type_ptr parse_type();
 	std::vector<std::shared_ptr<expression>> parse_expression_list(token_type end = TT_RPAREN);
 	std::vector<std::shared_ptr<variable_declaration>> parse_parameter_list(token_type end = TT_RPAREN);
 	std::vector<std::shared_ptr<generic_parameter>> parse_generics();

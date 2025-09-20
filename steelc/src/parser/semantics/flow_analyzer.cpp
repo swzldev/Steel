@@ -46,46 +46,11 @@ void flow_analyzer::visit(std::shared_ptr<return_statement> ret_stmt) {
 		return;
 	}
 
-	// we can immediately set current_returns, this is because
-	// the checks below are purely type related, and will
-	// produce their own errors, therefore for simplicity
-	// we shouldnt add a "doesnt return" error on top as
-	// TECHNICALLY it does just not in the right way
 	current_returns = true;
 
 	if (current_constructor && ret_stmt->returns_value()) {
 		ERROR(ERR_CONSTRUCTOR_RETURNS_VALUE, ret_stmt->position);
 		return;
-	}
-
-	// CHECK TYPE HERE AS CONTEXT IS NEEDED
-	auto& func_type = current_function->return_type;
-	if (ret_stmt->value) {
-		// check if function is void
-		if (func_type->is_primitive() && func_type->primitive == DT_VOID) {
-			ERROR(ERR_VOID_FUNCTION_RETURNS_VALUE, ret_stmt->position, current_function->identifier.c_str());
-			return;
-		}
-
-		ret_stmt->value->accept(*this);
-		// ensure types match
-		auto ret_type = ret_stmt->value->type();
-		if (ret_type == data_type::unknown) {
-			// assume error has already been reported
-			return;
-		}
-		else if (!ret_type || *func_type != *ret_type) {
-			ERROR(ERR_FUNCTION_RETURN_TYPE_MISMATCH, ret_stmt->position, current_function->identifier.c_str(), func_type->name().c_str(), "<Unknown Type>");
-			return;
-		}
-	}
-	else {
-		// ensure function is void
-		if (!func_type->is_primitive() || func_type->primitive != DT_VOID) {
-			ERROR(ERR_FUNCTION_MUST_RETURN_VALUE, ret_stmt->position, current_function->identifier.c_str());
-			return;
-		}
-
 	}
 }
 void flow_analyzer::visit(std::shared_ptr<return_if> ret_stmt) {
@@ -94,40 +59,12 @@ void flow_analyzer::visit(std::shared_ptr<return_if> ret_stmt) {
 		return;
 	}
 
+	current_returns = false; // may not return
+
 	if (current_constructor && ret_stmt->returns_value()) {
 		ERROR(ERR_CONSTRUCTOR_RETURNS_VALUE, ret_stmt->position);
 		return;
 	}
-
-	// CHECK TYPE HERE AS CONTEXT IS NEEDED
-	auto& func_type = current_function->return_type;
-	if (ret_stmt->value) {
-		// check if function is void
-		if (func_type->is_primitive() && func_type->primitive == DT_VOID) {
-			ERROR(ERR_VOID_FUNCTION_RETURNS_VALUE, ret_stmt->position, current_function->identifier.c_str());
-			return;
-		}
-
-		ret_stmt->value->accept(*this);
-		// ensure types match
-		if (!ret_stmt->value->type()) {
-			ERROR(ERR_FUNCTION_RETURN_TYPE_MISMATCH, ret_stmt->position, current_function->identifier.c_str(), func_type->name().c_str(), "<Unknown Type>");
-			return;
-		}
-		else if (*func_type != *ret_stmt->value->type()) {
-			ERROR(ERR_FUNCTION_RETURN_TYPE_MISMATCH, ret_stmt->position, current_function->identifier.c_str(), func_type->name().c_str(), ret_stmt->value->type()->name().c_str());
-			return;
-		}
-	}
-	else {
-		// ensure function is void
-		if (!func_type->is_primitive() || func_type->primitive != DT_VOID) {
-			ERROR(ERR_FUNCTION_MUST_RETURN_VALUE, ret_stmt->position, current_function->identifier.c_str());
-			return;
-		}
-
-	}
-	current_returns = false; // may not return
 }
 void flow_analyzer::visit(std::shared_ptr<if_statement> if_stmt) {
 	// check for an always true condition

@@ -110,7 +110,7 @@ ast_ptr parser::parse_function_declaration(bool is_constructor, bool is_override
 	}
 	
 	std::vector<std::shared_ptr<generic_parameter>> generics;
-	if (!is_override && !is_constructor) {
+	if (ENABLE_GENERICS && !is_override && !is_constructor) {
 		if (match(TT_LESS)) {
 			generics = parse_generics();
 			if (generics.empty()) {
@@ -131,17 +131,14 @@ ast_ptr parser::parse_function_declaration(bool is_constructor, bool is_override
 		return nullptr;
 	}
 
-	type_ptr ret_type;
+	type_ptr ret_type = to_data_type(DT_VOID);
 	if (!is_override && !is_constructor) {
-		if (!match(TT_ARROW)) {
-			ERROR_TOKEN(ERR_ARROW_EXPECTED, peek());
-			return nullptr;
-		}
-
-		ret_type = parse_type();
-		if (!ret_type) {
-			ERROR_TOKEN(ERR_TYPENAME_EXPECTED, peek());
-			return nullptr;
+		if (match(TT_ARROW)) {
+			ret_type = parse_type();
+			if (!ret_type) {
+				ERROR_TOKEN(ERR_TYPENAME_EXPECTED, peek());
+				return nullptr;
+			}
 		}
 	}
 
@@ -235,10 +232,30 @@ ast_ptr parser::parse_type_declaration(token& kind_token) {
 			ast_ptr method = parse_function_declaration(false, previous().type == TT_OVERRIDE);
 			if (method) type_decl->methods.push_back(std::dynamic_pointer_cast<function_declaration>(method));
 		}
-		// THIS IS BROKEN (FIX!!)
 		else if (match(TT_IDENTIFIER)) {
-			ast_ptr member = parse_variable_declaration(false);
-			if (member) type_decl->fields.push_back(std::dynamic_pointer_cast<variable_declaration>(member));
+			// field declaration - might change this later
+			token& field_name_token = previous();
+
+			if (!match(TT_COLON)) {
+				ERROR_TOKEN(ERR_COLON_EXPECTED, peek());
+				advance();
+				continue;
+			}
+
+			type_ptr field_type = parse_type();
+			if (!field_type) {
+				ERROR_TOKEN(ERR_TYPENAME_EXPECTED, peek());
+				advance();
+				continue;
+			}
+
+			if (!match(TT_SEMICOLON)) {
+				ERROR_TOKEN(ERR_SEMICOLON_EXPECTED, peek());
+				advance();
+				continue;
+			}
+
+			type_decl->fields.push_back(make_ast<variable_declaration>(field_name_token, /* not const */ false, field_type, field_name_token.value));
 		}
 		else {
 			ERROR_TOKEN(ERR_MEMBER_DECLARATION_EXPECTED, peek());
@@ -251,52 +268,6 @@ ast_ptr parser::parse_type_declaration(token& kind_token) {
 	}
 
 	return type_decl;
-}
-type_ptr parser::parse_type() {
-	// parse through modifiers, e.g. 'const'
-	data_type_modifiers type_mods = DTM_NONE;
-	while (false) {
-		auto modifier = to_type_modifier(previous().type);
-		if (type_mods & modifier) {
-			ERROR_TOKEN(ERR_DUPLICATE_TYPE_MODIFIER, previous());
-			return nullptr;
-		}
-		type_mods |= modifier;
-	}
-
-	// match typename (custom or primitive)
-	type_ptr type = data_type::unknown;
-	if (match_primitive() || match(TT_IDENTIFIER)) {
-		type = to_data_type(previous());
-	}
-	else {
-		// type mods but no typename
-		if (type_mods != DTM_NONE) {
-			ERROR_TOKEN(ERR_TYPENAME_EXPECTED, peek());
-		}
-		// no type or mods, so we can just return null
-		return nullptr;
-	}
-	type->modifiers = type_mods;
-
-	// parse through any pointer/array modifiers
-	while (true) {
-		if (match(TT_MULTIPLY)) {
-			type = make_pointer(type);
-		}
-		else if (match(TT_LBRACKET)) {
-			if (!match(TT_RBRACKET)) {
-				ERROR_TOKEN(ERR_RBRACKET_EXPECTED, peek());
-				return nullptr;
-			}
-			type = make_array(type);
-		}
-		else {
-			break;
-		}
-	}
-
-	return type;
 }
 ast_ptr parser::parse_parameter() {
 	// parse parameter type
@@ -549,6 +520,12 @@ ast_ptr parser::parse_unary_expression() {
 		auto operand = std::dynamic_pointer_cast<expression>(parse_unary_expression());
 		return make_ast<address_of_expression>(tok, operand);
 	}
+	// deref operator
+	if (tok.type == TT_MULTIPLY) {
+		advance();
+		auto operand = std::dynamic_pointer_cast<expression>(parse_unary_expression());
+		return make_ast<deref_expression>(tok, operand);
+	}
 	// check for prefix unary operators (steel does not support increment/decrement prefix operators)
 	if (tok.type == TT_SUBTRACT || tok.type == TT_NOT) {
 		advance();
@@ -726,6 +703,52 @@ ast_ptr parser::parse_initializer_list() {
 	return make_ast<initializer_list>(init_token, values);
 }
 
+type_ptr parser::parse_type() {
+	// parse through modifiers, e.g. 'const'
+	data_type_modifiers type_mods = DTM_NONE;
+	while (false) {
+		auto modifier = to_type_modifier(previous().type);
+		if (type_mods & modifier) {
+			ERROR_TOKEN(ERR_DUPLICATE_TYPE_MODIFIER, previous());
+			return nullptr;
+		}
+		type_mods |= modifier;
+	}
+
+	// match typename (custom or primitive)
+	type_ptr type = data_type::unknown;
+	if (match_primitive() || match(TT_IDENTIFIER)) {
+		type = to_data_type(previous());
+	}
+	else {
+		// type mods but no typename
+		if (type_mods != DTM_NONE) {
+			ERROR_TOKEN(ERR_TYPENAME_EXPECTED, peek());
+		}
+		// no type or mods, so we can just return null
+		return nullptr;
+	}
+	type->modifiers = type_mods;
+
+	// parse through any pointer/array modifiers
+	while (true) {
+		if (match(TT_MULTIPLY)) {
+			type = make_pointer(type);
+		}
+		else if (match(TT_LBRACKET)) {
+			if (!match(TT_RBRACKET)) {
+				ERROR_TOKEN(ERR_RBRACKET_EXPECTED, peek());
+				return nullptr;
+			}
+			type = make_array(type);
+		}
+		else {
+			break;
+		}
+	}
+
+	return type;
+}
 std::vector<std::shared_ptr<expression>> parser::parse_expression_list(token_type end) {
 	std::vector<std::shared_ptr<expression>> expressions;
 	while (!is_at_end() && !check(end)) {

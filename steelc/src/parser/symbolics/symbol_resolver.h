@@ -12,7 +12,7 @@ class symbol_resolver {
 public:
 	symbol_resolver() = default;
 
-	lookup_result get_variable(std::shared_ptr<type_declaration> type, const std::string& name) const;
+	lookup_result get_variable(std::shared_ptr<const type_declaration> type, const std::string& name) const;
 	lookup_result get_function(const std::string& name, type_ptr return_type, std::vector<type_ptr> param_types) const;
 	lookup_result get_method(std::shared_ptr<const type_declaration> type, const std::string& name, type_ptr return_type, std::vector<type_ptr> param_types) const;
 	lookup_result get_type(const std::string& name) const;
