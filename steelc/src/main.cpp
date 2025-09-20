@@ -78,8 +78,8 @@ int main(int argc, char** argv) {
 		return 1;
 	}
 
-	//stproj_file proj = stproj_file::load(argv[1]);
-	stproj_file proj = stproj_file::load(R"(C:\Users\maxmt\source\repos\Steel\steelc\demo\demo.stproj)");
+	stproj_file proj = stproj_file::load(argv[1]);
+	//stproj_file proj = stproj_file::load(R"(C:\Users\maxmt\source\repos\Steel\steelc\demo\demo.stproj)");
 	compiler compiler;
 	compiler.compile(proj.sources);
 
