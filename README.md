@@ -25,21 +25,21 @@
 <p>After downloading the compiler (which currently has the interpreter built-in), you can begin to create your first Steel project. Steel projects use TOML, and use the *.stproj extension. You can use the template below to create your project:</p>
 
 <pre><code>
-  name = "MyProject"
-  version = "1.0.0"
-  type = "executable"
+name = "MyProject"
+version = "1.0.0"
+type = "executable"
 
-  sources = ["Main.s"]
+sources = ["Main.s"]
 </code></pre>
 
 <p>Now, make a "Main.s" file in the same directory, this will be the file for your entry point. The entry point must be called "Main" and return an i32:</p>
 
-<code>
-  func Main() -> i32 {
-      Print("Hello, World!");
-      return 0;
-  }
-</code>
+<pre><code>
+func Main() -> i32 {
+    Print("Hello, World!");
+    return 0;
+}
+</code></pre>
 
 <p>Now navigate to the directory where the Steel compiler is, open a command prompt window and type the following:</p>
 <code>steelc.exe "&lt;path-to-stproj-file&gt;"</code>
