@@ -22,6 +22,8 @@
 <h2>Getting started</h2>
 <p>To begin first download the <a href="https://github.com/swzldev/Steel/releases/">latest release</a> of the compiler. This is nescessary for converting your Steel code into a functional executable.</p>
 
+<p>After downloading the compiler (which currently has the interpreter built-in), you can begin to create your first Steel project.</p>
+
 <h3>Important notes</h3>
 <p>Steel is currently in pre-alpha, this means many features are not fully functional and may contain plenty of bugs, this version is not meant to be released publicly. Currently the language uses a built in interpreter meaning it is significantly slower than intended. Additionally, there is little to no optimisation as the languages core features are still being built. Bare this in mind when downloading an old release like this one.</p>
 
