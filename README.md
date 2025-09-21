@@ -42,7 +42,7 @@
 </code>
 
 <p>Now navigate to the directory where the Steel compiler is, open a command prompt window and type the following:</p>
-<code>steelc.exe "<path-to-stproj-file>"</code>
+<code>steelc.exe "&lt;path-to-stproj-file&gt;"</code>
 
 <p>If you did everything correctly you should see the following output:</p>
 <img width="366" height="159" alt="image" src="https://github.com/user-attachments/assets/594d3a01-22ac-4cb8-a215-abba97bc7aa3" />
