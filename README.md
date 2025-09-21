@@ -1,4 +1,4 @@
-<h1 align="left">Steel<br/><img src="" alt="Logo" align="right" height="200px"></h1>
+<h1 align="left">Steel<br/><img src=".\assets\logo-red-png.png" alt="Logo" align="right" height="230px"></h1>
 <p align="left">
   <img src="https://img.shields.io/github/downloads/swzldev/Steel/latest/total" alt="Downloads">
   <img src="https://img.shields.io/github/stars/swzldev/Steel" alt="Stars">
