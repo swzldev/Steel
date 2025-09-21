@@ -19,6 +19,13 @@ public:
 		return base_type->name() + "[]";
 	}
 
+	bool is_primitive() const override {
+		return false;
+	}
+	bool is_indexable() const override {
+		return true;
+	}
+
 	type_ptr base_type;
 };
 
@@ -32,6 +39,13 @@ public:
 
 	std::string name() const override {
 		return base_type->name() + "*";
+	}
+
+	bool is_primitive() const override {
+		return false;
+	}
+	bool is_indexable() const override {
+		return true;
 	}
 
 	type_ptr base_type;
@@ -52,6 +66,13 @@ public:
 			return substitution->name();
 		}
 		return identifier;
+	}
+
+	bool is_primitive() const override {
+		return false;
+	}
+	bool is_indexable() const override {
+		return false;
 	}
 
 	type_ptr substitution = nullptr;

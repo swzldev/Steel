@@ -85,8 +85,38 @@
 - Added type checks for deref expressions, ensuring that only pointer types
   can be dereferenced.
 - Added support for deref expressions to the interpreter.
-- Fixed a bug in the type checker where it would invalidate dereferences to non
-  variables instead of just checking its a pointer type. Chained pointer
-  derefences now work as intended.
 - Added a flag to enable/disable generics, so that early release builds do not
   have access to half finished generics functionality.
+- Added built in functions: Read(), ReadKey(), ReadInt(), Wait(float seconds),
+  SetConsolePos(i32 x, i32 y).
+- Type checker now checks for unknown type assignments to prevent unnecessary
+  errors.
+- Fixed some bugs:
+  - Fixed a bug where method calls were being passed a copy of the object as
+    the 'this' pointer instead of the actual object, causing methods to be
+	modifying a clone and not themselves.
+  - Fixed a bug in the init checker where it would try to check the init state
+    of a variable before it had been resolved, causing a nullptr dereference.
+  - Fixed a bug in the type checker where it would check if a variable is const
+    without checking if its even been resolved, causing a nullptr dereference.
+  - Fixed a bug in the type checker where it would invalidate dereferences to non
+    variables instead of just checking its a pointer type. Chained pointer
+    derefences now work as intended.
+  - Fixed a bug where the type checker wasnt entering while and for loop bodies.
+- Name resolver now outputs an error for constructor call ambiguity.
+- Added a temporary override_return_type member to function call nodes because
+  builtin functions such as ReadInt() need to have a return type but they are
+  unable to contain actual function declarations as it breaks how they are
+  interpreted. This will be removed when the language is switched to being
+  compiled.
+
+### 21-09-2025
+- Added support for array initializers and array variables in the interpreter.
+- Fixed some bugs:
+    - Fixed a bug in the interpreter where the 'this' object was being pushed onto
+	  the this stack before being set, causing the first object on the stack to
+	  be a null pointer.
+- Added a new function GetKey() to check if a key is being pressed without halting
+  the program like ReadKey().
+- Added overrides for the 3 container types to allow support for indexing on arrays
+  and pointers (although pointer indexing is not yet functional).

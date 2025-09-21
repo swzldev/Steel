@@ -5,6 +5,8 @@
 
 #include "expression.h"
 #include "../../types/types.h"
+#include "../../types/container_types.h"
+#include "../../parser_utils.h"
 #include "../../../lexer/token_type.h"
 #include "../../../lexer/token_utils.h"
 
@@ -25,6 +27,16 @@ public:
 	}
 
 	type_ptr type() const override {
+		auto t = base->type();
+		if (t->is_array()) {
+			return std::dynamic_pointer_cast<array_type>(t)->base_type;
+		}
+		else if (t->is_pointer()) {
+			return std::dynamic_pointer_cast<pointer_type>(t)->base_type;
+		}
+		else if (t->is_primitive() && t->primitive == DT_STRING) {
+			return to_data_type(DT_CHAR);
+		}
 		return base->type();
 	}
 	bool is_rvalue() const override {

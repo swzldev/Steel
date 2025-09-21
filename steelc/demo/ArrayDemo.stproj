@@ -1,0 +1,5 @@
+name = "ArrayDemo"
+version = "1.0.0"
+type = "executable"
+
+sources = ["Main.s"]

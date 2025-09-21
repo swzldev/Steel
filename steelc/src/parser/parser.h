@@ -36,6 +36,7 @@ public:
 	ast_ptr parse_unary_expression();
 	ast_ptr parse_primary_expression();
 	ast_ptr parse_initializer_list();
+	ast_ptr parse_array_initializer();
 
 	// helper functions
 	type_ptr parse_type();

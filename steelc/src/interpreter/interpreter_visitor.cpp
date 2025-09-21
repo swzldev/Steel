@@ -3,6 +3,10 @@
 #include <iostream>
 #include <memory>
 #include <string>
+#include <thread>
+#include <chrono>
+#include <conio.h>
+#include <Windows.h>
 
 #include "../parser/ast/ast.h"
 #include "../parser/types/custom_types.h"
@@ -23,6 +27,16 @@ void interpreter_visitor::visit(std::shared_ptr<variable_declaration> var) {
 	if (var->initializer) {
 		// handle initializer list for custom types
 		if (auto init_list = std::dynamic_pointer_cast<initializer_list>(var->initializer)) {
+			if (init_list->is_array_initializer) {
+				std::vector<std::shared_ptr<runtime_value>> elements;
+				for (auto& val : init_list->values) {
+					val->accept(*this);
+					elements.push_back(std::make_shared<runtime_value>(*expression_result));
+				}
+				expression_result = std::make_shared<runtime_value>(elements);
+				add_var(var->identifier, expression_result);
+				return;
+			}
 			// check if type is custom
 			auto custom = std::dynamic_pointer_cast<custom_type>(var->type);
 			if (custom && custom->declaration) {
@@ -227,14 +241,10 @@ void interpreter_visitor::visit(std::shared_ptr<assignment_expression> expr) {
 	// assignment to member: obj.member = value
 	if (auto member_expr = std::dynamic_pointer_cast<member_expression>(expr->left)) {
 		member_expr->object->accept(*this);
-		auto obj = std::make_shared<runtime_value>(*expression_result);
+		auto& obj = *expression_result;
 		expr->right->accept(*this);
 		auto right = std::make_shared<runtime_value>(*expression_result);
-		obj->set_member(member_expr->member, right);
-		// if the object is a variable, update it in the environment
-		if (auto obj_id = std::dynamic_pointer_cast<identifier_expression>(member_expr->object)) {
-			set_var(obj_id->identifier, obj);
-		}
+		obj.set_member(member_expr->member, right);
 		expression_result = right;
 		return;
 	}
@@ -242,7 +252,16 @@ void interpreter_visitor::visit(std::shared_ptr<assignment_expression> expr) {
 void interpreter_visitor::visit(std::shared_ptr<member_expression> expr) {
 	// evaluate the object expression
 	expr->object->accept(*this);
-	auto obj = std::make_shared<runtime_value>(*expression_result);
+	auto& obj = expression_result;
+
+	// dereference ONCE if the object is a pointer
+	if (obj->is_pointer()) {
+		obj = obj->pointee;
+		if (!obj) {
+			throw_exception("Dereference of null pointer", expr->position);
+			return;
+		}
+	}
 
 	// get the member value
 	auto member_ptr = obj->get_member(expr->member);
@@ -323,13 +342,25 @@ void interpreter_visitor::visit(std::shared_ptr<index_expression> expr) {
 	auto base = std::make_shared<runtime_value>(*expression_result);
 	expr->indexer->accept(*this);
 	auto index = std::make_shared<runtime_value>(*expression_result);
-	if (!base->is_string()) {
-		throw_exception("Indexing only supported for strings", expr->position);
+	if (base->is_string()) {
+		int idx = index->as_int();
+		const std::string& str = base->as_string();
+		char ch = (idx < 0 || idx >= static_cast<int>(str.length())) ? '\0' : str[idx];
+		expression_result = std::make_shared<runtime_value>(data_type(DT_CHAR), std::string(1, ch));
+		return;
 	}
-	int idx = index->as_int();
-	const std::string& str = base->as_string();
-	char ch = (idx < 0 || idx >= static_cast<int>(str.length())) ? '\0' : str[idx];
-	expression_result = std::make_shared<runtime_value>(data_type(DT_CHAR), std::string(1, ch));
+	else if (base->is_array()) {
+		auto arr = base->as_array();
+		int idx = index->as_int();
+		if (idx < 0 || idx >= static_cast<int>(arr.size())) {
+			throw_exception("Array index out of bounds", expr->position);
+		}
+		expression_result = arr[idx];
+		return;
+	}
+	else {
+		throw_exception("Indexing only supported for strings and arrays", expr->position);
+	}
 }
 void interpreter_visitor::visit(std::shared_ptr<identifier_expression> expr) {
 	expression_result = get_var(expr->identifier);
@@ -360,7 +391,7 @@ void interpreter_visitor::visit(std::shared_ptr<function_call> func_call) {
 		}
 		// resolve the object
 		member_expr->object->accept(*this);
-		auto obj_ptr = std::make_shared<runtime_value>(*expression_result);
+		std::shared_ptr<runtime_value> obj_ptr = expression_result;
 
 		// if obj_ptr is a pointer, dereference to get the actual object
 		if (obj_ptr->is_pointer() && obj_ptr->pointee) {
@@ -406,6 +437,61 @@ void interpreter_visitor::visit(std::shared_ptr<function_call> func_call) {
 		std::cout << val->as_string();
 		std::cout.flush();
 		expression_result = std::make_shared<runtime_value>(data_type(DT_VOID), "");
+		return;
+	}
+	if (func_call->identifier == "Read") {
+		std::string input;
+		std::getline(std::cin, input);
+		expression_result = std::make_shared<runtime_value>(data_type(DT_STRING), input);
+		return;
+	}
+	if (func_call->identifier == "ReadKey") {
+		char ch = _getch();
+		expression_result = std::make_shared<runtime_value>(data_type(DT_CHAR), std::string(1, ch));
+		return;
+	}
+	if (func_call->identifier == "ReadInt") {
+		std::string input;
+		std::getline(std::cin, input);
+		expression_result = std::make_shared<runtime_value>(data_type(DT_I32), input);
+		return;
+	}
+	if (func_call->identifier == "Wait") {
+		func_call->args[0]->accept(*this);
+		auto seconds = std::make_shared<runtime_value>(*expression_result);
+		if (!seconds->is_number()) {
+			throw_exception("Wait function expects a numeric argument", func_call->position);
+			return;
+		}
+		int ms = static_cast<int>(seconds->as_float() * 1000);
+		std::this_thread::sleep_for(std::chrono::milliseconds(ms));
+		return;
+	}
+	if (func_call->identifier == "SetConsolePos") {
+		func_call->args[0]->accept(*this);
+		auto x = std::make_shared<runtime_value>(*expression_result);
+		func_call->args[1]->accept(*this);
+		auto y = std::make_shared<runtime_value>(*expression_result);
+		if (!x->is_int() || !y->is_int()) {
+			throw_exception("SetConsolePos function expects a numeric argument", func_call->position);
+			return;
+		}
+		COORD coord {
+			static_cast<SHORT>(x->as_int()),
+			static_cast<SHORT>(y->as_int())
+		};
+		SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), coord);
+		return;
+	}
+	if (func_call->identifier == "GetKey") {
+		func_call->args[0]->accept(*this);
+		auto x = std::make_shared<runtime_value>(*expression_result);
+		if (!x->is_char()) {
+			throw_exception("GetKey expects a character", func_call->position);
+			return;
+		}
+		char ch = _getch();
+		expression_result = std::make_shared<runtime_value>(data_type(DT_BOOL), (ch == x->as_char()) ? "true" : "false");
 		return;
 	}
 	enter_function(func_call->declaration, func_call->args);
@@ -549,8 +635,8 @@ void interpreter_visitor::build_vftable(std::shared_ptr<runtime_value> obj, std:
 	}
 }
 void interpreter_visitor::set_this(std::shared_ptr<runtime_value> obj) {
-	this_stack.push_back(this_object);
 	this_object = obj;
+	this_stack.push_back(obj);
 }
 void interpreter_visitor::remove_this() {
 	this_stack.pop_back();

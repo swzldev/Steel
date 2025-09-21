@@ -183,6 +183,9 @@ ast_ptr parser::parse_variable_declaration(bool is_const) {
 		if (check(TT_LBRACE)) {
 			initializer = parse_initializer_list();
 		}
+		else if (check(TT_LBRACKET)) {
+			initializer = parse_array_initializer();
+		}
 		else {
 			initializer = parse_expression();
 		}
@@ -435,7 +438,18 @@ ast_ptr parser::parse_return_statement() {
 
 	// if theres an if after return, it's a return if (without value)
 	if (match(TT_IF)) {
+		if (!match(TT_LPAREN)) {
+			ERROR_TOKEN(ERR_LPAREN_EXPECTED, peek());
+			return nullptr;
+		}
+
 		ast_ptr condition = parse_expression();
+
+		if (!match(TT_RPAREN)) {
+			ERROR_TOKEN(ERR_RPAREN_EXPECTED, peek());
+			return nullptr;
+		}
+
 		if (!match(TT_SEMICOLON)) {
 			ERROR_TOKEN(ERR_SEMICOLON_EXPECTED, peek());
 			return nullptr;
@@ -448,7 +462,18 @@ ast_ptr parser::parse_return_statement() {
 
 	// return if (with value)
 	if (match(TT_IF)) {
+		if (!match(TT_LPAREN)) {
+			ERROR_TOKEN(ERR_LPAREN_EXPECTED, peek());
+			return nullptr;
+		}
+
 		ast_ptr condition = parse_expression();
+
+		if (!match(TT_RPAREN)) {
+			ERROR_TOKEN(ERR_RPAREN_EXPECTED, peek());
+			return nullptr;
+		}
+
 		if (!match(TT_SEMICOLON)) {
 			ERROR_TOKEN(ERR_SEMICOLON_EXPECTED, peek());
 			return nullptr;
@@ -545,7 +570,7 @@ ast_ptr parser::parse_primary_expression() {
 		token& identifier_token = previous();
 		// only support type generics for now
 		std::vector<type_ptr> generic_args;
-		if (match(TT_LESS)) {
+		if (ENABLE_GENERICS && match(TT_LESS)) {
 			do {
 				type_ptr gen_type = parse_type();
 				if (gen_type) {
@@ -701,6 +726,21 @@ ast_ptr parser::parse_initializer_list() {
 		return nullptr;
 	}
 	return make_ast<initializer_list>(init_token, values);
+}
+ast_ptr parser::parse_array_initializer() {
+	token& init_token = peek();
+	if (!match(TT_LBRACKET)) {
+		ERROR_TOKEN(ERR_LBRACKET_EXPECTED, peek());
+		return nullptr;
+	}
+	std::vector<std::shared_ptr<expression>> values = parse_expression_list(TT_RBRACKET);
+	if (!match(TT_RBRACKET)) {
+		ERROR_TOKEN(ERR_RBRACE_EXPECTED, peek());
+		return nullptr;
+	}
+	auto list = make_ast<initializer_list>(init_token, values);
+	list->is_array_initializer = true;
+	return list;
 }
 
 type_ptr parser::parse_type() {

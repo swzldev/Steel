@@ -25,9 +25,13 @@ public:
     runtime_value(std::shared_ptr<runtime_value> pointee)
         : type(DT_POINTER), value(std::to_string((long long)pointee.get())), pointee(pointee) {
     }
+	runtime_value(const std::vector<std::shared_ptr<runtime_value>>& elems)
+		: type(DT_ARRAY), value(""), elements(elems) {
+	}
 
     data_type type;
     std::string value;
+	std::vector<std::shared_ptr<runtime_value>> elements;
 	std::shared_ptr<runtime_value> pointee;
     std::unordered_map<std::string, std::shared_ptr<runtime_value>> members;
     std::unordered_map<std::string, std::shared_ptr<function_declaration>> vftable;
@@ -38,7 +42,8 @@ public:
     inline bool is_string()    const { return type.primitive == DT_STRING; }
     inline bool is_bool()      const { return type.primitive == DT_BOOL; }
     inline bool is_void()      const { return type.primitive == DT_VOID; }
-	inline bool is_pointer()   const { return type.primitive == DT_POINTER; }
+    inline bool is_pointer()   const { return type.primitive == DT_POINTER; }
+    inline bool is_array()     const { return type.primitive == DT_ARRAY; }
     inline bool is_unknown()   const { return type.primitive == DT_UNKNOWN; }
     inline bool is_number()    const { return is_int() || is_float(); }
 
@@ -70,6 +75,10 @@ public:
         if (!is_bool()) throw std::runtime_error("runtime_value: not a bool");
         return value == "true" || value == "1";
     }
+	std::vector<std::shared_ptr<runtime_value>> as_array() const {
+		if (!is_array()) throw std::runtime_error("runtime_value: not an array");
+		return elements;
+	}
 
     void set_member(const std::string& name, std::shared_ptr<runtime_value> val) {
         members[name] = val;

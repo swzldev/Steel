@@ -103,6 +103,12 @@ void name_resolver::visit(std::shared_ptr<function_call> func_call) {
 			func_call->declaration_candidates = ctor_candidates;
 			func_call->ctor_type = std::get<std::shared_ptr<type_declaration>>(result.value);
 		}
+		else if (result.error == LOOKUP_COLLISION) {
+			ERROR(ERR_NAME_COLLISION, func_call->position, func_call->identifier.c_str());
+			// we should still set the call to be a constructor call but i dont know how to do
+			// that yet
+			return;
+		}
 		else {
 			// lookup function as normal
 			auto func_candidates = resolver.get_function_candidates(func_call->identifier, func_call->args.size(), func_call->generic_args.size());

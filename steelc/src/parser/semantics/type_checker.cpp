@@ -24,7 +24,14 @@ void type_checker::visit(std::shared_ptr<variable_declaration> var) {
 	// set variable type if unknown
 	if (var->type == data_type::unknown) {
 		if (var->has_initializer()) {
-			var->type = var->initializer->type();
+			auto init_type = var->initializer->type();
+			if (init_type == data_type::unknown) {
+				ERROR(ERR_CANNOT_INFER_TYPE_UNKNOWN_INIT, var->position, var->identifier.c_str());
+				return;
+			}
+			else {
+				var->type = var->initializer->type();
+			}
 		}
 		else {
 			ERROR(ERR_CANNOT_INFER_TYPE_NO_INIT, var->position, var->identifier.c_str());
@@ -43,10 +50,11 @@ void type_checker::visit(std::shared_ptr<variable_declaration> var) {
 	// ensure initializer is valid
 	if (var->has_initializer()) {
 		if (auto init_list = std::dynamic_pointer_cast<initializer_list>(var->initializer)) {
-			if (var->type->is_array()) {
-				// array
-				ERROR(ERR_ARRAY_INITIALIZER_UNSUPPORTED, var->position);
-				return;
+			if (init_list->is_array_initializer) {
+				if (!var->type->is_array()) {
+					ERROR(ERR_INVALID_ARRAY_INITIALIZER_USAGE, var->position);
+					return;
+				}
 			}
 			else if (auto custom = std::dynamic_pointer_cast<custom_type>(var->type)) {
 				// struct/class
@@ -186,6 +194,11 @@ void type_checker::visit(std::shared_ptr<binary_expression> expr) {
 	auto left_type = expr->left->type();
 	auto right_type = expr->right->type();
 
+	// if either type is unknown we can just ignore it, error flagged elsewhere
+	if (left_type == data_type::unknown || right_type == data_type::unknown) {
+		return;
+	}
+
 	const auto& builtin_operators = get_core_operators();
 	// if both sides are primitive types, check if a built in operator exists
 	if (left_type->is_primitive() && right_type->is_primitive()) {
@@ -235,7 +248,8 @@ void type_checker::visit(std::shared_ptr<assignment_expression> expr) {
 	auto right_type = expr->right->type();
 
 	// cannot assign to a const variable
-	if (auto left_var = std::dynamic_pointer_cast<identifier_expression>(expr->left)) {
+	auto left_var = std::dynamic_pointer_cast<identifier_expression>(expr->left);
+	if (left_var && left_var->declaration) {
 		if (left_var->declaration->is_const) {
 			ERROR(ERR_CONST_ASSIGNMENT, expr->position, left_var->declaration->identifier.c_str());
 			return;
@@ -245,6 +259,12 @@ void type_checker::visit(std::shared_ptr<assignment_expression> expr) {
 	// cannot assign to an rvalue
 	if (expr->left->is_rvalue()) {
 		ERROR(ERR_ASSIGNMENT_TO_RVALUE, expr->position);
+		return;
+	}
+
+	// if either type is unknown we can just ignore it for now, as it will
+	// make some kind of error elsewhere
+	if (left_type == data_type::unknown || right_type == data_type::unknown) {
 		return;
 	}
 
@@ -356,6 +376,28 @@ void type_checker::visit(std::shared_ptr<member_expression> expr) {
 		return;
 	}
 }
+void type_checker::visit(std::shared_ptr<initializer_list> init) {
+	if (init->is_array_initializer) {
+		type_ptr type = data_type::unknown;
+		for (const auto& value : init->values) {
+			value->accept(*this);
+			if (type == data_type::unknown) {
+				type = value->type();
+			}
+			else if (*type != *value->type()) {
+				ERROR(ERR_ARRAY_INITIALIZER_TYPE_MISMATCH, init->position, type->name().c_str(), value->type()->name().c_str());
+				return;
+			}
+		}
+		// we know the result type for array initializers
+		// however, we need to remember its an array and convert accordingly
+		init->result_type = make_array(type);
+		return;
+	}
+	for (const auto& value : init->values) {
+		value->accept(*this);
+	}
+}
 void type_checker::visit(std::shared_ptr<function_call> func_call) {
 	std::vector<type_ptr> arg_types;
 	for (const auto& arg : func_call->args) {
@@ -394,6 +436,24 @@ void type_checker::visit(std::shared_ptr<function_call> func_call) {
 
 	// TEMPORARY
 	if (func_call->identifier == "Print") return;
+	if (func_call->identifier == "Read") {
+		func_call->override_return_type = to_data_type(DT_STRING);
+		return;
+	}
+	if (func_call->identifier == "ReadKey") {
+		func_call->override_return_type = to_data_type(DT_CHAR);
+		return;
+	}
+	if (func_call->identifier == "ReadInt") {
+		func_call->override_return_type = to_data_type(DT_I32);
+		return;
+	}
+	if (func_call->identifier == "Wait") return;
+	if (func_call->identifier == "SetConsolePos") return;
+	if (func_call->identifier == "GetKey") {
+		func_call->override_return_type = to_data_type(DT_BOOL);
+		return;
+	}
 
 	// check any candidates match arguments provided
 	bool matches = false;
@@ -442,22 +502,31 @@ void type_checker::visit(std::shared_ptr<function_call> func_call) {
 }
 void type_checker::visit(std::shared_ptr<if_statement> if_stmt) {
 	if_stmt->condition->accept(*this);
-	if (!if_stmt->condition->type()->is_primitive() || if_stmt->condition->type()->primitive != DT_BOOL) {
-		ERROR(ERR_IF_CONDITION_NOT_BOOLEAN, if_stmt->position);
-		return;
-	}
+
 	if_stmt->then_block->accept(*this);
 	if (if_stmt->else_block) {
 		if_stmt->else_block->accept(*this);
 	}
+
+	auto cond_type = if_stmt->condition->type();
+	if (cond_type == data_type::unknown) {
+		// assume error has already been reported
+		return;
+	}
+
+	if (!if_stmt->condition->type()->is_primitive() || if_stmt->condition->type()->primitive != DT_BOOL) {
+		ERROR(ERR_IF_CONDITION_NOT_BOOLEAN, if_stmt->position);
+		return;
+	}
 }
 void type_checker::visit(std::shared_ptr<inline_if> inline_if) {
 	inline_if->condition->accept(*this);
+	inline_if->statement->accept(*this);
+
 	if (!inline_if->condition->type()->is_primitive() || inline_if->condition->type()->primitive != DT_BOOL) {
 		ERROR(ERR_IF_CONDITION_NOT_BOOLEAN, inline_if->position);
 		return;
 	}
-	inline_if->statement->accept(*this);
 }
 void type_checker::visit(std::shared_ptr<for_loop> for_loop) {
 	if (for_loop->initializer) {
@@ -474,6 +543,7 @@ void type_checker::visit(std::shared_ptr<for_loop> for_loop) {
 	if (for_loop->increment) {
 		for_loop->increment->accept(*this);
 	}
+	for_loop->body->accept(*this);
 }
 void type_checker::visit(std::shared_ptr<while_loop> while_loop) {
 	while_loop->condition->accept(*this);
@@ -481,6 +551,7 @@ void type_checker::visit(std::shared_ptr<while_loop> while_loop) {
 		ERROR(ERR_WHILE_CONDITION_NOT_BOOLEAN, while_loop->position);
 		return;
 	}
+	while_loop->body->accept(*this);
 }
 void type_checker::visit(std::shared_ptr<return_statement> ret) {
 	auto& func_type = current_function->return_type;

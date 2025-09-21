@@ -41,4 +41,5 @@ public:
 
 	std::vector<std::shared_ptr<expression>> values;
 	type_ptr result_type;
+	bool is_array_initializer = false;
 };

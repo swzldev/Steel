@@ -114,6 +114,9 @@ enum error_code {
     ERR_COLON_EXPECTED,
     ERR_CIRCULAR_INHERITANCE,
     ERR_DEREFERENCE_OF_RVALUE,
+    ERR_INVALID_ARRAY_INITIALIZER_USAGE,
+    ERR_ARRAY_INITIALIZER_TYPE_MISMATCH,
+    ERR_CANNOT_INFER_TYPE_UNKNOWN_INIT,
 };
 
 enum warning_code {
@@ -171,7 +174,7 @@ struct error_catalog {
             {"S036", "Type mismatch in initializer list"},
             {"S037", "Interface initializer is not allowed"},
             {"S038", "Array initializers are unsupported"},
-            {"S039", "Initializer list can only be used with custom types or arrays"},
+            {"S039", "Initializer list can only be used with custom types"},
             {"S040", "Variable of type '%s' cannot be assigned a value of type \"%s\""},
             {"S041", "No built-in operator matches the types provided"},
             {"S042", "The type '%s' is not defined"},
@@ -241,6 +244,9 @@ struct error_catalog {
             {"S119", "':' expected"},
             {"S120", "Circular inheritance detected. Class '%s' eventually inherits from itself: %s"},
             {"S121", "Only pointers can be dereferenced"},
+            {"S122", "Array initializer can only be used to initialize arrays"},
+            {"S123", "Type mismatch in array initializer. Expected '%s' but got '%s'"},
+            {"S124", "Cannot infer type from initializer"},
         };
         return errors[code - 1];
     }

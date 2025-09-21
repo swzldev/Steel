@@ -136,10 +136,10 @@ void ast_visitor::visit(std::shared_ptr<return_statement> ret_stmt) {
 	}
 }
 void ast_visitor::visit(std::shared_ptr<return_if> ret_stmt) {
-	ret_stmt->condition->accept(*this);
 	if (ret_stmt->value) {
 		ret_stmt->value->accept(*this);
 	}
+	ret_stmt->condition->accept(*this);
 }
 void ast_visitor::visit(std::shared_ptr<generic_parameter> param) {
 

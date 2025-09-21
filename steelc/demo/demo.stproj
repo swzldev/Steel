@@ -1,5 +1,0 @@
-name = "myproj"
-version = "1.0.0"
-type = "executable"
-
-sources = ["test.s", "math.s"]

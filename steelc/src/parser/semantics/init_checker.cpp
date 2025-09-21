@@ -42,7 +42,8 @@ void init_checker::visit(std::shared_ptr<variable_declaration> var) {
 void init_checker::visit(std::shared_ptr<assignment_expression> expr) {
 	expr->right->accept(*this);
 
-	if (auto id = std::dynamic_pointer_cast<identifier_expression>(expr->left)) {
+	auto id = std::dynamic_pointer_cast<identifier_expression>(expr->left);
+	if (id && id->declaration) {
 		initialized.insert(id->declaration);
 		id->declaration->initialized = true;
 	}
@@ -96,6 +97,7 @@ void init_checker::visit(std::shared_ptr<if_statement> if_stmt) {
 }
 void init_checker::visit(std::shared_ptr<for_loop> for_loop) {
 	// may never run, assume initializations could never occur
+	for_loop->initializer->accept(*this);
 	for_loop->condition->accept(*this);
 
 	auto before = initialized;

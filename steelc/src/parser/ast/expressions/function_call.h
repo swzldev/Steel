@@ -39,6 +39,9 @@ public:
 	}
 
 	type_ptr type() const override {
+		if (override_return_type) {
+			return override_return_type;
+		}
 		if (!declaration) {
 			if (ctor_type) {
 				return ctor_type->type();
@@ -61,6 +64,7 @@ public:
 	std::string identifier;
 	std::shared_ptr<expression> callee;
 	std::vector<std::shared_ptr<expression>> args;
+	type_ptr override_return_type = nullptr; // TEMPORARY
 	std::vector<std::shared_ptr<function_declaration>> declaration_candidates;
 	std::shared_ptr<function_declaration> declaration;
 	std::vector<type_ptr> generic_args;
