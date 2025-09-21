@@ -41,6 +41,12 @@
   }
 </code>
 
+<p>Now navigate to the directory where the Steel compiler is, open a command prompt window and type the following:</p>
+<code>steelc.exe "<path-to-stproj-file>"</code>
+
+<p>If you did everything correctly you should see the following output:</p>
+<img width="366" height="159" alt="image" src="https://github.com/user-attachments/assets/594d3a01-22ac-4cb8-a215-abba97bc7aa3" />
+
 <h3>Important notes</h3>
 <p>Steel is currently in pre-alpha, this means many features are not fully functional and may contain plenty of bugs, this version is not meant to be released publicly. Currently the language uses a built in interpreter meaning it is significantly slower than intended. Additionally, there is little to no optimisation as the languages core features are still being built. Bare this in mind when downloading an old release like this one.</p>
 
