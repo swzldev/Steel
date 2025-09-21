@@ -31,5 +31,5 @@
 <h2>Credits</h2>
 </p>As of right now I am the sole developer of Steel.</p>
 
-<h2>Liscense</h2>
-<p>This project is currently liscensed under the MIT liscense. However, this code is not intended to be used outside of this project, and may require heavy changes if you intend to use it yourself.</p>
+<h2>License</h2>
+<p>This project is currently liscensed under the MIT license. However, this code is not intended to be used outside of this project, and may require heavy changes if you intend to use it yourself.</p>
