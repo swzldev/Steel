@@ -24,13 +24,13 @@
 
 <p>After downloading the compiler (which currently has the interpreter built-in), you can begin to create your first Steel project. Steel projects use TOML, and use the *.stproj extension. You can use the template below to create your project:</p>
 
-<code>
+<pre><code>
   name = "MyProject"
   version = "1.0.0"
   type = "executable"
 
   sources = ["Main.s"]
-</code>
+</code></pre>
 
 <p>Now, make a "Main.s" file in the same directory, this will be the file for your entry point. The entry point must be called "Main" and return an i32:</p>
 
