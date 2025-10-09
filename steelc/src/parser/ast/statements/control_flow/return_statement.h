@@ -11,8 +11,11 @@ public:
 	return_statement()
 		: value(nullptr) {
 	}
-	return_statement(std::shared_ptr<expression> value)
+	return_statement(ast_ptr<expression> value) 
 		: value(value) {
+	}
+	return_statement(ast_ptr<expression> value, ast_ptr<expression> condition)
+		: value(value), condition(condition) {
 	}
 
 	std::string string(int indent) const override {
@@ -31,6 +34,10 @@ public:
 	inline bool returns_value() const {
 		return value != nullptr;
 	}
+	inline bool is_conditional() const {
+		return condition != nullptr;
+	}
 
-	std::shared_ptr<expression> value;
+	ast_ptr<expression> value;
+	ast_ptr<expression> condition;
 };

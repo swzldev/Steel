@@ -33,6 +33,8 @@ private:
 	bool check_for_char(std::string& src, size_t& index);
 	bool check_for_string(std::string& src, size_t& index);
 
+	std::string parse_text_literal(std::string& literal);
+
 	void add_token(const std::string& value);
 	void add_token(const std::string& value, token_type type);
 };

@@ -8,11 +8,10 @@
 #include "declarations/module_declaration.h"
 #include "declarations/conversion_declaration.h"
 #include "declarations/operator_declaration.h"
-#include "statements/block_statement.h"
+#include "statements/code_block.h"
 #include "statements/import_statement.h"
 #include "statements/inline_if.h"
 #include "statements/control_flow/return_statement.h"
-#include "statements/control_flow/return_if.h"
 #include "statements/control_flow/if_statement.h"
 #include "statements/control_flow/for_loop.h"
 #include "statements/control_flow/while_loop.h"
@@ -32,18 +31,26 @@
 #include "expressions/function_call.h"
 #include "expressions/literal.h"
 #include "generics/generic_parameter.h"
+#include "types/type_node.h"
 
 template<typename T, typename... Args>
-inline std::shared_ptr<T> make_ast(token& ast_token, Args... args) {
+inline ast_ptr<T> make_ast(token& ast_token, Args... args) {
 	static_assert(std::is_base_of<ast_node, T>::value, "T must derive from ast_node");
-	std::shared_ptr<T> node = std::make_shared<T>(std::forward<Args>(args)...);
+	ast_ptr<T> node = std::make_shared<T>(std::forward<Args>(args)...);
 	node->position = ast_token.pos;
 	return node;
 }
 template<typename T, typename... Args>
-inline std::shared_ptr<T> make_ast(Args... args) {
+inline ast_ptr<T> make_ast(position position, Args... args) {
 	static_assert(std::is_base_of<ast_node, T>::value, "T must derive from ast_node");
-	std::shared_ptr<T> node = std::make_shared<T>(std::forward<Args>(args)...);
+	ast_ptr<T> node = std::make_shared<T>(std::forward<Args>(args)...);
+	node->position = position;
+	return node;
+}
+template<typename T, typename... Args>
+inline ast_ptr<T> make_ast(Args... args) {
+	static_assert(std::is_base_of<ast_node, T>::value, "T must derive from ast_node");
+	ast_ptr<T> node = std::make_shared<T>(std::forward<Args>(args)...);
 	node->position = { 0, 0 };
 	return node;
 }

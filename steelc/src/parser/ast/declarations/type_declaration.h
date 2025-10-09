@@ -4,11 +4,8 @@
 #include <memory>
 #include <vector>
 
-#include "declaration.h"
-#include "variable_declaration.h"
-#include "function_declaration.h"
-#include "operator_declaration.h"
-#include "../../types/custom_types.h"
+#include "../ast_fwd.h"
+#include "../../types/type_handle.h"
 
 class type_declaration : public declaration, public std::enable_shared_from_this<type_declaration> {
 public:
@@ -70,10 +67,10 @@ public:
 
 	std::string identifier;
 	custom_type_type type_kind;
-	std::vector<type_ptr> base_types;
-	std::shared_ptr<const type_declaration> base_class;
-	std::vector<std::shared_ptr<function_declaration>> constructors;
-	std::vector<std::shared_ptr<variable_declaration>> fields;
-	std::vector<std::shared_ptr<function_declaration>> methods;
-	std::vector<std::shared_ptr<operator_declaration>> operators;
+	std::vector<type_handle> base_types;
+	ast_ptr<const type_declaration> base_class;
+	std::vector<ast_ptr<function_declaration>> constructors;
+	std::vector<ast_ptr<variable_declaration>> fields;
+	std::vector<ast_ptr<function_declaration>> methods;
+	std::vector<ast_ptr<operator_declaration>> operators;
 };

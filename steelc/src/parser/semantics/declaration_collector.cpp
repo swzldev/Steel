@@ -14,6 +14,12 @@ void declaration_collector::visit(std::shared_ptr<function_declaration> func) {
 		return;
 	}
 
+	// overrides cant be generic
+	if (func->is_generic && func->is_override) {
+		ERROR(ERR_OVERRIDE_CANT_BE_GENERIC, func->position);
+		return;
+	}
+
 	// constructor-specific logic
 	if (func->is_constructor) {
 		// constructors cannot be defined outside of a type declaration
@@ -43,16 +49,6 @@ void declaration_collector::visit(std::shared_ptr<function_declaration> func) {
 	// check modifiers
 	if (true) {}
 
-	// check for duplicate generic names
-	std::unordered_set<std::string> generic_names;
-	for (const auto& generic : func->generics) {
-		if (generic_names.find(generic->identifier) != generic_names.end()) {
-			ERROR(ERR_DUPLICATE_GENERIC, generic->position, generic->identifier.c_str());
-			return;
-		}
-		generic_names.insert(generic->identifier);
-	}
-
 	// if were in a type it must be a method
 	if (current_type) {
 		func->is_method = true;
@@ -77,10 +73,11 @@ void declaration_collector::visit(std::shared_ptr<function_declaration> func) {
 		}
 
 		// check if function is already defined (global)
-		int err = sym_table->add_function(func);
-		if (err != 0) {
-			ERROR((error_code)err, func->position, func->identifier.c_str());
-			return;
+		error_code err = sym_table->add_function(func);
+		if (err != ERR_SUCCESS) {
+			// we know all the errors reported here only use the functions identifier
+			// but this may need to change
+			ERROR(err, func->position, func->identifier.c_str());
 		}
 	}
 
@@ -115,15 +112,18 @@ void declaration_collector::visit(std::shared_ptr<variable_declaration> var) {
 	}
 
 	if (!current_function && !current_constructor && !current_type) {
-		if (!sym_table->add_variable(var)) {
-			ERROR(ERR_VARIABLE_ALREADY_DECLARED, var->position, var->identifier.c_str());
+		auto err = sym_table->add_variable(var);
+		if (err == ERR_VARIABLE_ALREADY_DECLARED_SCOPE) {
+			ERROR(ERR_VARIABLE_ALREADY_DECLARED_SCOPE, var->position, var->identifier.c_str());
 			return;
 		}
+		// shouldnt have any generic problems in the global scope
 	}
 }
 void declaration_collector::visit(std::shared_ptr<type_declaration> decl) {
 	// check if type is already defined
-	if (!sym_table->add_type(decl)) {
+	auto err = sym_table->add_type(decl);
+	if (err == ERR_TYPE_ALREADY_DEFINED) {
 		ERROR(ERR_TYPE_ALREADY_DEFINED, decl->position, decl->name().c_str());
 		return;
 	}

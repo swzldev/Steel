@@ -1,4 +1,4 @@
-#include "custom_types.h"
+#include "custom_type.h"
 
 #include "../ast/declarations/type_declaration.h"
 
@@ -11,10 +11,18 @@ std::shared_ptr<custom_type> custom_type::get(const std::string& identifier) {
 	return new_type;
 }
 
+bool custom_type::operator==(const data_type_ptr other) const {
+	if (!other->is_custom()) return false;
+	return name() == other->as_custom()->name();
+}
+
 int custom_type::size_of() const {
-    int size = 0;
     if (declaration) {
-        
+		int size = 0;
+		for (const auto& field : declaration->fields) {
+			size += field->type->size_of();
+		}
+		return size;
     }
     return -1;
 }

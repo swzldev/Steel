@@ -3,7 +3,7 @@
 #include <string>
 #include <memory>
 
-#include "expression.h"
+#include "../ast_fwd.h"
 #include "../../types/types.h"
 #include "../../../lexer/token_type.h"
 #include "../../../lexer/token_utils.h"
@@ -12,7 +12,7 @@ class binary_expression : public expression, public std::enable_shared_from_this
 public:
 	ENABLE_ACCEPT(binary_expression)
 
-	binary_expression(std::shared_ptr<expression> left, std::shared_ptr<expression> right, token_type oparater)
+	binary_expression(ast_ptr<expression> left, ast_ptr<expression> right, token_type oparater)
 		: left(left), right(right), oparator(oparater) {
 	}
 
@@ -27,7 +27,7 @@ public:
 
 	type_ptr type() const override {
 		if (!result_type) {
-			return data_type::unknown;
+			return data_type::UNKNOWN;
 		}
 		return result_type;
 	}
@@ -35,8 +35,8 @@ public:
 		return true;
 	}
 
-	std::shared_ptr<expression> left;
-	std::shared_ptr<expression> right;
+	ast_ptr<expression> left;
+	ast_ptr<expression> right;
 	token_type oparator;
     type_ptr result_type;
 };

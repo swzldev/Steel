@@ -4,8 +4,7 @@
 #include <memory>
 #include <iostream>
 
-#include "expression.h"
-#include "../declarations/function_declaration.h"
+#include "../ast_fwd.h"
 #include "../../parser_utils.h"
 #include "../../types/types.h"
 
@@ -13,13 +12,13 @@ class function_call : public expression, public std::enable_shared_from_this<fun
 public:
 	ENABLE_ACCEPT(function_call)
 
-	function_call(std::string function_name, std::vector<std::shared_ptr<expression>> args)
+	function_call(std::string function_name, std::vector<ast_ptr<expression>> args)
 		: identifier(function_name), args(args), declaration(nullptr) {
 	}
-	function_call(std::shared_ptr<expression> callee, std::string name, std::vector<std::shared_ptr<expression>> args)
+	function_call(ast_ptr<expression> callee, std::string name, std::vector<ast_ptr<expression>> args)
 		: identifier(name), callee(callee), args(args), declaration(nullptr) {
 	}
-	function_call(std::shared_ptr<expression> callee, std::vector<std::shared_ptr<expression>> args)
+	function_call(ast_ptr<expression> callee, std::vector<ast_ptr<expression>> args)
 		: identifier(""), callee(callee), args(args), declaration(nullptr) {
 	}
 
@@ -46,7 +45,7 @@ public:
 			if (ctor_type) {
 				return ctor_type->type();
 			}
-			return data_type::unknown;
+			return data_type::UNKNOWN;
 		}
 		return declaration->return_type;
 	}
@@ -62,11 +61,11 @@ public:
 	}
 
 	std::string identifier;
-	std::shared_ptr<expression> callee;
-	std::vector<std::shared_ptr<expression>> args;
-	type_ptr override_return_type = nullptr; // TEMPORARY
-	std::vector<std::shared_ptr<function_declaration>> declaration_candidates;
-	std::shared_ptr<function_declaration> declaration;
-	std::vector<type_ptr> generic_args;
-	std::shared_ptr<type_declaration> ctor_type = nullptr;
+	ast_ptr<expression> callee;
+	std::vector<ast_ptr<expression>> args;
+	data_type_ptr override_return_type = nullptr; // TEMPORARY
+	std::vector<ast_ptr<function_declaration>> declaration_candidates;
+	ast_ptr<function_declaration> declaration;
+	std::vector<type_handle> generic_args;
+	ast_ptr<type_declaration> ctor_type = nullptr;
 };

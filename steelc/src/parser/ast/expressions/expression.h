@@ -2,7 +2,7 @@
 
 #include <string>
 
-#include "../ast_node.h"
+#include "../ast_fwd.h"
 #include "../../types/types.h"
 
 class expression : public ast_node {

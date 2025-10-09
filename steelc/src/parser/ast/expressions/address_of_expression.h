@@ -3,14 +3,14 @@
 #include <string>
 #include <memory>
 
-#include "expression.h"
+#include "../ast_fwd.h"
 #include "../../parser_utils.h"
 
 class address_of_expression : public expression, public std::enable_shared_from_this<address_of_expression> {
 public:
 	ENABLE_ACCEPT(address_of_expression)
 
-	address_of_expression(std::shared_ptr<expression> value)
+	address_of_expression(ast_ptr<expression> value)
 		: value(value) {
 	}
 
@@ -28,5 +28,5 @@ public:
 		return true;
 	}
 
-	std::shared_ptr<expression> value;
+	ast_ptr<expression> value;
 };

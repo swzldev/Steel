@@ -15,6 +15,7 @@ bool is_primitive(token& tk);
 bool is_keyword(const std::string& tk);
 bool is_grammar(char tk);
 bool is_op(const std::string& tk);
+bool is_primitive(const std::string& tk);
 
 token_type get_keyword(const std::string& tk);
 token_type get_grammar(char tk);

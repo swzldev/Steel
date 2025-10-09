@@ -3,7 +3,7 @@
 #include <string>
 #include <memory>
 
-#include "expression.h"
+#include "../ast_fwd.h"
 #include "../../parser_utils.h"
 #include "../../types/types.h"
 
@@ -11,7 +11,7 @@ class initializer_list : public expression, public std::enable_shared_from_this<
 public:
 	ENABLE_ACCEPT(initializer_list)
 
-	initializer_list(std::vector<std::shared_ptr<expression>> args)
+	initializer_list(std::vector<ast_ptr<expression>> args)
 		: values(args) {
 	}
 
@@ -31,7 +31,7 @@ public:
 	}
 
 	type_ptr type() const override {
-		return result_type ? result_type : data_type::unknown;
+		return result_type ? result_type : data_type::UNKNOWN;
 	}
 	bool is_rvalue() const override {
 		return true; // initializer list always return a temporary value
@@ -39,7 +39,7 @@ public:
 		// on the right hand of an assignment
 	}
 
-	std::vector<std::shared_ptr<expression>> values;
+	std::vector<ast_ptr<expression>> values;
 	type_ptr result_type;
 	bool is_array_initializer = false;
 };

@@ -4,13 +4,13 @@
 #include <memory>
 
 #include "../../ast_node.h"
-#include "../../expressions/expression.h"
+#include "../../ast_fwd.h"
 
 class for_loop : public ast_node, public std::enable_shared_from_this<for_loop> {
 public:
 	ENABLE_ACCEPT(for_loop)
 
-	for_loop(ast_ptr initializer, std::shared_ptr<expression> condition, std::shared_ptr<expression> increment, ast_ptr body)
+	for_loop(ast_node_ptr initializer, ast_ptr<expression> condition, ast_ptr<expression> increment, ast_ptr<code_block> body)
 		: initializer(initializer), condition(condition), increment(increment), body(body) {
 	}
 
@@ -48,8 +48,8 @@ public:
 		return result;
 	}
 
-	ast_ptr initializer;
-	std::shared_ptr<expression> condition;
-	std::shared_ptr<expression> increment;
-	ast_ptr body;
+	ast_node_ptr initializer;
+	ast_ptr<expression> condition;
+	ast_ptr<expression> increment;
+	ast_ptr<code_block> body;
 };

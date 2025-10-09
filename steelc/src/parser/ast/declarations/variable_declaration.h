@@ -2,8 +2,7 @@
 
 #include <string>
 
-#include "declaration.h"
-#include "../expressions/expression.h"
+#include "../ast_fwd.h"
 #include "../../types/types.h"
 
 class variable_declaration : public declaration, public std::enable_shared_from_this<variable_declaration> {
@@ -38,7 +37,7 @@ public:
 
 	type_ptr type;
 	std::string identifier;
-	std::shared_ptr<expression> initializer;
+	ast_ptr<expression> initializer;
 	bool initialized = false;
 	bool is_const = false;
 	bool is_parameter = false;

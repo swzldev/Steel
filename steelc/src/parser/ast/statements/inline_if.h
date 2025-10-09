@@ -4,13 +4,13 @@
 #include <memory>
 
 #include "../ast_node.h"
-#include "../expressions/expression.h"
+#include "../ast_fwd.h"
 
 class inline_if : public ast_node, public std::enable_shared_from_this<inline_if> {
 public:
 	ENABLE_ACCEPT(inline_if)
 
-	inline_if(std::shared_ptr<expression> condition, std::shared_ptr<expression> statement)
+	inline_if(ast_ptr<expression> condition, ast_ptr<expression> statement)
 		: condition(condition), statement(statement) {
 	}
 
@@ -34,6 +34,6 @@ public:
 		return result;
 	}
 
-	std::shared_ptr<expression> condition;
-	std::shared_ptr<expression> statement;
+	ast_ptr<expression> condition;
+	ast_ptr<expression> statement;
 };

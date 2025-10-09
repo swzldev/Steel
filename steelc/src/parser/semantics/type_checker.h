@@ -35,9 +35,19 @@ public:
 	void visit(std::shared_ptr<return_if> ret_stmt) override;
 
 private:
+	std::shared_ptr<function_declaration> current_function = nullptr;
+	std::vector<std::map<std::string, type_ptr>> gtm_stack;
+
+	struct candidate_score {
+		std::shared_ptr<function_declaration> candidate;
+		int score = 0;
+	};
+
 	std::shared_ptr<custom_type> member_access_allowed(type_ptr type);
 	bool is_valid_conversion(type_ptr from, type_ptr to, bool implicit, position pos);
 	bool is_valid_upcast(type_ptr from, type_ptr to, position pos);
 
-	std::shared_ptr<function_declaration> current_function = nullptr;
+	int score_candidate(std::shared_ptr<function_declaration> candidate, const std::vector<type_ptr>& arg_types);
+
+	std::shared_ptr<function_declaration> unbox_generic_func(std::shared_ptr<function_declaration> func, std::vector<type_ptr> types);
 };

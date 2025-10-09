@@ -3,7 +3,7 @@
 #include <string>
 #include <memory>
 
-#include "expression.h"
+#include "../ast_fwd.h"
 #include "../../types/types.h"
 #include "../../../lexer/token_type.h"
 #include "../../../lexer/token_utils.h"
@@ -12,7 +12,7 @@ class assignment_expression : public expression, public std::enable_shared_from_
 public:
 	ENABLE_ACCEPT(assignment_expression)
 
-	assignment_expression(std::shared_ptr<expression> left, std::shared_ptr<expression> right)
+	assignment_expression(ast_ptr<expression> left, ast_ptr<expression> right)
 		: left(left), right(right) {
 	}
 
@@ -31,6 +31,6 @@ public:
 		return true;
 	}
 
-	std::shared_ptr<expression> left;
-	std::shared_ptr<expression> right;
+	ast_ptr<expression> left;
+	ast_ptr<expression> right;
 };

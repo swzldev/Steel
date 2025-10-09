@@ -3,15 +3,13 @@
 #include <string>
 #include <memory>
 
-#include "../ast_node.h"
-#include "expression.h"
-#include "identifier_expression.h"
+#include "../ast_fwd.h"
 
 class member_expression : public expression, public std::enable_shared_from_this<member_expression> {
 public:
 	ENABLE_ACCEPT(member_expression)
 
-	member_expression(std::shared_ptr<expression> object, std::string member)
+	member_expression(ast_ptr<expression> object, std::string member)
 		: object(object), member(member) {
 	}
 
@@ -32,7 +30,7 @@ public:
 
 	virtual type_ptr type() const override {
 		if (!declaration || !declaration->type) {
-			return data_type::unknown;
+			return data_type::UNKNOWN;
 		}
 		return declaration->type;
 	}
@@ -40,7 +38,7 @@ public:
 		return false;
 	}
 
-	std::shared_ptr<expression> object;
+	ast_ptr<expression> object;
 	std::string member;
-	std::shared_ptr<variable_declaration> declaration;
+	ast_ptr<variable_declaration> declaration;
 };

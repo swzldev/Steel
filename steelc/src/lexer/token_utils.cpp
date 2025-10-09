@@ -6,10 +6,10 @@ bool is_identifier(token& tk) {
 	return tk.type == TT_IDENTIFIER;
 }
 bool is_keyword(token& tk) {
-	return tk.type >= TT_I16 && tk.type <= TT_VOID;
+	return tk.type >= TT_FUNC && tk.type <= TT_EXPORT;
 }
 bool is_op(token& tk) {
-	return tk.type >= TT_ASSIGN && tk.type <= TT_ACCESS;
+	return tk.type >= TT_ASSIGN && tk.type <= TT_DOT;
 }
 bool is_eof(token& tk) {
 	return tk.type == TT_EOF;
@@ -26,6 +26,10 @@ bool is_grammar(char tk) {
 }
 bool is_op(const std::string& tk) {
 	return get_op(tk) != TT_UNKNOWN;
+}
+bool is_primitive(const std::string& tk) {
+	token_type tt = get_keyword(tk);
+	return tt >= TT_I16 && tt <= TT_VOID;
 }
 
 token_type get_keyword(const std::string& tk) {
@@ -62,9 +66,9 @@ const std::map<std::string, token_type>& get_keywords() {
 		{"let", TT_LET},
 		{"const", TT_CONST},
 		{"type", TT_TYPE},
-		{"i16", TT_I16},
-		{"i32", TT_I32},
-		{"i64", TT_I64},
+		{"short", TT_I16},
+		{"int", TT_I32},
+		{"long", TT_I64},
 		{"float", TT_FLOAT},
 		{"double", TT_DOUBLE},
 		{"char", TT_CHAR},
@@ -96,8 +100,8 @@ const std::map<std::string, token_type>& get_keywords() {
 }
 const std::vector<std::pair<std::string, token_type>>& get_operators() {
 	static const std::vector<std::pair<std::string, token_type>> operators = {
-		//{"and", TT_AND}, these are now keyword operators
-		//{"or", TT_OR},
+		{"+=", TT_ASSIGN_ADD},
+		{"-=", TT_ASSIGN_SUBTRACT},
 		{"++", TT_INCREMENT},
 		{"--", TT_DECREMENT},
 		{"==", TT_EQUAL},
@@ -107,14 +111,14 @@ const std::vector<std::pair<std::string, token_type>>& get_operators() {
 		{"->", TT_ARROW},
 		{"<", TT_LESS},
 		{">", TT_GREATER},
-		{"%", TT_MODULO},
-		{"+", TT_ADD},
-		{"-", TT_SUBTRACT},
-		{"*", TT_MULTIPLY},
-		{"/", TT_DIVIDE},
+		{"%", TT_PERCENT},
+		{"+", TT_PLUS},
+		{"-", TT_MINUS},
+		{"*", TT_ASTERISK},
+		{"/", TT_FSLASH},
 		{"=", TT_ASSIGN},
 		{"!", TT_NOT},
-		{".", TT_ACCESS},
+		{".", TT_DOT},
 	};
 	return operators;
 }
@@ -159,15 +163,15 @@ const std::map<char, token_type>& get_grammars() {
 
 int precedence_of(token_type tk) {
 	static const std::map<token_type, int> precedence_map = {
-		{TT_ACCESS, 40},
+		{TT_DOT, 40},
 		{TT_INCREMENT, 30},
 		{TT_DECREMENT, 30},
 		{TT_NOT, 30},
-		{TT_MULTIPLY, 20},
-		{TT_DIVIDE, 20},
-		{TT_MODULO, 20},
-		{TT_ADD, 10},
-		{TT_SUBTRACT, 10},
+		{TT_ASTERISK, 20},
+		{TT_FSLASH, 20},
+		{TT_PERCENT, 20},
+		{TT_PLUS, 10},
+		{TT_MINUS, 10},
 		{TT_LESS, 7},
 		{TT_LESS_EQ, 7},
 		{TT_GREATER, 7},
@@ -254,10 +258,10 @@ std::string to_string(token_type tk) {
 	case TT_EXPORT: return "export";
 	case TT_IMPORT: return "import";
 
-	case TT_ADD: return "+";
-	case TT_SUBTRACT: return "-";
-	case TT_MULTIPLY: return "*";
-	case TT_DIVIDE: return "/";
+	case TT_PLUS: return "+";
+	case TT_MINUS: return "-";
+	case TT_ASTERISK: return "*";
+	case TT_FSLASH: return "/";
 	case TT_ASSIGN: return "=";
 	case TT_EQUAL: return "==";
 	case TT_NOT_EQUAL: return "!=";
@@ -269,9 +273,9 @@ std::string to_string(token_type tk) {
 	case TT_GREATER: return ">";
 	case TT_LESS_EQ: return "<=";
 	case TT_GREATER_EQ: return ">=";
-	case TT_MODULO: return "%";
+	case TT_PERCENT: return "%";
 	case TT_NOT: return "not";
-	case TT_ACCESS: return ".";
+	case TT_DOT: return ".";
 
 	case TT_EOF: return "end of file";
 
@@ -359,10 +363,10 @@ std::string get_colored_representation(token& tk) {
 	case TT_IMPORT:
 		color = "\033[91m";
 		break;
-	case TT_ADD:
-	case TT_SUBTRACT:
-	case TT_MULTIPLY:
-	case TT_DIVIDE:
+	case TT_PLUS:
+	case TT_MINUS:
+	case TT_ASTERISK:
+	case TT_FSLASH:
 	case TT_ASSIGN:
 	case TT_EQUAL:
 	case TT_INCREMENT:
@@ -373,7 +377,7 @@ std::string get_colored_representation(token& tk) {
 	case TT_GREATER:
 	case TT_LESS_EQ:
 	case TT_GREATER_EQ:
-	case TT_MODULO:
+	case TT_PERCENT:
 	case TT_NOT:
 		color = "\033[37m";
 		break;

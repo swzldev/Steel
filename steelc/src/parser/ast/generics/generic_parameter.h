@@ -25,4 +25,5 @@ public:
 
 	std::string identifier;
 	generic_param_type type;
+	type_ptr constraint = nullptr;
 };

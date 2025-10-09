@@ -1,6 +1,9 @@
 #include "type_checker.h"
 
 #include <memory>
+#include <unordered_map>
+#include <unordered_set>
+#include <algorithm>
 
 #include "../ast/ast.h"
 #include "../types/custom_types.h"
@@ -9,6 +12,10 @@
 #include "../types/type_utils.h"
 
 void type_checker::visit(std::shared_ptr<function_declaration> func) {
+	if (func->is_generic && !func->is_constrained) {
+		return;
+	}
+
 	current_function = func;
 	if (func->body) {
 		func->body->accept(*this);
@@ -21,17 +28,26 @@ void type_checker::visit(std::shared_ptr<variable_declaration> var) {
 		var->initializer->accept(*this);
 	}
 
-	// set variable type if unknown
-	if (var->type == data_type::unknown) {
+	// set variable type if UNKNOWN
+	if (var->type == data_type::UNKNOWN) {
 		if (var->has_initializer()) {
 			auto init_type = var->initializer->type();
-			if (init_type == data_type::unknown) {
+			if (init_type == data_type::UNKNOWN) {
 				ERROR(ERR_CANNOT_INFER_TYPE_UNKNOWN_INIT, var->position, var->identifier.c_str());
 				return;
 			}
-			else {
-				var->type = var->initializer->type();
+			if (init_type->is_generic()) {
+				// substitute from constraint (if possible)
+				auto init_gen = std::dynamic_pointer_cast<generic_type>(init_type);
+				if (!init_gen || !init_gen->declaration || !init_gen->declaration->constraint ) {
+					ERROR(ERR_CANNOT_INFER_TYPE, var->initializer->position);
+					return;
+				}
+				else {
+					init_type = init_gen->declaration->constraint;
+				}
 			}
+			var->type = var->initializer->type();
 		}
 		else {
 			ERROR(ERR_CANNOT_INFER_TYPE_NO_INIT, var->position, var->identifier.c_str());
@@ -87,6 +103,21 @@ void type_checker::visit(std::shared_ptr<variable_declaration> var) {
 		else {
 			auto& var_type = var->type;
 			auto init_type = var->initializer->type();
+			if (init_type == data_type::UNKNOWN) {
+				ERROR(ERR_CANNOT_INFER_TYPE_UNKNOWN_INIT, var->position, var->identifier.c_str());
+				return;
+			}
+			if (init_type->is_generic()) {
+				// substitute from constraint (if possible)
+				auto init_gen = std::dynamic_pointer_cast<generic_type>(init_type);
+				if (!init_gen || !init_gen->declaration || !init_gen->declaration->constraint) {
+					ERROR(ERR_CANNOT_INFER_TYPE, var->initializer->position);
+					return;
+				}
+				else {
+					init_type = init_gen->declaration->constraint;
+				}
+			}
 			if (*var_type != *init_type && !is_valid_conversion(init_type, var_type, true, var->initializer->position)) {
 				ERROR(ERR_TYPE_ASSIGNMENT_MISMATCH, var->position, var->type->name().c_str(), var->initializer->type()->name().c_str());
 				return;
@@ -149,7 +180,7 @@ void type_checker::visit(std::shared_ptr<type_declaration> decl) {
 		// accept method as normal
 		method->accept(*this);
 
-		// methods in interfaces should have no body
+		// methods in interfaces should have no statements
 		if (decl->type_kind == CT_INTERFACE && method->body) {
 			ERROR(ERR_INTERFACE_METHOD_HAS_BODY, method->position);
 			return;
@@ -194,9 +225,25 @@ void type_checker::visit(std::shared_ptr<binary_expression> expr) {
 	auto left_type = expr->left->type();
 	auto right_type = expr->right->type();
 
-	// if either type is unknown we can just ignore it, error flagged elsewhere
-	if (left_type == data_type::unknown || right_type == data_type::unknown) {
+	// if either type is UNKNOWN we can just ignore it, error flagged elsewhere
+	if (left_type == data_type::UNKNOWN || right_type == data_type::UNKNOWN) {
 		return;
+	}
+
+	// for generic types we can subsitute
+	if (left_type->is_generic()) {
+		if (auto gen = std::dynamic_pointer_cast<generic_type>(left_type)) {
+			if (gen->declaration && gen->declaration->constraint) {
+				left_type = gen->declaration->constraint;
+			}
+		}
+	}
+	if (right_type->is_generic()) {
+		if (auto gen = std::dynamic_pointer_cast<generic_type>(right_type)) {
+			if (gen->declaration && gen->declaration->constraint) {
+				right_type = gen->declaration->constraint;
+			}
+		}
 	}
 
 	const auto& builtin_operators = get_core_operators();
@@ -239,7 +286,7 @@ void type_checker::visit(std::shared_ptr<binary_expression> expr) {
 		}
 	}
 	// no built-in or user-defined operators available
-	ERROR(ERR_NO_MATCHING_OPERATOR_BUILTIN_USER, expr->position);
+	ERROR(ERR_NO_MATCHING_OPERATOR_BUILTIN_USER, expr->position, left_type->name().c_str(), right_type->name().c_str());
 }
 void type_checker::visit(std::shared_ptr<assignment_expression> expr) {
 	expr->left->accept(*this);
@@ -262,9 +309,9 @@ void type_checker::visit(std::shared_ptr<assignment_expression> expr) {
 		return;
 	}
 
-	// if either type is unknown we can just ignore it for now, as it will
+	// if either type is UNKNOWN we can just ignore it for now, as it will
 	// make some kind of error elsewhere
-	if (left_type == data_type::unknown || right_type == data_type::unknown) {
+	if (left_type == data_type::UNKNOWN || right_type == data_type::UNKNOWN) {
 		return;
 	}
 
@@ -298,7 +345,7 @@ void type_checker::visit(std::shared_ptr<unary_expression> expr) {
 			return;
 		}
 		break;
-	case TT_SUBTRACT:
+	case TT_MINUS:
 		if (!operand_type->is_primitive() || operand_type->primitive != DT_I32 && operand_type->primitive != DT_FLOAT) {
 			ERROR(ERR_NEGATE_NUMERIC_ONLY, expr->position);
 			return;
@@ -346,7 +393,7 @@ void type_checker::visit(std::shared_ptr<cast_expression> expr) {
 void type_checker::visit(std::shared_ptr<member_expression> expr) {
 	expr->object->accept(*this);
 	auto type = expr->object->type();
-	if (type == data_type::unknown) {
+	if (type == data_type::UNKNOWN) {
 		// object resolution error, ignore for simplicity
 		return;
 	}
@@ -378,10 +425,10 @@ void type_checker::visit(std::shared_ptr<member_expression> expr) {
 }
 void type_checker::visit(std::shared_ptr<initializer_list> init) {
 	if (init->is_array_initializer) {
-		type_ptr type = data_type::unknown;
+		type_ptr type = data_type::UNKNOWN;
 		for (const auto& value : init->values) {
 			value->accept(*this);
-			if (type == data_type::unknown) {
+			if (type == data_type::UNKNOWN) {
 				type = value->type();
 			}
 			else if (*type != *value->type()) {
@@ -413,7 +460,7 @@ void type_checker::visit(std::shared_ptr<function_call> func_call) {
 			member->object->accept(*this);
 
 			auto type = member->object->type();
-			if (type == data_type::unknown) {
+			if (type == data_type::UNKNOWN) {
 				// object resolution error, ignore for simplicity
 				return;
 			}
@@ -425,7 +472,7 @@ void type_checker::visit(std::shared_ptr<function_call> func_call) {
 				return;
 			}
 
-			// find method - dont check for return type as its unknown in a call
+			// find method - dont check for return type as its UNKNOWN in a call
 			auto method_candidates = get_method_candidates(custom->declaration, func_call->identifier, func_call->args.size());
 			func_call->declaration_candidates = method_candidates;
 		}
@@ -456,37 +503,33 @@ void type_checker::visit(std::shared_ptr<function_call> func_call) {
 	}
 
 	// check any candidates match arguments provided
-	bool matches = false;
+	std::vector<candidate_score> matches;
 	for (const auto& candidate : func_call->declaration_candidates) {
-		if (candidate->is_generic) {
-			// we need to substitute generic types here
-
-		}
-
 		auto expected_types = candidate->get_expected_types();
 		if (expected_types.size() != arg_types.size()) {
 			ERROR(ERR_INTERNAL_ERROR, func_call->position, "Type Checker", "Argument count for candidate doesnt match");
 			continue; // argument count doesn't match
 		}
 
-		// check all args match for each candidate
-		// there should be at least one perfect match otherwise
-		// we give an error
-		// note currently there is no support for implicit conversions here
-		bool all_match = true;
-		for (size_t i = 0; i < expected_types.size(); ++i) {
-			if (*expected_types[i] != *arg_types[i]) {
-				all_match = false;
-				break;
+		// set explicit generics if they exist for scoring
+		if (candidate->is_generic && func_call->generic_args.size() > 0) {
+			for (size_t i = 0; i < func_call->generic_args.size() && i < candidate->generics.size(); i++) {
+				auto& gen_param = candidate->generics[i];
+				gen_param->constraint = func_call->generic_args[i];
 			}
 		}
-		if (all_match) {
-			func_call->declaration = candidate;
-			matches = true;
-			break;
+
+		int score = score_candidate(candidate, arg_types);
+		if (score > 0) {
+			matches.push_back({ candidate, score });
+		}
+
+		// reset generics
+		for (const auto& gen_param : candidate->generics) {
+			gen_param->constraint = nullptr;
 		}
 	}
-	if (!matches) {
+	if (matches.empty()) {
 		if (func_call->is_constructor()) {
 			ERROR(ERR_NO_MATCHING_CONSTRUCTOR, func_call->position, func_call->identifier.c_str());
 			return;
@@ -499,17 +542,45 @@ void type_checker::visit(std::shared_ptr<function_call> func_call) {
 		}
 		return;
 	}
+	else {
+		// sort matches by score
+		std::sort(matches.begin(), matches.end(), [](const candidate_score& a, const candidate_score& b) {
+			return a.score > b.score;
+		});
+		// if top 2 scores are the same, we have an ambiguity error
+		if (matches.size() > 1 && matches[0].score == matches[1].score) {
+			if (func_call->is_constructor()) {
+				ERROR(ERR_AMBIGUOUS_CONSTRUCTOR_CALL, func_call->position, func_call->identifier.c_str());
+			}
+			else if (func_call->is_method()) {
+				ERROR(ERR_AMBIGUOUS_METHOD_CALL, func_call->position, func_call->identifier.c_str());
+			}
+			else {
+				ERROR(ERR_AMBIGUOUS_FUNCTION_CALL, func_call->position, func_call->identifier.c_str());
+			}
+			return;
+		}
+		auto best_match = matches[0].candidate;
+		if (best_match->is_generic) {
+			best_match = unbox_generic_func(best_match, arg_types);
+			if (!best_match) {
+				ERROR(ERR_INTERNAL_ERROR, func_call->position, "Type Checker", "Failed to unbox generic function");
+				return;
+			}
+		}
+		func_call->declaration = best_match;
+	}
 }
 void type_checker::visit(std::shared_ptr<if_statement> if_stmt) {
 	if_stmt->condition->accept(*this);
 
 	if_stmt->then_block->accept(*this);
-	if (if_stmt->else_block) {
-		if_stmt->else_block->accept(*this);
+	if (if_stmt->else_statement) {
+		if_stmt->else_statement->accept(*this);
 	}
 
 	auto cond_type = if_stmt->condition->type();
-	if (cond_type == data_type::unknown) {
+	if (cond_type == data_type::UNKNOWN) {
 		// assume error has already been reported
 		return;
 	}
@@ -554,6 +625,10 @@ void type_checker::visit(std::shared_ptr<while_loop> while_loop) {
 	while_loop->body->accept(*this);
 }
 void type_checker::visit(std::shared_ptr<return_statement> ret) {
+	if (!current_function) {
+		return;
+	}
+
 	auto& func_type = current_function->return_type;
 	if (ret->value) {
 		// check if its a constructor
@@ -571,11 +646,19 @@ void type_checker::visit(std::shared_ptr<return_statement> ret) {
 		ret->value->accept(*this);
 		// ensure types match
 		auto ret_type = ret->value->type();
-		if (ret_type == data_type::unknown) {
+		if (ret_type == data_type::UNKNOWN) {
 			// assume error has already been reported
 			return;
 		}
-		else if (!ret_type || *func_type != *ret_type) {
+		if (ret_type->is_generic()) {
+			// try and use constraint
+			if (auto gen = std::dynamic_pointer_cast<generic_type>(ret_type)) {
+				if (gen->declaration && gen->declaration->constraint) {
+					ret_type = gen->declaration->constraint;
+				}
+			}
+		}
+		if (!ret_type || *func_type != *ret_type) {
 			ERROR(ERR_FUNCTION_RETURN_TYPE_MISMATCH, ret->position, current_function->identifier.c_str(), func_type->name().c_str(), ret_type->name().c_str());
 			return;
 		}
@@ -606,7 +689,7 @@ void type_checker::visit(std::shared_ptr<return_if> ret) {
 		ret->value->accept(*this);
 		// ensure types match
 		auto ret_type = ret->value->type();
-		if (ret_type == data_type::unknown) {
+		if (ret_type == data_type::UNKNOWN) {
 			// assume error has already been reported
 			return;
 		}
@@ -682,4 +765,62 @@ bool type_checker::is_valid_upcast(type_ptr from, type_ptr to, position pos) {
 		current = current->base_class;
 	}
 	return inherited.count(to_base->name()) > 0;
+}
+
+int type_checker::score_candidate(std::shared_ptr<function_declaration> candidate, const std::vector<type_ptr>& arg_types) {
+	auto expected = candidate->get_expected_types();
+	// mostly for safety, should never happen
+	if (expected.size() != arg_types.size()) return 0;
+	int score = 0;
+
+	for (size_t i = 0; i < expected.size(); ++i) {
+		if (*expected[i] == *arg_types[i]) {
+			score += 2; // exact match
+		}
+		else if (expected[i]->is_generic()) {
+			auto generic = std::dynamic_pointer_cast<generic_type>(expected[i]);
+			if (generic->declaration && generic->declaration->constraint) {
+				// check if arg_type can be assigned to the constraint
+				if (*generic->declaration->constraint == *arg_types[i]) {
+					score += 1; // generic parameter with constraint match
+				}
+				else {
+					return 0; // no match
+				}
+			}
+			else {
+				score += 1; // unconstrained generic parameter
+			}
+		}
+		else {
+			return 0; // no match
+		}
+	}
+
+	return score;
+}
+
+std::shared_ptr<function_declaration> type_checker::unbox_generic_func(std::shared_ptr<function_declaration> func, std::vector<type_ptr> types) {
+	if (types.size() != func->generics.size()) {
+		ERROR(ERR_INTERNAL_ERROR, func->position, "Type Checker", "Generic function unboxing called with incorrect number of types");
+		return nullptr;
+	}
+
+	// type check before unboxing as any generic types in the statements wont update
+	// to the unboxed version and will still hold references to the generic version
+	auto original_func = current_function;
+	for (size_t i = 0; i < func->generics.size(); i++) {
+		func->generics[i]->constraint = types[i];
+	}
+	func->is_constrained = true;
+	func->accept(*this);
+	func->is_constrained = false;
+	current_function = original_func;
+
+	// type checking is complete, create a fake version
+	auto unboxed = make_ast<function_declaration>(func->position, func->return_type, func->identifier, func->parameters, func->body, false);
+	for (size_t i = 0; i < unboxed->generics.size(); i++) {
+		unboxed->generics[i]->constraint = types[i];
+	}
+	return unboxed;
 }

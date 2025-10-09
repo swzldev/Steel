@@ -10,7 +10,7 @@ class while_loop : public ast_node, public std::enable_shared_from_this<while_lo
 public:
 	ENABLE_ACCEPT(while_loop)
 
-	while_loop(std::shared_ptr<expression> condition, ast_ptr body)
+	while_loop(ast_ptr<expression> condition, ast_ptr<code_block> body)
 		: condition(condition), body(body) {
 	}
 
@@ -35,5 +35,5 @@ public:
 	}
 
 	std::shared_ptr<expression> condition;
-	ast_ptr body;
+	ast_ptr<code_block> body;
 };

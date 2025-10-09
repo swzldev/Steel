@@ -31,7 +31,7 @@ public:
 	}
 
 	std::shared_ptr<source_file> source_file;
-	std::vector<ast_ptr> declarations;
+	std::vector<ast_node_ptr> declarations;
 	import_table import_tbl;
 	unsigned int unit_id;
 };

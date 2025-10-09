@@ -98,16 +98,16 @@ void ast_visitor::visit(std::shared_ptr<literal> literal) {
 void ast_visitor::visit(std::shared_ptr<import_statement> import_stmt) {
 	
 }
-void ast_visitor::visit(std::shared_ptr<block_statement> block) {
-	for (const auto& stmt : block->body) {
+void ast_visitor::visit(std::shared_ptr<code_block> block) {
+	for (const auto& stmt : block->statements) {
 		stmt->accept(*this);
 	}
 }
 void ast_visitor::visit(std::shared_ptr<if_statement> if_stmt) {
 	if_stmt->condition->accept(*this);
 	if_stmt->then_block->accept(*this);
-	if (if_stmt->else_block) {
-		if_stmt->else_block->accept(*this);
+	if (if_stmt->else_statement) {
+		if_stmt->else_statement->accept(*this);
 	}
 }
 void ast_visitor::visit(std::shared_ptr<inline_if> inline_if) {

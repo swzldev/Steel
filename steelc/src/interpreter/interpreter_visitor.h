@@ -35,7 +35,7 @@ public:
 	virtual void visit(std::shared_ptr<initializer_list> init) override;
 	virtual void visit(std::shared_ptr<function_call> func_call) override;
 	virtual void visit(std::shared_ptr<literal> literal) override;
-	virtual void visit(std::shared_ptr<block_statement> block) override;
+	virtual void visit(std::shared_ptr<code_block> block) override;
 	virtual void visit(std::shared_ptr<if_statement> if_stmt) override;
 	virtual void visit(std::shared_ptr<inline_if> if_stmt) override;
 	virtual void visit(std::shared_ptr<for_loop> for_loop) override;

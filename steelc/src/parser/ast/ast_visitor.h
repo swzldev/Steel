@@ -30,7 +30,7 @@ public:
 	virtual void visit(std::shared_ptr<function_call> func_call);
 	virtual void visit(std::shared_ptr<literal> literal);
 	virtual void visit(std::shared_ptr<import_statement> import_stmt);
-	virtual void visit(std::shared_ptr<block_statement> block);
+	virtual void visit(std::shared_ptr<code_block> block);
 	virtual void visit(std::shared_ptr<if_statement> if_stmt);
 	virtual void visit(std::shared_ptr<inline_if> inline_if);
 	virtual void visit(std::shared_ptr<for_loop> for_loop);

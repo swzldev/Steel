@@ -1,16 +1,16 @@
 #pragma once
 
 #include <string>
+#include <vector>
 
 #include "../ast_node.h"
 
-typedef unsigned int declaration_modifiers;
-enum decleration_modifier {
+enum declaration_modifier {
 	DM_NONE = 0,
 };
 
 class declaration : public ast_node {
 public:
-	declaration_modifiers mods = DM_NONE;
+	std::vector<declaration_modifier> mods;
 	std::string filename;
 };

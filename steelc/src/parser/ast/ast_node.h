@@ -27,4 +27,6 @@ protected:
 	}
 };
 
-using ast_ptr = std::shared_ptr<ast_node>;
+using ast_node_ptr = std::shared_ptr<ast_node>;
+template<typename T>
+using ast_ptr = std::shared_ptr<T>;

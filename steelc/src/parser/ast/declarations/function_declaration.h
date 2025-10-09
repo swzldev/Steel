@@ -3,10 +3,9 @@
 #include <string>
 #include <vector>
 
-#include "declaration.h"
-#include "variable_declaration.h"
+#include "../ast_fwd.h"
 #include "../../parser_utils.h"
-#include "../../types/types.h"
+#include "../../types/type_handle.h"
 
 class function_declaration : public declaration, public std::enable_shared_from_this<function_declaration> {
 public:
@@ -15,7 +14,7 @@ public:
 	function_declaration(type_ptr return_type, std::string identifier, std::vector<std::shared_ptr<variable_declaration>> parameters)
 		: return_type(return_type), identifier(identifier), parameters(parameters), body(nullptr) /* for built in functions */ {
 	}
-	function_declaration(type_ptr return_type, std::string identifier, std::vector<std::shared_ptr<variable_declaration>> parameters, ast_ptr body, bool is_override)
+	function_declaration(type_ptr return_type, std::string identifier, std::vector<std::shared_ptr<variable_declaration>> parameters, ast_node_ptr body, bool is_override)
 		: return_type(return_type), identifier(identifier), parameters(parameters), body(body), is_override(is_override) {
 	}
 
@@ -74,14 +73,15 @@ public:
 		return expected_types;
 	}
 
-	type_ptr return_type;
+	type_handle return_type;
 	std::string identifier;
-	std::vector<std::shared_ptr<generic_parameter>> generics;
-	std::vector<std::shared_ptr<variable_declaration>> parameters;
-	ast_ptr body;
+	std::vector<ast_ptr<generic_parameter>> generics;
+	std::vector<ast_ptr<variable_declaration>> parameters;
+	ast_node_ptr body;
 	bool is_method = false;
 	bool is_generic = false;
 	bool is_override = false;
 	bool is_constructor = false;
-	std::shared_ptr<function_declaration> overridden_function = nullptr;
+	bool is_constrained = false;
+	ast_ptr<function_declaration> overridden_function = nullptr;
 };

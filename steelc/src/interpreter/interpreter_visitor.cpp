@@ -100,7 +100,7 @@ void interpreter_visitor::visit(std::shared_ptr<binary_expression> expr) {
 		case TT_GREATER_EQ:
 			expression_result = std::make_shared<runtime_value>(data_type(DT_BOOL), (left->as_int() >= right->as_int() ? "true" : "false"));
 			break;
-		case TT_ADD:
+		case TT_PLUS:
 			if (left->is_string() && right->is_string()) {
 				expression_result = std::make_shared<runtime_value>(data_type(DT_STRING), left->as_string() + right->as_string());
 			}
@@ -134,7 +134,7 @@ void interpreter_visitor::visit(std::shared_ptr<binary_expression> expr) {
 				throw_exception("Unsupported types for addition", expr->position);
 			}
 			break;
-		case TT_SUBTRACT:
+		case TT_MINUS:
 			if (left->is_number() && right->is_number()) {
 				if (left->is_float() || right->is_float()) {
 					expression_result = std::make_shared<runtime_value>(data_type(DT_FLOAT), std::to_string(left->as_float() - right->as_float()));
@@ -151,7 +151,7 @@ void interpreter_visitor::visit(std::shared_ptr<binary_expression> expr) {
 				throw_exception("Unsupported types for subtraction", expr->position);
 			}
 			break;
-		case TT_MULTIPLY:
+		case TT_ASTERISK:
 			if (left->is_string() && right->is_int()) {
 				int count = right->as_int();
 				std::string result;
@@ -186,7 +186,7 @@ void interpreter_visitor::visit(std::shared_ptr<binary_expression> expr) {
 				throw_exception("Multiplication only supports numeric types, string * int, int * string, char * int, or int * char", expr->position);
 			}
 			break;
-		case TT_DIVIDE:
+		case TT_FSLASH:
 			if (right->is_number() && ((right->is_float() && right->as_float() == 0.0) || (right->is_int() && right->as_int() == 0))) {
 				throw_exception("Division by zero", expr->position);
 				return;
@@ -203,7 +203,7 @@ void interpreter_visitor::visit(std::shared_ptr<binary_expression> expr) {
 				throw_exception("Unsupported types for division", expr->position);
 			}
 			break;
-		case TT_MODULO:
+		case TT_PERCENT:
 			if (right->is_number() && right->as_int() == 0) {
 				throw_exception("Division by zero", expr->position);
 				return;
@@ -317,7 +317,7 @@ void interpreter_visitor::visit(std::shared_ptr<unary_expression> expr) {
 		expression_result = var;
 		break;
 	}
-	case TT_SUBTRACT: {
+	case TT_MINUS: {
 		if (operand->is_int()) {
 			expression_result = std::make_shared<runtime_value>(data_type(DT_I32), std::to_string(-operand->as_int()));
 		}
@@ -499,10 +499,10 @@ void interpreter_visitor::visit(std::shared_ptr<function_call> func_call) {
 void interpreter_visitor::visit(std::shared_ptr<literal> literal) {
 	expression_result = std::make_shared<runtime_value>(literal->primitive, literal->value);
 }
-void interpreter_visitor::visit(std::shared_ptr<block_statement> block) {
+void interpreter_visitor::visit(std::shared_ptr<code_block> block) {
 	push_scope();
-	for (int i = 0; i < block->body.size(); i++) {
-		block->body[i]->accept(*this);
+	for (int i = 0; i < block->statements.size(); i++) {
+		block->statements[i]->accept(*this);
 	}
 	pop_scope();
 }
@@ -511,8 +511,8 @@ void interpreter_visitor::visit(std::shared_ptr<if_statement> if_stmt) {
 	if (expression_result->as_bool()) {
 		if_stmt->then_block->accept(*this);
 	}
-	else if (if_stmt->else_block) {
-		if_stmt->else_block->accept(*this);
+	else if (if_stmt->else_statement) {
+		if_stmt->else_statement->accept(*this);
 	}
 }
 void interpreter_visitor::visit(std::shared_ptr<inline_if> inline_if) {

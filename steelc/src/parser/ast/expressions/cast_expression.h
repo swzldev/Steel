@@ -3,13 +3,13 @@
 #include <string>
 #include <memory>
 
-#include "expression.h"
+#include "../ast_fwd.h"
 
 class cast_expression : public expression, public std::enable_shared_from_this<cast_expression> {
 public:
 	ENABLE_ACCEPT(cast_expression)
 
-	cast_expression(type_ptr cast_type, std::shared_ptr<expression> expression)
+	cast_expression(type_ptr cast_type, ast_ptr<expression> expression)
 		: cast_type(cast_type), expression(expression) {
 	}
 
@@ -23,7 +23,7 @@ public:
 
 	type_ptr type() const override {
 		if (!cast_type) {
-			return data_type::unknown;
+			return data_type::UNKNOWN;
 		}
 		return cast_type;
 	}
@@ -32,5 +32,5 @@ public:
 	}
 
 	type_ptr cast_type;
-	std::shared_ptr<expression> expression;
+	ast_ptr<expression> expression;
 };

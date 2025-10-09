@@ -3,8 +3,7 @@
 #include <string>
 #include <vector>
 
-#include "declaration.h"
-#include "variable_declaration.h"
+#include "../ast_fwd.h"
 #include "../../parser_utils.h"
 #include "../../types/types.h"
 
@@ -12,10 +11,10 @@ class conversion_declaration : public declaration, public std::enable_shared_fro
 public:
 	ENABLE_ACCEPT(conversion_declaration)
 
-	conversion_declaration(type_ptr from, type_ptr to, ast_ptr body)
+	conversion_declaration(type_ptr from, type_ptr to, ast_ptr<code_block> body)
 		: from(from), to(to), body(body), implicit(false) {
 	}
-	conversion_declaration(type_ptr from, type_ptr to, ast_ptr body, bool implicit)
+	conversion_declaration(type_ptr from, type_ptr to, ast_ptr<code_block> body, bool implicit)
 		: from(from), to(to), body(body), implicit(implicit) {
 	}
 	conversion_declaration(type_ptr from, type_ptr to, bool implicit)
@@ -43,6 +42,6 @@ public:
 
 	type_ptr from;
 	type_ptr to;
-	ast_ptr body;
+	ast_ptr<code_block> body;
 	bool implicit;
 };

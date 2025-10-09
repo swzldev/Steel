@@ -3,8 +3,7 @@
 #include <string>
 #include <memory>
 
-#include "expression.h"
-#include "../declarations/variable_declaration.h"
+#include "../ast_fwd.h"
 
 class this_expression : public expression, public std::enable_shared_from_this<this_expression> {
 public:

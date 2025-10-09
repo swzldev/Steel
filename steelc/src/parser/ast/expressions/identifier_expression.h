@@ -3,8 +3,7 @@
 #include <string>
 #include <memory>
 
-#include "expression.h"
-#include "../declarations/variable_declaration.h"
+#include "../ast_fwd.h"
 
 class identifier_expression : public expression, public std::enable_shared_from_this<identifier_expression> {
 public:
@@ -19,12 +18,12 @@ public:
 	}
 
 	type_ptr type() const override {
-		return declaration ? declaration->type : data_type::unknown;
+		return declaration ? declaration->type : data_type::UNKNOWN;
 	}
 	bool is_rvalue() const override {
 		return false;
 	}
 
 	std::string identifier;
-	std::shared_ptr<variable_declaration> declaration;
+	ast_ptr<variable_declaration> declaration;
 };

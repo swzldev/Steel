@@ -3,7 +3,7 @@
 #include <string>
 #include <memory>
 
-#include "expression.h"
+#include "../ast_fwd.h"
 #include "../../types/types.h"
 #include "../../../lexer/token_type.h"
 #include "../../../lexer/token_utils.h"
@@ -12,7 +12,7 @@ class unary_expression : public expression, public std::enable_shared_from_this<
 public:
 	ENABLE_ACCEPT(unary_expression)
 
-	unary_expression(token_type op, std::shared_ptr<expression> operand)
+	unary_expression(token_type op, ast_ptr<expression> operand)
 		: oparator(op), operand(operand) {
 	}
 
@@ -32,5 +32,5 @@ public:
 	}
 
 	token_type oparator;
-	std::shared_ptr<expression> operand;
+	ast_ptr<expression> operand;
 };

@@ -9,31 +9,55 @@ symbol_table::symbol_table() {
 
 void symbol_table::push_scope() {
 	scopes.emplace_back();
+    generic_scopes.emplace_back();
 }
 void symbol_table::pop_scope() {
 	if (!scopes.empty()) {
 		scopes.pop_back();
 	}
+    if (!generic_scopes.empty()) {
+        generic_scopes.pop_back();
+    }
 }
 
-bool symbol_table::add_variable(std::shared_ptr<variable_declaration> var) {
+error_code symbol_table::add_variable(std::shared_ptr<variable_declaration> var) {
 	auto& current_scope = scopes.back();
+    // variables cannot shadow generics
+	for (const auto& gen_scope : generic_scopes) {
+		if (gen_scope.find(var->identifier) != gen_scope.end()) {
+			return ERR_VARIABLE_SHADOWS_GENERIC;
+		}
+	}
 	if (current_scope.find(var->identifier) != current_scope.end()) {
-		return false;
+		return ERR_VARIABLE_ALREADY_DECLARED_SCOPE;
 	}
     current_scope[var->identifier] = var;
-	return true;
+	return ERR_SUCCESS;
 }
-bool symbol_table::add_field(std::shared_ptr<type_declaration> type, std::shared_ptr<variable_declaration> var) {
+error_code symbol_table::add_generic(std::shared_ptr<generic_parameter> param) {
+	auto& current_scope = generic_scopes.back();
+	// generics cannot shadow variables
+	for (const auto& var_scope : scopes) {
+		if (var_scope.find(param->identifier) != var_scope.end()) {
+			return ERR_GENERIC_SHADOWS_VARIABLE;
+		}
+	}
+	if (current_scope.find(param->identifier) != current_scope.end()) {
+		return ERR_DUPLICATE_GENERIC;
+	}
+	current_scope[param->identifier] = param;
+	return ERR_SUCCESS;
+}
+error_code symbol_table::add_field(std::shared_ptr<type_declaration> type, std::shared_ptr<variable_declaration> var) {
     for (auto& field : type->fields) {
         if (field->identifier == var->identifier) {
-            return false; // field already exists
+            return ERR_VARIABLE_ALREADY_DECLARED_SCOPE; // field already exists
         }
     }
 	type->fields.push_back(var);
-	return true;
+	return ERR_SUCCESS;
 }
-int symbol_table::add_function(std::shared_ptr<function_declaration> func) {
+error_code symbol_table::add_function(std::shared_ptr<function_declaration> func) {
     for (const auto& existing : functions) {
         const auto& existing_func = existing.second;
         if (existing.first == func->identifier) {
@@ -58,9 +82,9 @@ int symbol_table::add_function(std::shared_ptr<function_declaration> func) {
         }
     }
     functions.emplace_back(func->identifier, func);
-    return 0;
+    return ERR_SUCCESS;
 }
-int symbol_table::add_method(std::shared_ptr<type_declaration> type, std::shared_ptr<function_declaration> func) {
+error_code symbol_table::add_method(std::shared_ptr<type_declaration> type, std::shared_ptr<function_declaration> func) {
 	// check if method already exists in type
 	for (const auto& method : type->methods) {
 		if (method->identifier == func->identifier) {
@@ -83,14 +107,14 @@ int symbol_table::add_method(std::shared_ptr<type_declaration> type, std::shared
 		}
 	}
     type->methods.push_back(func);
-    return true;
+    return ERR_SUCCESS;
 }
-bool symbol_table::add_type(std::shared_ptr<type_declaration> type) {
+error_code symbol_table::add_type(std::shared_ptr<type_declaration> type) {
 	if (types.find(type->name()) != types.end()) {
-		return false;
+		return ERR_TYPE_ALREADY_DEFINED;
 	}
 	types[type->name()] = type;
-	return true;
+	return ERR_SUCCESS;
 }
 
 lookup_result symbol_table::get_variable(std::shared_ptr<const type_declaration> type, const std::string& name) const {
@@ -111,6 +135,15 @@ lookup_result symbol_table::get_variable(std::shared_ptr<const type_declaration>
         }
     }
     return { LOOKUP_NO_MATCH };
+}
+lookup_result symbol_table::get_generic(const std::string& name) const {
+    // local lookup
+	for (auto it = generic_scopes.rbegin(); it != generic_scopes.rend(); ++it) {
+		auto found = it->find(name);
+		if (found != it->end()) {
+			return { found->second };
+		}
+	}
 }
 lookup_result symbol_table::get_function(const std::string& name, type_ptr return_type, std::vector<type_ptr> param_types) const {
 	// local lookup

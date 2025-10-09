@@ -120,3 +120,50 @@
   the program like ReadKey().
 - Added overrides for the 3 container types to allow support for indexing on arrays
   and pointers (although pointer indexing is not yet functional).
+
+### 26-09-2025
+- Added a new primitive DT_CUSTOM to easily check if a data type is custom without
+  having to dynamic cast, however this is new and so currently it isnt used and
+  will need to be updated throughout the codebase.
+- The generic_type data type now holds a reference to the generic parameter ast node
+  this means we can easily update the parameter instead of having to update all
+  generics - i dont know why it wasnt like this before but generics wernt functional
+  anyway.
+
+### 27-09-2025
+- Added generic support into the type and name resolver and also added an unbox_generic
+  function to the type checker which hopefully works.
+
+### 28-09-2025
+- The type resolver now resolves generic function arguments.
+- The type checker now scores based on generic argument matches that are explicit.
+- Added a flag to the function declaration to check whether its been constrained,
+  this means we dont type check the generic function body only the unboxed versions.
+
+### 05-10-2025
+- Added a new using ast<T> to reduce long type names.
+- Added an is_body flag to the block_statement node (now code_block) so that the
+  code block can now check itself if it should push a new scope or not.
+- Updated all ast nodes to just include ast_fwd.h instead of each individual node
+  header which just keeps everything a bit cleaner and easier to manage.
+- Renamed if_statement's else_block to else_statement as it may not be a block.
+- Removed the return_if node and moved it into the return_statement node as it was
+  unnecessary to have a seperate node for it.
+
+### 06-10-2025
+- Made a new type_handle class to hold both the syntax type and the resolved type.
+
+### 07-10-2025
+- Completely rewriting the type system, data_type is no longer always a primitive
+  but instead an abstract class, primitive type is its own type now. This will make
+  it much easier to cast between types especially with the new as_ functions like
+  as_primitive and as_custom.
+- Made ast_ptr a template which reduces the writing of non root ast nodes.
+  ast_node_ptr can be used as a replacement for storing root node pointers.
+
+### 08-10-2025
+- Renamed i16, i32, and i64 to short, int, and long.
+
+### 09-10-2025
+- Updated the type node to support different types like arrays and pointers.
+- Added support for += and -= operators.

@@ -19,7 +19,7 @@ public:
 	void visit(std::shared_ptr<variable_declaration> var) override;
 	void visit(std::shared_ptr<assignment_expression> expr) override;
 	void visit(std::shared_ptr<identifier_expression> expr) override;
-	void visit(std::shared_ptr<block_statement> block) override;
+	void visit(std::shared_ptr<code_block> block) override;
 	void visit(std::shared_ptr<if_statement> if_stmt) override;
 	void visit(std::shared_ptr<for_loop> for_loop) override;
 	void visit(std::shared_ptr<while_loop> while_loop) override;
@@ -28,5 +28,5 @@ private:
 	std::unordered_set<std::shared_ptr<variable_declaration>> initialized;
 	bool in_method = false;
 
-	void traverse_block(std::shared_ptr<block_statement>& block, bool restore);
+	void traverse_block(std::shared_ptr<code_block>& block, bool restore);
 };

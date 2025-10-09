@@ -3,7 +3,7 @@
 #include <string>
 #include <memory>
 
-#include "expression.h"
+#include "../ast_fwd.h"
 #include "../../types/types.h"
 #include "../../types/container_types.h"
 #include "../../parser_utils.h"
@@ -44,6 +44,6 @@ public:
 	}
 
 
-	std::shared_ptr<expression> base;
-	std::shared_ptr<expression> indexer;
+	ast_ptr<expression> base;
+	ast_ptr<expression> indexer;
 };

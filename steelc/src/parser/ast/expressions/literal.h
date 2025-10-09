@@ -3,7 +3,7 @@
 #include <string>
 #include <memory>
 
-#include "expression.h"
+#include "../ast_fwd.h"
 
 class literal : public expression, public std::enable_shared_from_this<literal> {
 public:
