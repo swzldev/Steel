@@ -5,7 +5,7 @@
 
 #include "declaration.h"
 #include "../../parser_utils.h"
-#include "../../types/types.h"
+#include "../../types/data_type.h"
 #include "../../../lexer/token_type.h"
 
 class operator_declaration : public declaration, public std::enable_shared_from_this<operator_declaration> {
@@ -28,7 +28,7 @@ public:
 	}
 
 	bool matches(const type_ptr& left, token_type oparator, const type_ptr& right) const {
-		return *this->left == *left && this->oparator == oparator && *this->right == *right;
+		return *this->left == left && this->oparator == oparator && *this->right == right;
 	}
 
 	type_ptr result_type;

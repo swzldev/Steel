@@ -11,7 +11,7 @@ public:
 	ENABLE_ACCEPT(if_statement)
 
 	if_statement()
-		: condition(nullptr), then_block(nullptr), else_block(nullptr) {
+		: condition(nullptr), then_block(nullptr), else_node(nullptr) {
 	}
 
 	std::string string(int indent) const override {
@@ -32,8 +32,8 @@ public:
 			result += ind + "  <Empty>\n";
 		}
 		result += ind + " Else Block:\n";
-		if (else_block) {
-			result += else_block->string(indent + 1) + "\n";
+		if (else_node) {
+			result += else_node->string(indent + 1) + "\n";
 		}
 		else {
 			result += ind + "  <Empty>\n";
@@ -43,5 +43,5 @@ public:
 
 	std::shared_ptr<expression> condition;
 	ast_ptr then_block;
-	ast_ptr else_block;
+	ast_ptr else_node;
 };

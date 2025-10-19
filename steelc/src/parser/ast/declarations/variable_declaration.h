@@ -4,7 +4,7 @@
 
 #include "declaration.h"
 #include "../expressions/expression.h"
-#include "../../types/types.h"
+#include "../../types/data_type.h"
 
 class variable_declaration : public declaration, public std::enable_shared_from_this<variable_declaration> {
 public:

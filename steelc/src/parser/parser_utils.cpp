@@ -1,15 +1,12 @@
 #include "parser_utils.h"
 
-#include "types/types.h"
-#include "types/custom_types.h"
+#include "types/data_type.h"
+#include "types/custom_type.h"
 #include "types/container_types.h"
 
 data_type_modifier to_type_modifier(token_type tt) {
 	data_type_modifier mod;
 	switch (tt) {
-	case TT_CONST:
-		mod = DTM_CONST;
-		break;
 	default:
 		mod = DTM_NONE;
 	}
@@ -54,10 +51,12 @@ primitive_type to_primitive(token_type tt) {
     }
 	return dt;
 }
-std::shared_ptr<class data_type> to_data_type(token& tk) {
-	return to_primitive(tk.type) != DT_UNKNOWN ? std::make_shared<data_type>(to_primitive(tk.type)) : to_data_type(tk.value);
+const type_ptr to_data_type(token& tk) {
+	auto type = to_primitive(tk.type) != DT_UNKNOWN ? std::make_shared<data_type>(to_primitive(tk.type)) : to_data_type(tk.value);
+	type->position = tk.pos;
+	return type;
 }
-type_ptr to_data_type(token_type tt) {
+const type_ptr to_data_type(token_type tt) {
 	primitive_type prim = to_primitive(tt);
 	if (prim != DT_UNKNOWN) {
 		return std::make_shared<data_type>(prim);
@@ -65,25 +64,14 @@ type_ptr to_data_type(token_type tt) {
 	// custom type
 	return nullptr;
 }
-type_ptr to_data_type(primitive_type pt) {
+const type_ptr to_data_type(primitive_type pt) {
 	if (pt != DT_UNKNOWN) {
 		return std::make_shared<data_type>(pt);
 	}
 	return nullptr;
 }
-
-std::shared_ptr<class data_type> to_data_type(const std::string& type_name) {
+const type_ptr to_data_type(const std::string& type_name) {
 	return custom_type::get(type_name);
-}
-
-type_ptr make_pointer(type_ptr base_type) {
-	return std::make_shared<pointer_type>(base_type);
-}
-type_ptr make_array(type_ptr base_type) {
-	return std::make_shared<array_type>(base_type);
-}
-type_ptr make_array(type_ptr base_type, size_t size) {
-	return std::make_shared<array_type>(base_type, size);
 }
 
 bool is_numeric(primitive_type primitive) {
@@ -96,37 +84,5 @@ bool is_numeric(primitive_type primitive) {
 		return true;
 	default:
 		return false;
-	}
-}
-
-int primitive_size_of(primitive_type primitive) {
-	switch (primitive) {
-	case DT_I16: return 2;
-	case DT_I32: return 4;
-	case DT_I64: return 8;
-	case DT_FLOAT: return 4;
-	case DT_DOUBLE: return 8;
-	case DT_CHAR: return 1;
-	case DT_STRING: return 8;
-	case DT_BYTE: return 1;
-	case DT_BOOL: return 1;
-	case DT_VOID: return 0;
-	default: return -1;
-	}
-}
-
-std::string to_string(primitive_type primitive) {
-	switch (primitive) {
-	case DT_I16: return "small";
-	case DT_I32: return "int";
-	case DT_I64: return "large";
-	case DT_FLOAT: return "float";
-	case DT_DOUBLE: return "double";
-	case DT_CHAR: return "char";
-	case DT_STRING: return "string";
-	case DT_BYTE: return "byte";
-	case DT_BOOL: return "bool";
-	case DT_VOID: return "void";
-	default: return "unknown";
 	}
 }

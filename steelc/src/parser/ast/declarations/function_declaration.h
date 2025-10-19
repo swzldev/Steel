@@ -6,12 +6,13 @@
 #include "declaration.h"
 #include "variable_declaration.h"
 #include "../../parser_utils.h"
-#include "../../types/types.h"
+#include "../../types/data_type.h"
 
 class function_declaration : public declaration, public std::enable_shared_from_this<function_declaration> {
 public:
 	ENABLE_ACCEPT(function_declaration)
 
+	function_declaration() = default;
 	function_declaration(type_ptr return_type, std::string identifier, std::vector<std::shared_ptr<variable_declaration>> parameters)
 		: return_type(return_type), identifier(identifier), parameters(parameters), body(nullptr) /* for built in functions */ {
 	}
@@ -57,11 +58,11 @@ public:
 			return false;
 		}
 		for (size_t i = 0; i < parameters.size(); i++) {
-			if (*parameters[i]->type != *other->parameters[i]->type) {
+			if (*parameters[i]->type != other->parameters[i]->type) {
 				return false;
 			}
 		}
-		if (match_return_type && *return_type != *other->return_type) {
+		if (match_return_type && *return_type != other->return_type) {
 			return false;
 		}
 		return true;
@@ -77,11 +78,14 @@ public:
 	type_ptr return_type;
 	std::string identifier;
 	std::vector<std::shared_ptr<generic_parameter>> generics;
+	std::vector<type_ptr> generic_substitutions;
 	std::vector<std::shared_ptr<variable_declaration>> parameters;
 	ast_ptr body;
 	bool is_method = false;
 	bool is_generic = false;
 	bool is_override = false;
 	bool is_constructor = false;
+	bool is_constrained = false;
+	bool is_generic_instance = false;
 	std::shared_ptr<function_declaration> overridden_function = nullptr;
 };

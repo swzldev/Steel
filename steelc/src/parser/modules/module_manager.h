@@ -18,7 +18,7 @@ public:
 	std::shared_ptr<module_info> get_global_module();
 	std::shared_ptr<module_info> get_parent(std::shared_ptr<module_info> module);
 
-	std::shared_ptr<class function_declaration> main_declaration;
+	std::shared_ptr<class function_declaration> entry_point;
 
 private:
 	std::shared_ptr<module_info> global_module;

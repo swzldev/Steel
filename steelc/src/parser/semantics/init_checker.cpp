@@ -59,7 +59,7 @@ void init_checker::visit(std::shared_ptr<identifier_expression> expr) {
 		return;
 	}
 }
-void init_checker::visit(std::shared_ptr<block_statement> block) {
+void init_checker::visit(std::shared_ptr<code_block> block) {
 	auto before = initialized;
 	for (auto& stmt : block->body) {
 		stmt->accept(*this);
@@ -71,19 +71,19 @@ void init_checker::visit(std::shared_ptr<if_statement> if_stmt) {
 
 	auto before = initialized;
 	auto then_set = initialized;
-	auto then_block = std::dynamic_pointer_cast<block_statement>(if_stmt->then_block);
+	auto then_block = std::dynamic_pointer_cast<code_block>(if_stmt->then_block);
 	traverse_block(then_block, false);
 	then_set = initialized;
 
 	auto else_set = before;
-	if (if_stmt->else_block) {
+	if (if_stmt->else_node) {
 		initialized = before;
-		if (auto else_block = std::dynamic_pointer_cast<block_statement>(if_stmt->else_block)) {
-			traverse_block(else_block, false);
+		if (auto else_node = std::dynamic_pointer_cast<code_block>(if_stmt->else_node)) {
+			traverse_block(else_node, false);
 		}
 		else {
 			// usually an else-if statement, so we can accept as normal
-			if_stmt->else_block->accept(*this);
+			if_stmt->else_node->accept(*this);
 		}
 		else_set = initialized;
 	}
@@ -101,7 +101,7 @@ void init_checker::visit(std::shared_ptr<for_loop> for_loop) {
 	for_loop->condition->accept(*this);
 
 	auto before = initialized;
-	auto block = std::dynamic_pointer_cast<block_statement>(for_loop->body);
+	auto block = std::dynamic_pointer_cast<code_block>(for_loop->body);
 	traverse_block(block, false);
 
 	initialized = before;
@@ -111,13 +111,13 @@ void init_checker::visit(std::shared_ptr<while_loop> while_loop) {
 	while_loop->condition->accept(*this);
 
 	auto before = initialized;
-	auto block = std::dynamic_pointer_cast<block_statement>(while_loop->body);
+	auto block = std::dynamic_pointer_cast<code_block>(while_loop->body);
 	traverse_block(block, false);
 
 	initialized = before;
 }
 
-void init_checker::traverse_block(std::shared_ptr<block_statement>& block, bool restore) {
+void init_checker::traverse_block(std::shared_ptr<code_block>& block, bool restore) {
 	auto before = initialized;
 	for (auto& stmt : block->body) {
 		stmt->accept(*this);

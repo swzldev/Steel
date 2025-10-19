@@ -6,7 +6,7 @@
 #include "declaration.h"
 #include "variable_declaration.h"
 #include "../../parser_utils.h"
-#include "../../types/types.h"
+#include "../../types/data_type.h"
 
 class conversion_declaration : public declaration, public std::enable_shared_from_this<conversion_declaration> {
 public:

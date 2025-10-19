@@ -2,7 +2,8 @@
 
 #include <memory>
 
-#include "types.h"
+#include "data_type.h"
+#include "../ast/generics/generic_parameter.h"
 
 class array_type : public data_type {
 public:
@@ -13,10 +14,14 @@ public:
 		: base_type(base_type), data_type(DT_ARRAY) {
 	}
 
-	bool operator==(const data_type& other) const override;
+	bool operator==(const type_ptr& other) const override;
 
 	std::string name() const override {
 		return base_type->name() + "[]";
+	}
+
+	std::shared_ptr<data_type> clone() const override {
+		return std::make_shared<array_type>(*this);
 	}
 
 	bool is_primitive() const override {
@@ -35,10 +40,14 @@ public:
 		: base_type(base_type), data_type(DT_POINTER) {
 	}
 
-	bool operator==(const data_type& other) const override;
+	bool operator==(const type_ptr& other) const override;
 
 	std::string name() const override {
 		return base_type->name() + "*";
+	}
+
+	std::shared_ptr<data_type> clone() const override {
+		return std::make_shared<pointer_type>(*this);
 	}
 
 	bool is_primitive() const override {
@@ -59,13 +68,17 @@ public:
 
 	std::string identifier;
 
-	bool operator==(const data_type& other) const override;
+	bool operator==(const type_ptr& other) const override;
 	
 	std::string name() const override {
-		if (substitution) {
-			return substitution->name();
+		if (declaration && declaration->substitution) {
+			return declaration->substitution->name();
 		}
 		return identifier;
+	}
+
+	std::shared_ptr<data_type> clone() const override {
+		return std::make_shared<generic_type>(*this);
 	}
 
 	bool is_primitive() const override {
@@ -75,5 +88,5 @@ public:
 		return false;
 	}
 
-	type_ptr substitution = nullptr;
+	std::shared_ptr<generic_parameter> declaration = nullptr;
 };

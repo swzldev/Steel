@@ -8,16 +8,26 @@
 #include <conio.h>
 #include <Windows.h>
 
+#include "classes/runtime_exception.h"
 #include "../parser/ast/ast.h"
-#include "../parser/types/custom_types.h"
+#include "../parser/types/custom_type.h"
 
 void interpreter_visitor::begin(std::shared_ptr<function_declaration> entry_point) {
 	std::cout << "Starting execution...\n" << std::endl;
 
-	enter_function(entry_point, {});
+	try {
+		enter_function(entry_point, {});
 
-	// execution finished
-	std::cout << "\nExecution finished successfully.\nExit code: " << expression_result->as_int() << std::endl;
+		// execution finished successfully
+		std::cout << "\nExecution finished successfully.\nExit code: " << expression_result->as_int() << std::endl;
+	}
+	catch (const runtime_exception& e) {
+		std::cerr << "\nRuntime Exception Thrown: " << e.what() << std::endl;
+		std::cerr << "At line: " << e.position.line << ", column: " << e.position.column << std::endl;
+
+		std::cerr << "\nExecution failed." << std::endl;
+		return;
+	}
 }
 
 void interpreter_visitor::visit(std::shared_ptr<function_declaration> func) {
@@ -31,41 +41,41 @@ void interpreter_visitor::visit(std::shared_ptr<variable_declaration> var) {
 				std::vector<std::shared_ptr<runtime_value>> elements;
 				for (auto& val : init_list->values) {
 					val->accept(*this);
-					elements.push_back(std::make_shared<runtime_value>(*expression_result));
+					elements.push_back(new_val(expression_result->type, expression_result->value));
 				}
-				expression_result = std::make_shared<runtime_value>(elements);
+				expression_result = new_array(var->type, elements);
 				add_var(var->identifier, expression_result);
 				return;
 			}
 			// check if type is custom
 			auto custom = std::dynamic_pointer_cast<custom_type>(var->type);
 			if (custom && custom->declaration) {
-				auto obj = std::make_shared<runtime_value>(*var->type, "");
+				auto obj = new_val(var->type, "");
 				// assign initializer values to fields
 				for (size_t i = 0; i < init_list->values.size(); i++) {
 					auto& member_decl = custom->declaration->fields[i];
 					init_list->values[i]->accept(*this);
-					obj->set_member(member_decl->identifier, std::make_shared<runtime_value>(*expression_result));
+					obj->set_member(member_decl->identifier, new_val(expression_result->type, expression_result->value));
 				}
 				add_var(var->identifier, obj);
 				return;
 			}
 		}
 		var->initializer->accept(*this);
-		add_var(var->identifier, std::make_shared<runtime_value>(*expression_result));
+		add_var(var->identifier, new_val(expression_result->type, expression_result->value));
 	}
 	else {
 		// handle default initialization for custom types
 		auto custom = std::dynamic_pointer_cast<custom_type>(var->type);
 		if (custom && custom->declaration) {
-			auto obj = std::make_shared<runtime_value>(*var->type, "");
+			auto obj = new_val(var->type, "");
 			for (auto& member : custom->declaration->fields) {
-				obj->set_member(member->identifier, std::make_shared<runtime_value>(*member->type, ""));
+				obj->set_member(member->identifier, new_val(member->type, ""));
 			}
 			add_var(var->identifier, obj);
 			return;
 		}
-		add_var(var->identifier, std::make_shared<runtime_value>(*var->type, ""));
+		add_var(var->identifier, new_val(var->type, ""));
 	}
 }
 void interpreter_visitor::visit(std::shared_ptr<type_declaration> decl) {
@@ -76,58 +86,58 @@ void interpreter_visitor::visit(std::shared_ptr<expression_statement> expr) {
 }
 void interpreter_visitor::visit(std::shared_ptr<binary_expression> expr) {
 	expr->left->accept(*this);
-	auto left = std::make_shared<runtime_value>(*expression_result);
+	auto left = new_val(expression_result->type, expression_result->value);
 	expr->right->accept(*this);
-	auto right = std::make_shared<runtime_value>(*expression_result);
+	auto right = new_val(expression_result->type, expression_result->value);
 	switch (expr->oparator) {
 	default:
 		switch (expr->oparator) {
 		case TT_EQUAL:
-			expression_result = std::make_shared<runtime_value>(data_type(DT_BOOL), (*left == *right ? "true" : "false"));
+			expression_result = new_val(to_data_type(DT_BOOL), (*left == *right ? "true" : "false"));
 			break;
 		case TT_NOT_EQUAL:
-			expression_result = std::make_shared<runtime_value>(data_type(DT_BOOL), (*left != *right ? "true" : "false"));
+			expression_result = new_val(to_data_type(DT_BOOL), (*left != *right ? "true" : "false"));
 			break;
 		case TT_LESS:
-			expression_result = std::make_shared<runtime_value>(data_type(DT_BOOL), (*left < *right ? "true" : "false"));
+			expression_result = new_val(to_data_type(DT_BOOL), (*left < *right ? "true" : "false"));
 			break;
 		case TT_LESS_EQ:
-			expression_result = std::make_shared<runtime_value>(data_type(DT_BOOL), (left->as_int() <= right->as_int() ? "true" : "false"));
+			expression_result = new_val(to_data_type(DT_BOOL), (left->as_int() <= right->as_int() ? "true" : "false"));
 			break;
 		case TT_GREATER:
-			expression_result = std::make_shared<runtime_value>(data_type(DT_BOOL), (left->as_int() > right->as_int() ? "true" : "false"));
+			expression_result = new_val(to_data_type(DT_BOOL), (left->as_int() > right->as_int() ? "true" : "false"));
 			break;
 		case TT_GREATER_EQ:
-			expression_result = std::make_shared<runtime_value>(data_type(DT_BOOL), (left->as_int() >= right->as_int() ? "true" : "false"));
+			expression_result = new_val(to_data_type(DT_BOOL), (left->as_int() >= right->as_int() ? "true" : "false"));
 			break;
 		case TT_ADD:
 			if (left->is_string() && right->is_string()) {
-				expression_result = std::make_shared<runtime_value>(data_type(DT_STRING), left->as_string() + right->as_string());
+				expression_result = new_val(to_data_type(DT_STRING), left->as_string() + right->as_string());
 			}
 			else if (left->is_string() && right->is_char()) {
-				expression_result = std::make_shared<runtime_value>(data_type(DT_STRING), left->as_string() + right->as_char());
+				expression_result = new_val(to_data_type(DT_STRING), left->as_string() + right->as_char());
 			}
 			else if (left->is_char() && right->is_string()) {
-				expression_result = std::make_shared<runtime_value>(data_type(DT_STRING), std::string(1, left->as_char()) + right->as_string());
+				expression_result = new_val(to_data_type(DT_STRING), std::string(1, left->as_char()) + right->as_string());
 			}
 			else if (left->is_char() && right->is_int()) {
 				char result = static_cast<char>(left->as_char() + right->as_int());
-				expression_result = std::make_shared<runtime_value>(data_type(DT_CHAR), std::string(1, result));
+				expression_result = new_val(to_data_type(DT_CHAR), std::string(1, result));
 			}
 			else if (left->is_int() && right->is_char()) {
 				char result = static_cast<char>(left->as_int() + right->as_char());
-				expression_result = std::make_shared<runtime_value>(data_type(DT_CHAR), std::string(1, result));
+				expression_result = new_val(to_data_type(DT_CHAR), std::string(1, result));
 			}
 			else if (left->is_char() && right->is_char()) {
 				char result = static_cast<char>(left->as_char() + right->as_char());
-				expression_result = std::make_shared<runtime_value>(data_type(DT_CHAR), std::string(1, result));
+				expression_result = new_val(to_data_type(DT_CHAR), std::string(1, result));
 			}
 			else if (left->is_number() && right->is_number()) {
 				if (left->is_float() || right->is_float()) {
-					expression_result = std::make_shared<runtime_value>(data_type(DT_FLOAT), std::to_string(left->as_float() + right->as_float()));
+					expression_result = new_val(to_data_type(DT_FLOAT), std::to_string(left->as_float() + right->as_float()));
 				}
 				else {
-					expression_result = std::make_shared<runtime_value>(data_type(DT_I32), std::to_string(left->as_int() + right->as_int()));
+					expression_result = new_val(to_data_type(DT_I32), std::to_string(left->as_int() + right->as_int()));
 				}
 			}
 			else {
@@ -137,15 +147,15 @@ void interpreter_visitor::visit(std::shared_ptr<binary_expression> expr) {
 		case TT_SUBTRACT:
 			if (left->is_number() && right->is_number()) {
 				if (left->is_float() || right->is_float()) {
-					expression_result = std::make_shared<runtime_value>(data_type(DT_FLOAT), std::to_string(left->as_float() - right->as_float()));
+					expression_result = new_val(to_data_type(DT_FLOAT), std::to_string(left->as_float() - right->as_float()));
 				}
 				else {
-					expression_result = std::make_shared<runtime_value>(data_type(DT_I32), std::to_string(left->as_int() - right->as_int()));
+					expression_result = new_val(to_data_type(DT_I32), std::to_string(left->as_int() - right->as_int()));
 				}
 			}
 			else if (left->is_char() && right->is_char()) {
 				char result = static_cast<char>(left->as_char() - right->as_char());
-				expression_result = std::make_shared<runtime_value>(data_type(DT_CHAR), std::string(1, result));
+				expression_result = new_val(to_data_type(DT_CHAR), std::string(1, result));
 			}
 			else {
 				throw_exception("Unsupported types for subtraction", expr->position);
@@ -156,30 +166,30 @@ void interpreter_visitor::visit(std::shared_ptr<binary_expression> expr) {
 				int count = right->as_int();
 				std::string result;
 				for (int i = 0; i < count; ++i) result += left->as_string();
-				expression_result = std::make_shared<runtime_value>(data_type(DT_STRING), result);
+				expression_result = new_val(to_data_type(DT_STRING), result);
 			}
 			else if (left->is_char() && right->is_int()) {
 				int count = right->as_int();
 				std::string result(count, left->as_char());
-				expression_result = std::make_shared<runtime_value>(data_type(DT_STRING), result);
+				expression_result = new_val(to_data_type(DT_STRING), result);
 			}
 			else if (left->is_int() && right->is_string()) {
 				int count = left->as_int();
 				std::string result;
 				for (int i = 0; i < count; ++i) result += right->as_string();
-				expression_result = std::make_shared<runtime_value>(data_type(DT_STRING), result);
+				expression_result = new_val(to_data_type(DT_STRING), result);
 			}
 			else if (left->is_int() && right->is_char()) {
 				int count = left->as_int();
 				std::string result(count, right->as_char());
-				expression_result = std::make_shared<runtime_value>(data_type(DT_STRING), result);
+				expression_result = new_val(to_data_type(DT_STRING), result);
 			}
 			else if (left->is_number() && right->is_number()) {
 				if (left->is_float() || right->is_float()) {
-					expression_result = std::make_shared<runtime_value>(data_type(DT_FLOAT), std::to_string(left->as_float() * right->as_float()));
+					expression_result = new_val(to_data_type(DT_FLOAT), std::to_string(left->as_float() * right->as_float()));
 				}
 				else {
-					expression_result = std::make_shared<runtime_value>(data_type(DT_I32), std::to_string(left->as_int() * right->as_int()));
+					expression_result = new_val(to_data_type(DT_I32), std::to_string(left->as_int() * right->as_int()));
 				}
 			}
 			else {
@@ -193,10 +203,10 @@ void interpreter_visitor::visit(std::shared_ptr<binary_expression> expr) {
 			}
 			if (left->is_number() && right->is_number()) {
 				if (left->is_float() || right->is_float()) {
-					expression_result = std::make_shared<runtime_value>(data_type(DT_FLOAT), std::to_string(left->as_float() / right->as_float()));
+					expression_result = new_val(to_data_type(DT_FLOAT), std::to_string(left->as_float() / right->as_float()));
 				}
 				else {
-					expression_result = std::make_shared<runtime_value>(data_type(DT_I32), std::to_string(left->as_int() / right->as_int()));
+					expression_result = new_val(to_data_type(DT_I32), std::to_string(left->as_int() / right->as_int()));
 				}
 			}
 			else {
@@ -209,18 +219,18 @@ void interpreter_visitor::visit(std::shared_ptr<binary_expression> expr) {
 				return;
 			}
 			if (left->is_int() && right->is_int()) {
-				expression_result = std::make_shared<runtime_value>(data_type(DT_I32), std::to_string(left->as_int() % right->as_int()));
+				expression_result = new_val(to_data_type(DT_I32), std::to_string(left->as_int() % right->as_int()));
 			}
 			else {
 				throw_exception("Modulo only supports integer types", expr->position);
 			}
 			break;
 		case TT_AND:
-			expression_result = std::make_shared<runtime_value>(data_type(DT_BOOL),
+			expression_result = new_val(to_data_type(DT_BOOL),
 				(left->as_bool() && right->as_bool()) ? "true" : "false");
 			break;
 		case TT_OR:
-			expression_result = std::make_shared<runtime_value>(data_type(DT_BOOL),
+			expression_result = new_val(to_data_type(DT_BOOL),
 				(left->as_bool() || right->as_bool()) ? "true" : "false");
 			break;
 		default:
@@ -233,7 +243,7 @@ void interpreter_visitor::visit(std::shared_ptr<assignment_expression> expr) {
 	// assignment to variable
 	if (auto id_expr = std::dynamic_pointer_cast<identifier_expression>(expr->left)) {
 		expr->right->accept(*this);
-		auto right = std::make_shared<runtime_value>(*expression_result);
+		auto right = new_val(expression_result->type, expression_result->value);
 		set_var(id_expr->identifier, right);
 		expression_result = right;
 		return;
@@ -243,7 +253,7 @@ void interpreter_visitor::visit(std::shared_ptr<assignment_expression> expr) {
 		member_expr->object->accept(*this);
 		auto& obj = *expression_result;
 		expr->right->accept(*this);
-		auto right = std::make_shared<runtime_value>(*expression_result);
+		auto right = new_val(expression_result->type, expression_result->value);
 		obj.set_member(member_expr->member, right);
 		expression_result = right;
 		return;
@@ -272,7 +282,7 @@ void interpreter_visitor::visit(std::shared_ptr<member_expression> expr) {
 }
 void interpreter_visitor::visit(std::shared_ptr<address_of_expression> expr) {
 	expr->value->accept(*this);
-	expression_result = std::make_shared<runtime_value>(expression_result);
+	expression_result = new_pointer(expression_result);
 }
 void interpreter_visitor::visit(std::shared_ptr<deref_expression> expr) {
 	expr->value->accept(*this);
@@ -280,7 +290,7 @@ void interpreter_visitor::visit(std::shared_ptr<deref_expression> expr) {
 }
 void interpreter_visitor::visit(std::shared_ptr<unary_expression> expr) {
 	expr->operand->accept(*this);
-	auto operand = std::make_shared<runtime_value>(*expression_result);
+	auto operand = new_val(expression_result->type, expression_result->value);
 
 	switch (expr->oparator) {
 	case TT_INCREMENT: {
@@ -288,10 +298,10 @@ void interpreter_visitor::visit(std::shared_ptr<unary_expression> expr) {
 		if (!id_expr) throw_exception("Cannot increment non-variable", expr->position);
 		auto var = get_var(id_expr->identifier);
 		if (var->is_int()) {
-			var = std::make_shared<runtime_value>(data_type(DT_I32), std::to_string(var->as_int() + 1));
+			var = new_val(to_data_type(DT_I32), std::to_string(var->as_int() + 1));
 		}
 		else if (var->is_float()) {
-			var = std::make_shared<runtime_value>(data_type(DT_FLOAT), std::to_string(var->as_float() + 1.0));
+			var = new_val(to_data_type(DT_FLOAT), std::to_string(var->as_float() + 1.0));
 		}
 		else {
 			throw_exception("Increment only supported for numeric types", expr->position);
@@ -305,10 +315,10 @@ void interpreter_visitor::visit(std::shared_ptr<unary_expression> expr) {
 		if (!id_expr) throw_exception("Cannot decrement non-variable", expr->position);
 		auto var = get_var(id_expr->identifier);
 		if (var->is_int()) {
-			var = std::make_shared<runtime_value>(data_type(DT_I32), std::to_string(var->as_int() - 1));
+			var = new_val(to_data_type(DT_I32), std::to_string(var->as_int() - 1));
 		}
 		else if (var->is_float()) {
-			var = std::make_shared<runtime_value>(data_type(DT_FLOAT), std::to_string(var->as_float() - 1.0));
+			var = new_val(to_data_type(DT_FLOAT), std::to_string(var->as_float() - 1.0));
 		}
 		else {
 			throw_exception("Decrement only supported for numeric types", expr->position);
@@ -319,10 +329,10 @@ void interpreter_visitor::visit(std::shared_ptr<unary_expression> expr) {
 	}
 	case TT_SUBTRACT: {
 		if (operand->is_int()) {
-			expression_result = std::make_shared<runtime_value>(data_type(DT_I32), std::to_string(-operand->as_int()));
+			expression_result = new_val(to_data_type(DT_I32), std::to_string(-operand->as_int()));
 		}
 		else if (operand->is_float()) {
-			expression_result = std::make_shared<runtime_value>(data_type(DT_FLOAT), std::to_string(-operand->as_float()));
+			expression_result = new_val(to_data_type(DT_FLOAT), std::to_string(-operand->as_float()));
 		}
 		else {
 			throw_exception("Unary minus only supported for numeric types", expr->position);
@@ -330,7 +340,7 @@ void interpreter_visitor::visit(std::shared_ptr<unary_expression> expr) {
 		break;
 	}
 	case TT_NOT: {
-		expression_result = std::make_shared<runtime_value>(data_type(DT_BOOL), operand->as_bool() ? "false" : "true");
+		expression_result = new_val(to_data_type(DT_BOOL), operand->as_bool() ? "false" : "true");
 		break;
 	}
 	default:
@@ -339,14 +349,14 @@ void interpreter_visitor::visit(std::shared_ptr<unary_expression> expr) {
 }
 void interpreter_visitor::visit(std::shared_ptr<index_expression> expr) {
 	expr->base->accept(*this);
-	auto base = std::make_shared<runtime_value>(*expression_result);
+	auto base = new_val(expression_result->type, expression_result->value);
 	expr->indexer->accept(*this);
-	auto index = std::make_shared<runtime_value>(*expression_result);
+	auto index = new_val(expression_result->type, expression_result->value);
 	if (base->is_string()) {
 		int idx = index->as_int();
 		const std::string& str = base->as_string();
 		char ch = (idx < 0 || idx >= static_cast<int>(str.length())) ? '\0' : str[idx];
-		expression_result = std::make_shared<runtime_value>(data_type(DT_CHAR), std::string(1, ch));
+		expression_result = new_val(to_data_type(DT_CHAR), std::string(1, ch));
 		return;
 	}
 	else if (base->is_array()) {
@@ -376,12 +386,12 @@ void interpreter_visitor::visit(std::shared_ptr<cast_expression> expr) {
 	expr->expression->accept(*this);
 	if (expr->expression->type()->is_pointer()) {
 		// this is janky, but the whole interpreter is just for testing anyway
-		expression_result = std::make_shared<runtime_value>(data_type(DT_I32), expression_result->as_string());
+		expression_result = new_val(to_data_type(DT_I32), expression_result->as_string());
 	}
 }
 void interpreter_visitor::visit(std::shared_ptr<initializer_list> init_list) {
 	// handle initializer list for custom types
-	expression_result = std::make_shared<runtime_value>(data_type(DT_UNKNOWN), "");
+	expression_result = new_val(to_data_type(DT_UNKNOWN), "");
 }
 void interpreter_visitor::visit(std::shared_ptr<function_call> func_call) {
 	if (func_call->is_method()) {
@@ -416,10 +426,10 @@ void interpreter_visitor::visit(std::shared_ptr<function_call> func_call) {
 	if (func_call->declaration && func_call->declaration->is_constructor) {
 		// allocate object of the correct type
 		auto custom = std::dynamic_pointer_cast<custom_type>(func_call->declaration->return_type);
-		auto obj = std::make_shared<runtime_value>(*custom, "");
+		auto obj = new_val(custom, "");
 		if (custom && custom->declaration) {
 			for (auto& member : custom->declaration->fields) {
-				obj->set_member(member->identifier, std::make_shared<runtime_value>(*member->type, ""));
+				obj->set_member(member->identifier, new_val(member->type, ""));
 			}
 			build_vftable(obj, custom);
 		}
@@ -433,32 +443,32 @@ void interpreter_visitor::visit(std::shared_ptr<function_call> func_call) {
 	}
 	if (func_call->identifier == "Print") {
 		func_call->args[0]->accept(*this);
-		auto val = std::make_shared<runtime_value>(*expression_result);
+		auto val = new_val(expression_result->type, expression_result->value);
 		std::cout << val->as_string();
 		std::cout.flush();
-		expression_result = std::make_shared<runtime_value>(data_type(DT_VOID), "");
+		expression_result = new_val(to_data_type(DT_VOID), "");
 		return;
 	}
 	if (func_call->identifier == "Read") {
 		std::string input;
 		std::getline(std::cin, input);
-		expression_result = std::make_shared<runtime_value>(data_type(DT_STRING), input);
+		expression_result = new_val(to_data_type(DT_STRING), input);
 		return;
 	}
 	if (func_call->identifier == "ReadKey") {
 		char ch = _getch();
-		expression_result = std::make_shared<runtime_value>(data_type(DT_CHAR), std::string(1, ch));
+		expression_result = new_val(to_data_type(DT_CHAR), std::string(1, ch));
 		return;
 	}
 	if (func_call->identifier == "ReadInt") {
 		std::string input;
 		std::getline(std::cin, input);
-		expression_result = std::make_shared<runtime_value>(data_type(DT_I32), input);
+		expression_result = new_val(to_data_type(DT_I32), input);
 		return;
 	}
 	if (func_call->identifier == "Wait") {
 		func_call->args[0]->accept(*this);
-		auto seconds = std::make_shared<runtime_value>(*expression_result);
+		auto seconds = new_val(expression_result->type, expression_result->value);
 		if (!seconds->is_number()) {
 			throw_exception("Wait function expects a numeric argument", func_call->position);
 			return;
@@ -469,14 +479,14 @@ void interpreter_visitor::visit(std::shared_ptr<function_call> func_call) {
 	}
 	if (func_call->identifier == "SetConsolePos") {
 		func_call->args[0]->accept(*this);
-		auto x = std::make_shared<runtime_value>(*expression_result);
+		auto x = new_val(expression_result->type, expression_result->value);
 		func_call->args[1]->accept(*this);
-		auto y = std::make_shared<runtime_value>(*expression_result);
+		auto y = new_val(expression_result->type, expression_result->value);
 		if (!x->is_int() || !y->is_int()) {
 			throw_exception("SetConsolePos function expects a numeric argument", func_call->position);
 			return;
 		}
-		COORD coord {
+		COORD coord{
 			static_cast<SHORT>(x->as_int()),
 			static_cast<SHORT>(y->as_int())
 		};
@@ -485,21 +495,21 @@ void interpreter_visitor::visit(std::shared_ptr<function_call> func_call) {
 	}
 	if (func_call->identifier == "GetKey") {
 		func_call->args[0]->accept(*this);
-		auto x = std::make_shared<runtime_value>(*expression_result);
+		auto x = new_val(expression_result->type, expression_result->value);
 		if (!x->is_char()) {
 			throw_exception("GetKey expects a character", func_call->position);
 			return;
 		}
 		char ch = _getch();
-		expression_result = std::make_shared<runtime_value>(data_type(DT_BOOL), (ch == x->as_char()) ? "true" : "false");
+		expression_result = new_val(to_data_type(DT_BOOL), (ch == x->as_char()) ? "true" : "false");
 		return;
 	}
 	enter_function(func_call->declaration, func_call->args);
 }
 void interpreter_visitor::visit(std::shared_ptr<literal> literal) {
-	expression_result = std::make_shared<runtime_value>(literal->primitive, literal->value);
+	expression_result = new_val(to_data_type(literal->primitive), literal->value);
 }
-void interpreter_visitor::visit(std::shared_ptr<block_statement> block) {
+void interpreter_visitor::visit(std::shared_ptr<code_block> block) {
 	push_scope();
 	for (int i = 0; i < block->body.size(); i++) {
 		block->body[i]->accept(*this);
@@ -511,8 +521,8 @@ void interpreter_visitor::visit(std::shared_ptr<if_statement> if_stmt) {
 	if (expression_result->as_bool()) {
 		if_stmt->then_block->accept(*this);
 	}
-	else if (if_stmt->else_block) {
-		if_stmt->else_block->accept(*this);
+	else if (if_stmt->else_node) {
+		if_stmt->else_node->accept(*this);
 	}
 }
 void interpreter_visitor::visit(std::shared_ptr<inline_if> inline_if) {
@@ -550,24 +560,19 @@ void interpreter_visitor::visit(std::shared_ptr<while_loop> while_loop) {
 	pop_scope();
 }
 void interpreter_visitor::visit(std::shared_ptr<return_statement> ret_stmt) {
+	if (ret_stmt->is_conditional()) {
+		ret_stmt->condition->accept(*this);
+		if (!expression_result->as_bool()) {
+			// condition is false, do not return
+			return;
+		}
+	}
 	if (ret_stmt->value) {
 		ret_stmt->value->accept(*this);
 		throw function_return(*expression_result);
 	}
 	else {
-		throw function_return(runtime_value(data_type(DT_VOID), ""));
-	}
-}
-void interpreter_visitor::visit(std::shared_ptr<return_if> ret_stmt) {
-	ret_stmt->condition->accept(*this);
-	if (expression_result->as_bool()) {
-		if (ret_stmt->value) {
-			ret_stmt->value->accept(*this);
-			throw function_return(*expression_result);
-		}
-		else {
-			throw function_return(runtime_value(data_type(DT_VOID), ""));
-		}
+		throw function_return(runtime_value(to_data_type(DT_VOID), ""));
 	}
 }
 
@@ -619,6 +624,16 @@ void interpreter_visitor::set_var(const std::string& identifier, std::shared_ptr
 	throw_exception("Variable \"" + identifier + "\" not found", position{ 0, 0 });
 }
 
+val_ptr interpreter_visitor::new_val(const type_ptr type, const std::string& value) {
+	return std::make_shared<runtime_value>(type, value);
+}
+val_ptr interpreter_visitor::new_pointer(std::shared_ptr<runtime_value> pointee) {
+	return std::make_shared<runtime_value>(pointee);
+}
+val_ptr interpreter_visitor::new_array(const type_ptr elem_type, const std::vector<std::shared_ptr<runtime_value>>& elements) {
+	return std::make_shared<runtime_value>(elem_type, elements);
+}
+
 void interpreter_visitor::build_vftable(std::shared_ptr<runtime_value> obj, std::shared_ptr<custom_type> type) {
 	if (!type->declaration) return;
 
@@ -653,15 +668,15 @@ void interpreter_visitor::enter_function(std::shared_ptr<function_declaration> f
 	// add function parameters to scope
 	for (int i = 0; i < func->parameters.size(); i++) {
 		args[i]->accept(*this);
-		add_var(func->parameters[i]->identifier, std::make_shared<runtime_value>(*expression_result));
+		add_var(func->parameters[i]->identifier, new_val(expression_result->type, expression_result->value));
 	}
 	try {
 		func->body->accept(*this);
 		// no return encountered, set to void
-		expression_result = std::make_shared<runtime_value>(data_type(DT_VOID), "");
+		expression_result = new_val(to_data_type(DT_VOID), "");
 	}
 	catch (const function_return& ret) {
-		expression_result = std::make_shared<runtime_value>(ret.value);
+		expression_result = new_val(ret.value.type, ret.value.value);
 	}
 	pop_scope();
 	function_stack.pop_back();
@@ -672,7 +687,7 @@ void interpreter_visitor::enter_method(std::shared_ptr<function_declaration> fun
 	// add function parameters to scope
 	for (int i = 0; i < func->parameters.size(); i++) {
 		args[i]->accept(*this);
-		add_var(func->parameters[i]->identifier, std::make_shared<runtime_value>(*expression_result));
+		add_var(func->parameters[i]->identifier, new_val(expression_result->type, expression_result->value));
 	}
 
 	set_this(object);
@@ -684,10 +699,10 @@ void interpreter_visitor::enter_method(std::shared_ptr<function_declaration> fun
 		}
 		func->body->accept(*this);
 		// no return encountered, set to void
-		expression_result = std::make_shared<runtime_value>(data_type(DT_VOID), "");
+		expression_result = new_val(to_data_type(DT_VOID), "");
 	}
 	catch (const function_return& ret) {
-		expression_result = std::make_shared<runtime_value>(ret.value);
+		expression_result = new_val(ret.value.type, ret.value.value);
 	}
 
 	remove_this();
@@ -695,14 +710,5 @@ void interpreter_visitor::enter_method(std::shared_ptr<function_declaration> fun
 	function_stack.pop_back();
 }
 void interpreter_visitor::throw_exception(std::string message, position pos) {
-#ifdef _DEBUG
-	throw("Runtime exception occured during process execution");
-#endif
-	std::cerr << "Runtime exception occurred: " << message << "\n";
-	std::cerr << "At line: " << pos.line << ", column: " << pos.column << "\n\n";
-	std::cerr << "Call stack:" << "\n";
-	for (int i = 0; i < function_stack.size(); i++) {
-		std::cerr << function_stack[i]->identifier << "()" << "\n";
-	}
-	exit(1);
+	throw runtime_exception(message, pos);
 }

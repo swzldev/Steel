@@ -7,7 +7,7 @@
 #include "expression.h"
 #include "../declarations/function_declaration.h"
 #include "../../parser_utils.h"
-#include "../../types/types.h"
+#include "../../types/data_type.h"
 
 class function_call : public expression, public std::enable_shared_from_this<function_call> {
 public:
@@ -46,7 +46,7 @@ public:
 			if (ctor_type) {
 				return ctor_type->type();
 			}
-			return data_type::unknown;
+			return data_type::UNKNOWN;
 		}
 		return declaration->return_type;
 	}

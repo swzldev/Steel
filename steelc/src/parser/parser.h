@@ -10,7 +10,7 @@
 #include "symbolics/symbol_table.h"
 #include "../lexer/token.h"
 
-constexpr auto ENABLE_GENERICS = false;
+constexpr auto ENABLE_GENERICS = true;
 
 class parser : public compilation_pass {
 public:
@@ -19,24 +19,24 @@ public:
 
 	void parse();
 	ast_ptr parse_declaration();
-	ast_ptr parse_constructor_declaration(token& typename_token);
-	ast_ptr parse_function_declaration(bool is_constructor, bool is_override);
-	ast_ptr parse_variable_declaration(bool is_const);
-	ast_ptr parse_type_declaration(token& kind_token);
-	ast_ptr parse_parameter();
+	std::shared_ptr<function_declaration> parse_constructor_declaration(token& typename_token);
+	std::shared_ptr<function_declaration> parse_function_declaration(bool is_constructor, bool is_override);
+	std::shared_ptr<variable_declaration> parse_variable_declaration(bool is_const);
+	std::shared_ptr<type_declaration> parse_type_declaration(token& kind_token);
+	std::shared_ptr<variable_declaration> parse_parameter();
 	ast_ptr parse_statement();
-	ast_ptr parse_block();
-	ast_ptr parse_if_statement();
-	ast_ptr parse_for_loop();
-	ast_ptr parse_while_loop();
-	ast_ptr parse_return_statement();
+	std::shared_ptr<code_block> parse_block(bool is_body = true);
+	std::shared_ptr<if_statement> parse_if_statement();
+	std::shared_ptr<for_loop> parse_for_loop();
+	std::shared_ptr<while_loop> parse_while_loop();
+	std::shared_ptr<return_statement> parse_return_statement();
 	ast_ptr parse_expression_statement();
-	ast_ptr parse_expression();
-	ast_ptr parse_binary_expression(int precedence = 0);
-	ast_ptr parse_unary_expression();
-	ast_ptr parse_primary_expression();
-	ast_ptr parse_initializer_list();
-	ast_ptr parse_array_initializer();
+	std::shared_ptr<expression> parse_expression();
+	std::shared_ptr<expression> parse_binary_expression(int precedence = 0);
+	std::shared_ptr<expression> parse_unary_expression();
+	std::shared_ptr<expression> parse_primary_expression();
+	std::shared_ptr<initializer_list> parse_initializer_list();
+	std::shared_ptr<initializer_list> parse_array_initializer();
 
 	// helper functions
 	type_ptr parse_type();
@@ -48,8 +48,6 @@ private:
 	std::shared_ptr<compilation_unit> unit;
 	std::vector<token>& tokens;
 	size_t current = 0;
-
-	std::string text_literal_to_string(token& literal_token);
 
 	token& peek();
 	token& previous();

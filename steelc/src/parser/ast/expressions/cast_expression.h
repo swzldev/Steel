@@ -23,7 +23,7 @@ public:
 
 	type_ptr type() const override {
 		if (!cast_type) {
-			return data_type::unknown;
+			return data_type::UNKNOWN;
 		}
 		return cast_type;
 	}

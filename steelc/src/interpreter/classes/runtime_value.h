@@ -8,43 +8,44 @@
 #include <memory>
 
 #include "../parser/ast/ast_fwd.h"
-#include "../parser/types/types.h"
-#include "../parser/types/custom_types.h"
+#include "../parser/types/data_type.h"
+#include "../parser/types/custom_type.h"
+#include "../parser/types/type_utils.h"
 
 class runtime_value {
 public:
     runtime_value()
-        : type(DT_UNKNOWN), value("") {
+        : type(data_type::UNKNOWN), value("") {
     }
-    runtime_value(const data_type& t, const std::string& v)
+    runtime_value(const type_ptr t, const std::string& v)
         : type(t), value(v) {
     }
-    runtime_value(const data_type& t)
+    runtime_value(const type_ptr t)
         : type(t), value("") {
     }
     runtime_value(std::shared_ptr<runtime_value> pointee)
-        : type(DT_POINTER), value(std::to_string((long long)pointee.get())), pointee(pointee) {
+        : type(make_pointer(pointee->type)), value(std::to_string((long long)pointee.get())), pointee(pointee) {
     }
-	runtime_value(const std::vector<std::shared_ptr<runtime_value>>& elems)
-		: type(DT_ARRAY), value(""), elements(elems) {
-	}
+    runtime_value(type_ptr elem_type, const std::vector<std::shared_ptr<runtime_value>>& elems)
+        : type(make_array(elem_type)), value(""), elements(elems) {
+    }
 
-    data_type type;
+    type_ptr type;
     std::string value;
-	std::vector<std::shared_ptr<runtime_value>> elements;
-	std::shared_ptr<runtime_value> pointee;
+    std::vector<std::shared_ptr<runtime_value>> elements;
+    std::shared_ptr<runtime_value> pointee;
     std::unordered_map<std::string, std::shared_ptr<runtime_value>> members;
     std::unordered_map<std::string, std::shared_ptr<function_declaration>> vftable;
 
-    inline bool is_int()       const { return type.primitive == DT_I32; }
-    inline bool is_float()     const { return type.primitive == DT_FLOAT; }
-    inline bool is_char()      const { return type.primitive == DT_CHAR; }
-    inline bool is_string()    const { return type.primitive == DT_STRING; }
-    inline bool is_bool()      const { return type.primitive == DT_BOOL; }
-    inline bool is_void()      const { return type.primitive == DT_VOID; }
-    inline bool is_pointer()   const { return type.primitive == DT_POINTER; }
-    inline bool is_array()     const { return type.primitive == DT_ARRAY; }
-    inline bool is_unknown()   const { return type.primitive == DT_UNKNOWN; }
+    inline bool is_int()       const { return type->is_primitive() && type->primitive == DT_I32; }
+    inline bool is_float()     const { return type->is_primitive() && type->primitive == DT_FLOAT; }
+    inline bool is_char()      const { return type->is_primitive() && type->primitive == DT_CHAR; }
+    inline bool is_string()    const { return type->is_primitive() && type->primitive == DT_STRING; }
+    inline bool is_bool()      const { return type->is_primitive() && type->primitive == DT_BOOL; }
+    inline bool is_void()      const { return type->is_primitive() && type->primitive == DT_VOID; }
+    inline bool is_pointer()   const { return type->is_pointer(); }
+    inline bool is_array()     const { return type->is_array(); }
+    inline bool is_unknown()   const { return type->is_unknown(); }
     inline bool is_number()    const { return is_int() || is_float(); }
 
     int as_int() const {
@@ -64,34 +65,33 @@ public:
         if (is_string()) return value;
         if (is_char()) return std::string(1, as_char());
         if (is_int() || is_float() || is_bool()) return value;
-		if (is_pointer()) {
-			std::ostringstream oss;
-			oss << "0x" << std::hex << std::stoll(value);
-			return oss.str();
-		}
+        if (is_pointer()) {
+            std::ostringstream oss;
+            oss << "0x" << std::hex << std::stoll(value);
+            return oss.str();
+        }
         return value;
     }
     bool as_bool() const {
         if (!is_bool()) throw std::runtime_error("runtime_value: not a bool");
         return value == "true" || value == "1";
     }
-	std::vector<std::shared_ptr<runtime_value>> as_array() const {
-		if (!is_array()) throw std::runtime_error("runtime_value: not an array");
-		return elements;
-	}
-
-    void set_member(const std::string& name, std::shared_ptr<runtime_value> val) {
-        members[name] = val;
+    std::vector<std::shared_ptr<runtime_value>> as_array() const {
+        if (!is_array()) throw std::runtime_error("runtime_value: not an array");
+        return elements;
     }
 
-    std::shared_ptr<runtime_value> get_member(const std::string& name) const {
+    inline void set_member(const std::string& name, std::shared_ptr<runtime_value> val) {
+        members[name] = val;
+    }
+    inline std::shared_ptr<runtime_value> get_member(const std::string& name) const {
         auto it = members.find(name);
         if (it != members.end()) return it->second;
         return nullptr;
     }
 
     bool operator==(const runtime_value& other) const {
-        return type.primitive == other.type.primitive && value == other.value;
+        return type == other.type && value == other.value;
     }
     bool operator!=(const runtime_value& other) const {
         return !(*this == other);
@@ -113,3 +113,5 @@ public:
         return !(*this < other);
     }
 };
+
+using val_ptr = std::shared_ptr<runtime_value>;

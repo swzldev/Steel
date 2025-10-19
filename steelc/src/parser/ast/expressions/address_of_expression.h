@@ -4,7 +4,7 @@
 #include <memory>
 
 #include "expression.h"
-#include "../../parser_utils.h"
+#include "../../types/type_utils.h"
 
 class address_of_expression : public expression, public std::enable_shared_from_this<address_of_expression> {
 public:

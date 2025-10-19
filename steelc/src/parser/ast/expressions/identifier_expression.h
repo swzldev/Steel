@@ -19,7 +19,7 @@ public:
 	}
 
 	type_ptr type() const override {
-		return declaration ? declaration->type : data_type::unknown;
+		return declaration ? declaration->type : data_type::UNKNOWN;
 	}
 	bool is_rvalue() const override {
 		return false;

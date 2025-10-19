@@ -26,7 +26,7 @@ void flow_analyzer::visit(std::shared_ptr<function_declaration> func) {
 		ERROR(ERR_NOT_ALL_PATHS_RETURN_VALUE, func->position);
 	}
 }
-void flow_analyzer::visit(std::shared_ptr<block_statement> block) {
+void flow_analyzer::visit(std::shared_ptr<code_block> block) {
 	size_t i = 0;
 	for (; i < block->body.size(); i++) {
 		block->body[i]->accept(*this);
@@ -46,20 +46,8 @@ void flow_analyzer::visit(std::shared_ptr<return_statement> ret_stmt) {
 		return;
 	}
 
-	current_returns = true;
-
-	if (current_constructor && ret_stmt->returns_value()) {
-		ERROR(ERR_CONSTRUCTOR_RETURNS_VALUE, ret_stmt->position);
-		return;
-	}
-}
-void flow_analyzer::visit(std::shared_ptr<return_if> ret_stmt) {
-	if (!current_function && !current_constructor) {
-		ERROR(ERR_RETURN_OUTSIDE_FUNCTION, ret_stmt->position);
-		return;
-	}
-
-	current_returns = false; // may not return
+	// non conditional return always returns, otherwise it may not
+	current_returns = !ret_stmt->is_conditional();
 
 	if (current_constructor && ret_stmt->returns_value()) {
 		ERROR(ERR_CONSTRUCTOR_RETURNS_VALUE, ret_stmt->position);
@@ -78,9 +66,9 @@ void flow_analyzer::visit(std::shared_ptr<if_statement> if_stmt) {
 	then_returns = current_returns;
 	current_returns = false;
 
-	if (if_stmt->else_block) {
+	if (if_stmt->else_node) {
 		// could be a block statement or another if (for an else if)
-		if_stmt->else_block->accept(*this);
+		if_stmt->else_node->accept(*this);
 		else_returns = current_returns;
 		current_returns = false;
 	}

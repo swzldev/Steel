@@ -6,12 +6,12 @@
 #include "token.h"
 #include "../parser/compilation_pass.h"
 
-enum _lexer_flags {
+enum lexer_flag {
 	LF_NONE = 0,
 	LF_TEXT = 1 << 0,
 	LF_MULTILINE = 1 << 1,
 };
-typedef int lexer_flags;
+typedef unsigned int lexer_flags;
 
 class lexer : public compilation_pass {
 public:
@@ -32,6 +32,8 @@ private:
 	bool check_for_number(std::string& src, size_t& index);
 	bool check_for_char(std::string& src, size_t& index);
 	bool check_for_string(std::string& src, size_t& index);
+
+	std::string parse_text_literal(std::string& literal);
 
 	void add_token(const std::string& value);
 	void add_token(const std::string& value, token_type type);

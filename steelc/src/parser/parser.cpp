@@ -89,7 +89,7 @@ ast_ptr parser::parse_declaration() {
 	}
 	return nullptr;
 }
-ast_ptr parser::parse_constructor_declaration(token& typename_token) {
+std::shared_ptr<function_declaration> parser::parse_constructor_declaration(token& typename_token) {
 	ast_ptr constructor = parse_function_declaration(true, false);
 	auto func_decl = std::dynamic_pointer_cast<function_declaration>(constructor);
 	if (func_decl) {
@@ -99,7 +99,7 @@ ast_ptr parser::parse_constructor_declaration(token& typename_token) {
 	}
 	return nullptr;
 }
-ast_ptr parser::parse_function_declaration(bool is_constructor, bool is_override) {
+std::shared_ptr<function_declaration> parser::parse_function_declaration(bool is_constructor, bool is_override) {
 	token identifier_token;
 	if (!is_constructor) {
 		if (!match(TT_IDENTIFIER)) {
@@ -157,8 +157,8 @@ ast_ptr parser::parse_function_declaration(bool is_constructor, bool is_override
 	}
 	return nullptr;
 }
-ast_ptr parser::parse_variable_declaration(bool is_const) {
-	type_ptr var_type = data_type::unknown;
+std::shared_ptr<variable_declaration> parser::parse_variable_declaration(bool is_const) {
+	type_ptr var_type = data_type::UNKNOWN;
 	if (match(TT_LBRACKET)) {
 		var_type = parse_type();
 		if (!var_type) {
@@ -198,7 +198,7 @@ ast_ptr parser::parse_variable_declaration(bool is_const) {
 	auto decl = make_ast<variable_declaration>(identifier_token, is_const, var_type, identifier_token.value, std::dynamic_pointer_cast<expression>(initializer));
 	return decl;
 }
-ast_ptr parser::parse_type_declaration(token& kind_token) {
+std::shared_ptr<type_declaration> parser::parse_type_declaration(token& kind_token) {
 	if (!match(TT_IDENTIFIER)) {
 		ERROR_TOKEN(ERR_ID_EXPECTED, peek());
 		return nullptr;
@@ -207,6 +207,10 @@ ast_ptr parser::parse_type_declaration(token& kind_token) {
 
 	custom_type_type type_kind = kind_token.type == TT_STRUCT ? CT_STRUCT : kind_token.type == TT_CLASS ? CT_CLASS : CT_INTERFACE;
 	auto type_decl = make_ast<type_declaration>(identifier_token, type_kind, identifier_token.value);
+
+	if (ENABLE_GENERICS && match(TT_LESS)) {
+		type_decl->generics = parse_generics();
+	}
 
 	std::vector<type_ptr> base_types;
 	if (match(TT_COLON)) {
@@ -272,7 +276,7 @@ ast_ptr parser::parse_type_declaration(token& kind_token) {
 
 	return type_decl;
 }
-ast_ptr parser::parse_parameter() {
+std::shared_ptr<variable_declaration> parser::parse_parameter() {
 	// parse parameter type
 	type_ptr param_type = parse_type();
 	if (!param_type) {
@@ -296,7 +300,7 @@ ast_ptr parser::parse_parameter() {
 ast_ptr parser::parse_statement() {
 	if (check(TT_LBRACE)) {
 		// parse block also matches LBRACE, so we only check here
-		return parse_block();
+		return parse_block(false);
 	}
 	else if (match(TT_IF)) {
 		return parse_if_statement();
@@ -312,12 +316,12 @@ ast_ptr parser::parse_statement() {
 	}
 	return parse_expression_statement();
 }
-ast_ptr parser::parse_block() {
+std::shared_ptr<code_block> parser::parse_block(bool is_body) {
 	if (!match(TT_LBRACE)) {
 		ERROR_TOKEN(ERR_LBRACE_EXPECTED, peek());
 		return nullptr;
 	}
-	std::shared_ptr<block_statement> block = std::make_shared<block_statement>();
+	std::shared_ptr<code_block> block = std::make_shared<code_block>();
 	while (!is_at_end() && !check(TT_RBRACE)) {
 		if (match(TT_CONST) || match(TT_LET)) {
 			bool is_const = previous().type == TT_CONST;
@@ -336,9 +340,10 @@ ast_ptr parser::parse_block() {
 		ERROR_TOKEN(ERR_RBRACE_EXPECTED, peek());
 		return nullptr;
 	}
+	block->is_body = is_body;
 	return block;
 }
-ast_ptr parser::parse_if_statement() {
+std::shared_ptr<if_statement> parser::parse_if_statement() {
 	token& if_token = previous();
 	std::shared_ptr<if_statement> if_stmt = make_ast<if_statement>(if_token);
 	if (!match(TT_LPAREN)) {
@@ -359,17 +364,17 @@ ast_ptr parser::parse_if_statement() {
 	if (match(TT_ELSE)) {
 		if (match(TT_IF)) {
 			// else if statement
-			if_stmt->else_block = parse_if_statement();
+			if_stmt->else_node = parse_if_statement();
 		}
 		else {
 			// else block
-			if_stmt->else_block = parse_block();
+			if_stmt->else_node = parse_block();
 		}
 	}
 
 	return if_stmt;
 }
-ast_ptr parser::parse_for_loop() {
+std::shared_ptr<for_loop> parser::parse_for_loop() {
 	token& for_token = previous();
 	if (!match(TT_LPAREN)) {
 		ERROR_TOKEN(ERR_LPAREN_EXPECTED, peek());
@@ -411,7 +416,7 @@ ast_ptr parser::parse_for_loop() {
 
 	return make_ast<for_loop>(for_token, initializer, std::dynamic_pointer_cast<expression>(condition), std::dynamic_pointer_cast<expression>(increment), body);
 }
-ast_ptr parser::parse_while_loop() {
+std::shared_ptr<while_loop> parser::parse_while_loop() {
 	token& while_token = previous();
 	if (!match(TT_LPAREN)) {
 		ERROR_TOKEN(ERR_LPAREN_EXPECTED, peek());
@@ -428,64 +433,41 @@ ast_ptr parser::parse_while_loop() {
 
 	return make_ast<while_loop>(while_token, std::dynamic_pointer_cast<expression>(condition), body);
 }
-ast_ptr parser::parse_return_statement() {
+std::shared_ptr<return_statement> parser::parse_return_statement() {
 	token& return_token = previous();
 
-	// if a semicolon is found immediately after return, it's a bare return
+	// base return
 	if (match(TT_SEMICOLON)) {
-		return make_ast<return_statement>(return_token, nullptr);
+		return make_ast<return_statement>(return_token, nullptr, nullptr);
 	}
 
-	// if theres an if after return, it's a return if (without value)
+	// returns value?
+	std::shared_ptr<expression> value = nullptr;
+	if (!check(TT_IF) && !check(TT_SEMICOLON)) {
+		value = parse_expression();
+	}
+
+	// is conditional?
+	std::shared_ptr<expression> condition = nullptr;
 	if (match(TT_IF)) {
 		if (!match(TT_LPAREN)) {
 			ERROR_TOKEN(ERR_LPAREN_EXPECTED, peek());
 			return nullptr;
 		}
-
-		ast_ptr condition = parse_expression();
-
+		condition = parse_expression();
 		if (!match(TT_RPAREN)) {
 			ERROR_TOKEN(ERR_RPAREN_EXPECTED, peek());
 			return nullptr;
 		}
-
-		if (!match(TT_SEMICOLON)) {
-			ERROR_TOKEN(ERR_SEMICOLON_EXPECTED, peek());
-			return nullptr;
-		}
-		return make_ast<return_if>(return_token, std::dynamic_pointer_cast<expression>(condition));
-	}
-
-	// parse the return value expression
-	ast_ptr value = parse_expression();
-
-	// return if (with value)
-	if (match(TT_IF)) {
-		if (!match(TT_LPAREN)) {
-			ERROR_TOKEN(ERR_LPAREN_EXPECTED, peek());
-			return nullptr;
-		}
-
-		ast_ptr condition = parse_expression();
-
-		if (!match(TT_RPAREN)) {
-			ERROR_TOKEN(ERR_RPAREN_EXPECTED, peek());
-			return nullptr;
-		}
-
-		if (!match(TT_SEMICOLON)) {
-			ERROR_TOKEN(ERR_SEMICOLON_EXPECTED, peek());
-			return nullptr;
-		}
-		return make_ast<return_if>(return_token, std::dynamic_pointer_cast<expression>(condition), std::dynamic_pointer_cast<expression>(value));
 	}
 
 	if (!match(TT_SEMICOLON)) {
 		ERROR_TOKEN(ERR_SEMICOLON_EXPECTED, peek());
 		return nullptr;
 	}
-	return make_ast<return_statement>(return_token, std::dynamic_pointer_cast<expression>(value));
+
+	// Construct the return_statement with value and condition (either or both may be nullptr)
+	return make_ast<return_statement>(return_token, value, condition);
 }
 ast_ptr parser::parse_expression_statement() {
 	token& expr_token = peek();
@@ -504,10 +486,10 @@ ast_ptr parser::parse_expression_statement() {
 	}
 	return make_ast<expression_statement>(expr_token, std::dynamic_pointer_cast<expression>(expr));
 }
-ast_ptr parser::parse_expression() {
+std::shared_ptr<expression> parser::parse_expression() {
 	return parse_binary_expression();
 }
-ast_ptr parser::parse_binary_expression(int precedence) {
+std::shared_ptr<expression> parser::parse_binary_expression(int precedence) {
 	token& expr_token = peek();
 	std::shared_ptr<expression> left = std::dynamic_pointer_cast<expression>(parse_unary_expression());
 	while (true) {
@@ -537,7 +519,7 @@ ast_ptr parser::parse_binary_expression(int precedence) {
 	}
 	return left;
 }
-ast_ptr parser::parse_unary_expression() {
+std::shared_ptr<expression> parser::parse_unary_expression() {
 	token& tok = peek();
 	// address-of operator
 	if (tok.type == TT_AMPERSAND) {
@@ -560,8 +542,8 @@ ast_ptr parser::parse_unary_expression() {
 	// otherwise, parse primary expression
 	return parse_primary_expression();
 }
-ast_ptr parser::parse_primary_expression() {
-	ast_ptr expr = nullptr;
+std::shared_ptr<expression> parser::parse_primary_expression() {
+	std::shared_ptr<expression> expr = nullptr;
 
 	if (match(TT_IDENTIFIER)) {
 		// this is only used for global functions
@@ -613,13 +595,11 @@ ast_ptr parser::parse_primary_expression() {
 	}
 	else if (match(TT_CHAR_LITERAL)) {
 		token& literal_token = previous();
-		std::string char_value = text_literal_to_string(literal_token);
-		expr = make_ast<literal>(literal_token, DT_CHAR, char_value);
+		expr = make_ast<literal>(literal_token, DT_CHAR, literal_token.value);
 	}
 	else if (match(TT_STRING_LITERAL)) {
 		token& literal_token = previous();
-		std::string str_value = text_literal_to_string(literal_token);
-		expr = make_ast<literal>(literal_token, DT_STRING, str_value);
+		expr = make_ast<literal>(literal_token, DT_STRING, literal_token.value);
 	}
 	else if (match(2, TT_TRUE, TT_FALSE)) {
 		token& literal_token = previous();
@@ -714,7 +694,7 @@ ast_ptr parser::parse_primary_expression() {
 
 	return expr;
 }
-ast_ptr parser::parse_initializer_list() {
+std::shared_ptr<initializer_list> parser::parse_initializer_list() {
 	token& init_token = peek();
 	if (!match(TT_LBRACE)) {
 		ERROR_TOKEN(ERR_LBRACE_EXPECTED, peek());
@@ -727,7 +707,7 @@ ast_ptr parser::parse_initializer_list() {
 	}
 	return make_ast<initializer_list>(init_token, values);
 }
-ast_ptr parser::parse_array_initializer() {
+std::shared_ptr<initializer_list> parser::parse_array_initializer() {
 	token& init_token = peek();
 	if (!match(TT_LBRACKET)) {
 		ERROR_TOKEN(ERR_LBRACKET_EXPECTED, peek());
@@ -745,24 +725,20 @@ ast_ptr parser::parse_array_initializer() {
 
 type_ptr parser::parse_type() {
 	// parse through modifiers, e.g. 'const'
-	data_type_modifiers type_mods = DTM_NONE;
-	while (false) {
+	std::vector<data_type_modifier> type_mods;
+	while (match_modifier()) {
 		auto modifier = to_type_modifier(previous().type);
-		if (type_mods & modifier) {
-			ERROR_TOKEN(ERR_DUPLICATE_TYPE_MODIFIER, previous());
-			return nullptr;
-		}
-		type_mods |= modifier;
+		type_mods.push_back(modifier);
 	}
 
 	// match typename (custom or primitive)
-	type_ptr type = data_type::unknown;
+	type_ptr type = data_type::UNKNOWN;
 	if (match_primitive() || match(TT_IDENTIFIER)) {
 		type = to_data_type(previous());
 	}
 	else {
 		// type mods but no typename
-		if (type_mods != DTM_NONE) {
+		if (!type_mods.empty()) {
 			ERROR_TOKEN(ERR_TYPENAME_EXPECTED, peek());
 		}
 		// no type or mods, so we can just return null
@@ -843,37 +819,6 @@ std::vector<std::shared_ptr<generic_parameter>> parser::parse_generics() {
 			return generics;
 		}
 	}
-}
-
-std::string parser::text_literal_to_string(token& literal_token) {
-	// remove quotes
-	std::string literal_trimmed = literal_token.value.substr(1, literal_token.value.length() - 2);
-	// replace escaped characters
-	std::string result("");
-	for (size_t i = 0; i < literal_trimmed.length(); i++) {
-		if (literal_trimmed[i] == '\\') {
-			i++; // skip the escape character
-			if (i < literal_trimmed.length()) {
-				switch (literal_trimmed[i]) {
-				case 'n': result += '\n'; break;
-				case 't': result += '\t'; break;
-				case 'r': result += '\r'; break;
-				case '0': result += '\0'; break; // null character
-				case '\\': result += '\\'; break;
-				case '"': result += '"'; break;
-				default: result += literal_trimmed[i]; break; // just add the character if it's not a known escape sequence
-				}
-			}
-			else {
-				ERROR_TOKEN(ERR_INCOMPLETE_ESCAPE_SEQ, literal_token);
-				return "";
-			}
-		}
-		else {
-			result += literal_trimmed[i];
-		}
-	}
-	return result;
 }
 
 token& parser::peek() {

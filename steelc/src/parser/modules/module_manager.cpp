@@ -1,7 +1,5 @@
 #include "module_manager.h"
 
-#include <algorithm>
-
 module_manager::module_manager() {
 	global_module = std::make_shared<module_info>();
 	global_module->id = get_next_id();

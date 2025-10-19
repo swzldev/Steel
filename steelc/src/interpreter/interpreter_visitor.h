@@ -7,6 +7,7 @@
 
 #include "classes/function_return.h"
 #include "classes/runtime_value.h"
+#include "../parser/ast/ast_fwd.h"
 #include "../parser/ast/ast_visitor.h"
 #include "../parser/symbolics/symbol_table.h"
 
@@ -35,13 +36,12 @@ public:
 	virtual void visit(std::shared_ptr<initializer_list> init) override;
 	virtual void visit(std::shared_ptr<function_call> func_call) override;
 	virtual void visit(std::shared_ptr<literal> literal) override;
-	virtual void visit(std::shared_ptr<block_statement> block) override;
+	virtual void visit(std::shared_ptr<code_block> block) override;
 	virtual void visit(std::shared_ptr<if_statement> if_stmt) override;
 	virtual void visit(std::shared_ptr<inline_if> if_stmt) override;
 	virtual void visit(std::shared_ptr<for_loop> for_loop) override;
 	virtual void visit(std::shared_ptr<while_loop> while_loop) override;
 	virtual void visit(std::shared_ptr<return_statement> ret_stmt) override;
-	virtual void visit(std::shared_ptr<return_if> ret_stmt) override;
 
 private:
 	std::vector<std::map<std::string, std::shared_ptr<runtime_value>>> variables;
@@ -54,6 +54,10 @@ private:
 	std::shared_ptr<runtime_value> expression_result;
 	std::shared_ptr<runtime_value> this_object;
 	std::vector<std::shared_ptr<runtime_value>> this_stack;
+
+	val_ptr new_val(const type_ptr type, const std::string& value);
+	val_ptr new_pointer(std::shared_ptr<runtime_value> pointee);
+	val_ptr new_array(const type_ptr elem_type, const std::vector<std::shared_ptr<runtime_value>>& elements);
 
 	void build_vftable(std::shared_ptr<runtime_value> obj, std::shared_ptr<custom_type> type);
 	void set_this(std::shared_ptr<runtime_value> obj);

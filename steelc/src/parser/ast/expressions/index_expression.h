@@ -4,7 +4,7 @@
 #include <memory>
 
 #include "expression.h"
-#include "../../types/types.h"
+#include "../../types/data_type.h"
 #include "../../types/container_types.h"
 #include "../../parser_utils.h"
 #include "../../../lexer/token_type.h"

@@ -120,3 +120,55 @@
   the program like ReadKey().
 - Added overrides for the 3 container types to allow support for indexing on arrays
   and pointers (although pointer indexing is not yet functional).
+
+### 14-10-2025
+- Huge type system rewrite - ended up liking the original system more so rolled back.
+- Some of the changes from the new system have been backported and so unfortunately
+  there may be some missing changes in the changelog but that isnt so important
+  in this stage anyway.
+- != is no longer a virtual operator in data_type, as it always just calls !(*this == other)
+  anyway.
+- Casting into data_type subclasses is now built-in to the data_type class, which makes
+  it significantly easier to write and also more safe (backported).
+- Added a new DT_CUSTOM data type so that custom types can be detected easily from the
+  base class (data_type) and no longer just uses DT_UNKNOWN which should be reserved
+  only for the UNKNOWN data type (backported).
+- data_type now derives from std::enable_shared_from_this to allow as_ functions to work
+  correctly (backported).
+- data_type's == operator now uses a type_ptr argument which means dereferencing types
+  is no longer needed during comparison (backported).
+- Added a language_constants namespace to store widely used language constants, for example
+  the name of the entry point (backported).
+- Updated the interpreter with a lot of changes made to support the new type system (however
+  these changes are better for the old system too so have been backported):
+    - The interpreter now uses type_ptr instead of raw data_type objects which reduces the need
+	  a bunch of dereferencing.
+	- The interpreter now correctly sets up the type for pointers and arrays instead of just
+      creating a new data_type object with the correct type enum which should be illegal.
+	- The interpreter now uses new utility functions new_... to create new objects at runtime
+	  which avoids std::make_shared spam.
+	- The interpreter now throws an actual c++ exception when a runtime error occurs instead of
+	  just printing an error and exiting, which is just better for overall code flow and allows
+	  an additional "Execution failed." message as well as any nescessary clean-up which may
+	  be needed in the future.
+
+### 16-10-2025
+- Renamed block_statement to code_block and added a flag is_body for denoting if its the body of
+  another node or just a standalone code block (backported).
+- Updated the parser to return an accurate ast node type instead of just a generate ast_ptr (backported).
+- Added generic support for type declarations.
+
+### 17-10-2025
+- Backported some more features in the semantic passes to re-enable generic support.
+- Added some utility functions to data_type:
+    - is_void()
+	- is_integer()
+	- is_floating_point()
+	- is_numeric()
+	- is_character()
+	- is_text()
+- Added a position member to data_type for better error reporting.
+
+### 19-10-2025
+- Added a new version of make_ast that supports a direct position object rather than a token.
+- The parser now sets the is_body flag of standalone and non-standalone code blocks correctly.

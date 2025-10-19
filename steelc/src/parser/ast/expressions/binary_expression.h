@@ -4,7 +4,7 @@
 #include <memory>
 
 #include "expression.h"
-#include "../../types/types.h"
+#include "../../types/data_type.h"
 #include "../../../lexer/token_type.h"
 #include "../../../lexer/token_utils.h"
 
@@ -27,7 +27,7 @@ public:
 
 	type_ptr type() const override {
 		if (!result_type) {
-			return data_type::unknown;
+			return data_type::UNKNOWN;
 		}
 		return result_type;
 	}

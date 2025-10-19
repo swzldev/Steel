@@ -8,7 +8,7 @@ void interpreter::begin_execution() {
 	interpreter_visitor visitor;
 	
 	// get the main function
-	auto& main_func = module_manager.main_declaration;
+	auto& main_func = module_manager.entry_point;
 	if (main_func == nullptr) {
 		std::cerr << "Interpreter error: No 'Main' function found in the program." << std::endl;
 		return;

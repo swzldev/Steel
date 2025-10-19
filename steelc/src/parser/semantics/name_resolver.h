@@ -27,13 +27,10 @@ public:
 	void visit(std::shared_ptr<identifier_expression> expr) override;
 	void visit(std::shared_ptr<this_expression> expr) override;
 	void visit(std::shared_ptr<function_call> func_call) override;
-	void visit(std::shared_ptr<block_statement> block) override;
+	void visit(std::shared_ptr<code_block> block) override;
 	void visit(std::shared_ptr<if_statement> if_stmt) override;
 	void visit(std::shared_ptr<for_loop> for_loop) override;
 	void visit(std::shared_ptr<while_loop> while_loop) override;
-
-	// for blocks where we dont want to push and pop a new scope
-	void visit_block(ast_ptr& block);
 
 private:
 	symbol_resolver resolver;

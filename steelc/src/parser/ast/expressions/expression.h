@@ -3,7 +3,7 @@
 #include <string>
 
 #include "../ast_node.h"
-#include "../../types/types.h"
+#include "../../types/data_type.h"
 
 class expression : public ast_node {
 public:

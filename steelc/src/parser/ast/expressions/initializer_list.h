@@ -5,7 +5,7 @@
 
 #include "expression.h"
 #include "../../parser_utils.h"
-#include "../../types/types.h"
+#include "../../types/data_type.h"
 
 class initializer_list : public expression, public std::enable_shared_from_this<initializer_list> {
 public:
@@ -31,7 +31,7 @@ public:
 	}
 
 	type_ptr type() const override {
-		return result_type ? result_type : data_type::unknown;
+		return result_type ? result_type : data_type::UNKNOWN;
 	}
 	bool is_rvalue() const override {
 		return true; // initializer list always return a temporary value

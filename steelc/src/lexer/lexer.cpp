@@ -203,7 +203,7 @@ bool lexer::check_for_char(std::string& src, size_t& index) {
 		return false;
 	}
 
-	std::string literal("\'");
+	std::string literal;
 	size_t i = index + 1;
 	for (; src[i] != '\'' && i < src.length(); i++) {
 		// do not allow line ends
@@ -212,19 +212,21 @@ bool lexer::check_for_char(std::string& src, size_t& index) {
 		}
 		literal += src[i];
 	}
-	literal += src[i];
 
 	// ensure char literal has an end
-	if (literal.length() < 2 || literal.back() != '\'') {
+	if (literal.length() < 2 || src[i] != '\'') {
 		ERROR(ERR_UNTERMINATED_CHAR_LITERAL, { line, column });
 	}
 
+	// parse result
+	literal = parse_text_literal(literal);
+
 	// ensure that the char literal is exactly one character long
-	if (literal.length() != 3) { // 1 character + 2 quotes
+	if (literal.length() != 1) { // 1 character
 		ERROR(ERR_TOO_MANY_CHARS_IN_CHAR_LITERAL, { line, column });
 	}
 
-	column += literal.length();
+	column += (i - index + 1);
 
 	// add literal token
 	add_token(literal, TT_CHAR_LITERAL);
@@ -238,7 +240,7 @@ bool lexer::check_for_string(std::string& src, size_t& index) {
 		return false;
 	}
 
-	std::string literal("\"");
+	std::string literal;
 	size_t i = index + 1;
 	for (; src[i] != '\"' && i < src.length(); i++) {
 		// do not allow line ends
@@ -247,14 +249,16 @@ bool lexer::check_for_string(std::string& src, size_t& index) {
 		}
 		literal += src[i];
 	}
-	literal += src[i];
 
 	// ensure string literal has an end
-	if (literal.length() < 2 || literal.back() != '\"') {
+	if (literal.length() < 2 || src[i] != '\"') {
 		ERROR(ERR_UNTERMINATED_STRING_LITERAL, { line, column });
 	}
 
-	column += literal.length();
+	column += (i - index + 1);
+
+	// parse result
+	literal = parse_text_literal(literal);
 
 	// add literal token
 	add_token(literal, TT_STRING_LITERAL);
@@ -263,9 +267,57 @@ bool lexer::check_for_string(std::string& src, size_t& index) {
 	return true;
 }
 
+std::string lexer::parse_text_literal(std::string& literal) {
+	std::string result;
+	size_t idx = 0;
+
+	auto next = [&]() -> char {
+		if (idx + 1 < literal.length()) {
+			return literal[idx + 1];
+		}
+		return '\0';
+		};
+
+	for (char c : literal) {
+		// catch all escape sequences here
+		if (c == '\\') {
+			char nc = next();
+			switch (nc) {
+			case 'n':
+				result += '\n';
+				break;
+			case 't':
+				result += '\t';
+				break;
+			case 'r':
+				result += '\r';
+				break;
+			case '\\':
+				result += '\\';
+				break;
+			case '\"':
+				result += '\"';
+				break;
+			case '\'':
+				result += '\'';
+				break;
+			default:
+				ERROR(ERR_UNKNOWN_ESCAPE_SEQUENCE, { line, column + idx }, (std::string("\\") + nc).c_str());
+				break;
+			}
+			idx++; // skip next char
+		}
+		else {
+			result += c;
+		}
+		idx++;
+	}
+	return result;
+}
+
 void lexer::add_token(const std::string& value) {
 	// early return for empty strings
-	if (value.empty()) return;	
+	if (value.empty()) return;
 
 	// check if the token is a keyword
 	if (is_keyword(value)) {
@@ -275,7 +327,7 @@ void lexer::add_token(const std::string& value) {
 	// add token
 	else {
 		add_token(value, TT_IDENTIFIER);
-	}	
+	}
 }
 void lexer::add_token(const std::string& value, token_type type) {
 	tokens.push_back({ value, type, line, column - value.length() });

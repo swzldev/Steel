@@ -32,7 +32,7 @@ public:
 
 	virtual type_ptr type() const override {
 		if (!declaration || !declaration->type) {
-			return data_type::unknown;
+			return data_type::UNKNOWN;
 		}
 		return declaration->type;
 	}

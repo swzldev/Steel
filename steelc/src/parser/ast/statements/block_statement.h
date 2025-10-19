@@ -4,11 +4,11 @@
 
 #include "../ast_node.h"
 
-class block_statement : public ast_node, public std::enable_shared_from_this<block_statement> {
+class code_block : public ast_node, public std::enable_shared_from_this<code_block> {
 public:
-	ENABLE_ACCEPT(block_statement)
+	ENABLE_ACCEPT(code_block)
 
-	block_statement() {
+	code_block() {
 	}
 
 	std::string string(int indent) const override {
@@ -27,4 +27,5 @@ public:
 	}
 
 	std::vector<ast_ptr> body;
+	bool is_body = false;
 };

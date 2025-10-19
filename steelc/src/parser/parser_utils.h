@@ -12,17 +12,9 @@ enum primitive_type;
 
 enum data_type_modifier to_type_modifier(token_type tt);
 enum primitive_type to_primitive(token_type tt);
-type_ptr to_data_type(token& tk);
-type_ptr to_data_type(token_type tt);
-type_ptr to_data_type(primitive_type pt);
-type_ptr to_data_type(const std::string& type_name);
-
-type_ptr make_pointer(type_ptr base_type);
-type_ptr make_array(type_ptr base_type);
-type_ptr make_array(type_ptr base_type, size_t size);
+const type_ptr to_data_type(token& tk);
+const type_ptr to_data_type(token_type tt);
+const type_ptr to_data_type(primitive_type pt);
+const type_ptr to_data_type(const std::string& type_name);
 
 bool is_numeric(primitive_type primitive);
-
-int primitive_size_of(primitive_type primitive);
-
-std::string to_string(primitive_type primitive);

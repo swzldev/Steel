@@ -12,7 +12,8 @@
 #include "../ast/declarations/variable_declaration.h"
 #include "../ast/declarations/function_declaration.h"
 #include "../ast/declarations/type_declaration.h"
-#include "../types/types.h"
+#include "../types/data_type.h"
+#include "../../error/error_catalog.h"
 
 enum lookup_error {
 	LOOKUP_OK,
@@ -29,6 +30,9 @@ public:
 	lookup_result(std::shared_ptr<variable_declaration> var)
 		: error(LOOKUP_OK), value(std::move(var)) {
 	}
+	lookup_result(std::shared_ptr<generic_parameter> param)
+		: error(LOOKUP_OK), value(std::move(param)) {
+	}
 	lookup_result(std::shared_ptr<function_declaration> func)
 		: error(LOOKUP_OK), value(std::move(func)) {
 	}
@@ -39,6 +43,7 @@ public:
 	lookup_error error = LOOKUP_OK;
 	std::variant<
 		std::shared_ptr<variable_declaration>,
+		std::shared_ptr<generic_parameter>,
 		std::shared_ptr<function_declaration>,
 		std::shared_ptr<type_declaration>
 	> value;
@@ -54,26 +59,32 @@ public:
 	void push_scope();
 	void pop_scope();
 
-	bool add_variable(std::shared_ptr<variable_declaration> var);
-	bool add_field(std::shared_ptr<type_declaration> type, std::shared_ptr<variable_declaration> var);
-	int add_function(std::shared_ptr<function_declaration> func);
-	int add_method(std::shared_ptr<type_declaration> type, std::shared_ptr<function_declaration> func);
-	bool add_type(std::shared_ptr<type_declaration> type);
+	error_code add_variable(std::shared_ptr<variable_declaration> var);
+	error_code add_generic(std::shared_ptr<generic_parameter> param);
+	error_code add_field(std::shared_ptr<type_declaration> type, std::shared_ptr<variable_declaration> var);
+	error_code add_function(std::shared_ptr<function_declaration> func);
+	error_code add_method(std::shared_ptr<type_declaration> type, std::shared_ptr<function_declaration> func);
+	error_code add_type(std::shared_ptr<type_declaration> type);
 
 	inline bool has_variable(const std::string& name) const {
 		return get_variable(nullptr, name).error == LOOKUP_OK;
+	}
+	inline bool has_generic(const std::string& name) const {
+		return get_generic(name).error == LOOKUP_OK;
 	}
 	inline bool has_type(const std::string& name) const {
 		return types.find(name) != types.end();
 	}
 
 	lookup_result get_variable(std::shared_ptr<const type_declaration> type, const std::string& name) const;
+	lookup_result get_generic(const std::string& name) const;
 	lookup_result get_function(const std::string& name, type_ptr return_type, std::vector<type_ptr> param_types) const;
 	lookup_result get_type(const std::string& name) const;
 	std::vector<std::shared_ptr<function_declaration>> get_function_candidates(const std::string& name, size_t arity, size_t generics) const;
-	
+
 private:
 	std::vector<std::map<std::string, std::shared_ptr<variable_declaration>>> scopes;
+	std::vector<std::map<std::string, std::shared_ptr<generic_parameter>>> generic_scopes;
 	std::vector<std::pair<std::string, std::shared_ptr<function_declaration>>> functions;
 	std::unordered_map<std::string, std::shared_ptr<type_declaration>> types;
 };

@@ -10,11 +10,10 @@ class module_declaration;
 class conversion_declaration;
 class operator_declaration;
 
-class block_statement;
+class code_block;
 class import_statement;
 class inline_if;
 class return_statement;
-class return_if;
 class if_statement;
 class for_loop;
 class while_loop;

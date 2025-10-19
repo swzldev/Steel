@@ -4,26 +4,47 @@
 #include <memory>
 
 #include "../ast/ast.h"
-#include "../types/custom_types.h"
+#include "../types/custom_type.h"
 
 void name_resolver::visit(std::shared_ptr<function_declaration> func) {
 	if (func->body) {
 		sym_table->push_scope();
+
 		if (func->is_constructor) {
 			current_ctor = func;
 		}
 		else {
 			current_func = func;
 		}
+
+		// add generics to the current scope
+		for (const auto& generic : func->generics) {
+			auto err = sym_table->add_generic(generic);
+			if (err == ERR_DUPLICATE_GENERIC) {
+				ERROR(ERR_DUPLICATE_GENERIC, func->position, generic->identifier.c_str());
+				continue;
+			}
+			else if (err == ERR_GENERIC_SHADOWS_VARIABLE) {
+				// we know they have the same name with this error so we can use this sneaky trick to name both
+				ERROR(ERR_GENERIC_SHADOWS_VARIABLE, func->position, generic->identifier.c_str(), generic->identifier.c_str());
+				continue;
+			}
+		}
+
 		// add parameters to the current scope
 		for (const auto& param : func->parameters) {
 			if (sym_table->has_variable(param->identifier)) {
 				ERROR(ERR_DUPLICATE_PARAMETER, func->position, param->identifier.c_str());
 				continue;
 			}
-			sym_table->add_variable(param);
+			if (sym_table->add_variable(param) == ERR_VARIABLE_SHADOWS_GENERIC) {
+				// we know they have the same name with this error so we can use this sneaky trick to name both
+				ERROR(ERR_VARIABLE_SHADOWS_GENERIC, func->position, param->identifier.c_str(), param->identifier.c_str());
+				continue;
+			}
 		}
-		visit_block(func->body);
+
+		func->body->accept(*this);
 		current_func = nullptr;
 		current_ctor = nullptr;
 		sym_table->pop_scope();
@@ -33,8 +54,14 @@ void name_resolver::visit(std::shared_ptr<variable_declaration> var) {
 	// only check local variables here - globals are already handled
 	// in the declaration collector pass
 	if (!sym_table->in_global_scope()) {
-		if (!sym_table->add_variable(var)) {
-			ERROR(ERR_VARIABLE_ALREADY_DECLARED, var->position, var->identifier.c_str());
+		auto err = sym_table->add_variable(var);
+		if (err == ERR_VARIABLE_ALREADY_DECLARED_SCOPE) {
+			ERROR(ERR_VARIABLE_ALREADY_DECLARED_SCOPE, var->position, var->identifier.c_str());
+			return;
+		}
+		else if (err == ERR_VARIABLE_SHADOWS_GENERIC) {
+			// we know they have the same name with this error so we can use this sneaky trick to name both
+			ERROR(ERR_VARIABLE_SHADOWS_GENERIC, var->position, var->identifier.c_str(), var->identifier.c_str());
 			return;
 		}
 	}
@@ -121,12 +148,16 @@ void name_resolver::visit(std::shared_ptr<function_call> func_call) {
 		arg->accept(*this);
 	}
 }
-void name_resolver::visit(std::shared_ptr<block_statement> block) {
-	sym_table->push_scope();
+void name_resolver::visit(std::shared_ptr<code_block> block) {
+	if (!block->is_body) {
+		sym_table->push_scope();
+	}
 	for (const auto& stmt : block->body) {
 		stmt->accept(*this);
 	}
-	sym_table->pop_scope();
+	if (!block->is_body) {
+		sym_table->pop_scope();
+	}
 }
 void name_resolver::visit(std::shared_ptr<if_statement> if_stmt) {
 	// may change this later to support inline variable if statements
@@ -134,8 +165,8 @@ void name_resolver::visit(std::shared_ptr<if_statement> if_stmt) {
 	//sym_table->push_scope();
 	if_stmt->then_block->accept(*this);
 	//sym_table->pop_scope();
-	if (if_stmt->else_block) {
-		if_stmt->else_block->accept(*this);
+	if (if_stmt->else_node) {
+		if_stmt->else_node->accept(*this);
 	}
 }
 void name_resolver::visit(std::shared_ptr<for_loop> for_loop) {
@@ -149,7 +180,7 @@ void name_resolver::visit(std::shared_ptr<for_loop> for_loop) {
 	if (for_loop->increment) {
 		for_loop->increment->accept(*this);
 	}
-	visit_block(for_loop->body);
+	for_loop->body->accept(*this);
 	sym_table->pop_scope();
 }
 void name_resolver::visit(std::shared_ptr<while_loop> while_loop) {
@@ -157,17 +188,6 @@ void name_resolver::visit(std::shared_ptr<while_loop> while_loop) {
 		while_loop->condition->accept(*this);
 	}
 	sym_table->push_scope();
-	visit_block(while_loop->body);
+	while_loop->body->accept(*this);
 	sym_table->pop_scope();
-}
-
-void name_resolver::visit_block(ast_ptr& block) {
-	auto block_ptr = std::dynamic_pointer_cast<block_statement>(block);
-	if (!block_ptr) {
-		ERROR(ERR_INTERNAL_ERROR, block->position, "Name Resolver" "Expected block statement in visit_block");
-		return;
-	}
-	for (const auto& stmt : block_ptr->body) {
-		stmt->accept(*this);
-	}
 }

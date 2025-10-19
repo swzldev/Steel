@@ -92,11 +92,11 @@ lookup_result symbol_resolver::get_method(std::shared_ptr<const type_declaration
 	std::shared_ptr<function_declaration> method = nullptr;
 
 	for (const auto& method : type->methods) {
-		if (method->identifier == name && *method->return_type == *return_type) {
+		if (method->identifier == name && *method->return_type == return_type) {
 			if (method->parameters.size() == param_types.size()) {
 				bool params_match = true;
 				for (size_t i = 0; i < method->parameters.size(); ++i) {
-					if (*method->parameters[i]->type != *param_types[i]) {
+					if (*method->parameters[i]->type != param_types[i]) {
 						params_match = false;
 						break;
 					}
@@ -166,7 +166,7 @@ std::vector<std::shared_ptr<function_declaration>> symbol_resolver::get_function
 
 	return candidates;
 }
-std::vector<std::shared_ptr<function_declaration>> symbol_resolver::get_ctor_candidates(const std::string& name, size_t arity) {
+std::vector<std::shared_ptr<function_declaration>> symbol_resolver::get_ctor_candidates(const std::string& name, size_t arity) const {
 	std::vector<std::shared_ptr<function_declaration>> candidates;
 
 	const auto& result = get_type(name);

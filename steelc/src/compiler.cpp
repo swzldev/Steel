@@ -77,7 +77,7 @@ bool compiler::compile(std::vector<source_file> sources) {
 			semantic_errors.insert(semantic_errors.end(), errors.begin(), errors.end());
 		}
 
-		type_checker type_checker(unit);
+		type_checker type_checker(unit, module_manager);
 		unit->accept(type_checker);
 		if (type_checker.has_errors()) {
 			const auto& errors = type_checker.get_errors();

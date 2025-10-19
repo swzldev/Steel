@@ -2,7 +2,7 @@
 
 #include <vector>
 
-#include "types.h"
+#include "data_type.h"
 #include "../ast/declarations/operator_declaration.h"
 #include "../ast/declarations/conversion_declaration.h"
 #include "../../lexer/token_type.h"

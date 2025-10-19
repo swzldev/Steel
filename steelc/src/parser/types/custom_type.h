@@ -2,7 +2,7 @@
 
 #include <map>
 
-#include "types.h"
+#include "data_type.h"
 
 class type_declaration;
 
@@ -19,16 +19,7 @@ public:
 	// retrieves a custom type, or creates one if it doesnt exist
 	static std::shared_ptr<custom_type> get(const std::string& identifier);
 
-	bool operator==(const data_type& other) const override {
-		if (auto custom = dynamic_cast<const custom_type*>(&other)) {
-			// compare typename
-			return identifier == custom->identifier;
-		}
-		return false;
-	}
-	bool operator!=(const data_type& other) const {
-		return !(*this == other);
-	}
+	bool operator==(const type_ptr& other) const override;
 
 	int size_of() const override;
 
@@ -43,6 +34,8 @@ public:
 		return identifier;
 	}
 
+	std::shared_ptr<data_type> clone() const override;
+
 	type_id tid() const {
 		return id;
 	}
@@ -51,7 +44,7 @@ public:
 
 private:
 	custom_type(const std::string& identifier)
-		: data_type(), declaration(nullptr), identifier(identifier) {
+		: data_type(DT_CUSTOM), declaration(nullptr), identifier(identifier) {
 		static type_id next_id = 0;
 		id = next_id++;
 	}

@@ -6,7 +6,7 @@
 
 enum error_code {
     ERR_SUCCESS = 0,
-	ERR_ID_EXPECTED,
+    ERR_ID_EXPECTED,
     ERR_LBRACE_EXPECTED,
     ERR_RBRACE_EXPECTED,
     ERR_LBRACKET_EXPECTED,
@@ -29,7 +29,7 @@ enum error_code {
     ERR_CONSTRUCTOR_OUTSIDE_TYPE,
     ERR_CONSTRUCTOR_OVERLOAD_EXISTS,
     ERR_VARIABLE_VOID_TYPE,
-    ERR_VARIABLE_ALREADY_DECLARED,
+    ERR_VARIABLE_ALREADY_DECLARED_SCOPE,
     ERR_TYPE_ALREADY_DEFINED,
     ERR_NESTED_TYPE_DECLARATION_NOT_ALLOWED,
     ERR_STRUCT_CONTAINS_METHOD,
@@ -84,7 +84,7 @@ enum error_code {
     ERR_NO_CONVERSION_EXISTS,
     ERR_CONVERSION_EXPLICIT_CAST_REQUIRED,
     ERR_RETURN_TYPE_CANT_OVERLOAD,
-    ERR_MAIN_OVERLOADED,
+    ERR_ENTRY_OVERLOADED,
     ERR_NO_MATCHING_METHOD,
     ERR_INTERNAL_ERROR,
     ERR_MODULE_NOT_FOUND,
@@ -117,6 +117,14 @@ enum error_code {
     ERR_INVALID_ARRAY_INITIALIZER_USAGE,
     ERR_ARRAY_INITIALIZER_TYPE_MISMATCH,
     ERR_CANNOT_INFER_TYPE_UNKNOWN_INIT,
+    ERR_VARIABLE_SHADOWS_GENERIC,
+    ERR_GENERIC_SHADOWS_VARIABLE,
+    ERR_AMBIGUOUS_CONSTRUCTOR_CALL,
+    ERR_AMBIGUOUS_METHOD_CALL,
+    ERR_AMBIGUOUS_FUNCTION_CALL,
+    ERR_OVERRIDE_CANT_BE_GENERIC,
+    ERR_CANNOT_INFER_TYPE,
+    ERR_UNKNOWN_ESCAPE_SEQUENCE,
 };
 
 enum warning_code {
@@ -130,7 +138,7 @@ enum warning_code {
 };
 
 enum advice_code {
-    
+
 };
 
 struct error_catalog {
@@ -180,7 +188,7 @@ struct error_catalog {
             {"S042", "The type '%s' is not defined"},
             {"S043", "Expected member name"},
             {"S044", "The type '%s' has no member named '%s'"},
-            {"S045", "No built-in or user-defined operator matches the types provided"},
+            {"S045", "No built-in or user-defined operator matches the types provided, types are '%s', '%s'"},
             {"S046", "Logical NOT operator can only be applied to boolean expressions"},
             {"S047", "NEGATE operator can only be applied to integer or float expressions"},
             {"S048", "Increment operator can only be applied to integer expressions"},
@@ -214,11 +222,11 @@ struct error_catalog {
             {"S089", "No built-in or user-defined conversion exists from '%s' to '%s'"},
             {"S090", "Conversion from '%s' to '%s' is explicit, did you forget to use a cast?"},
             {"S091", "Functions or methods cannot be overloaded by return type"},
-            {"S092", "Main function cannot be overloaded"},
+            {"S092", "Only one entry point '%s' is allowed in a single program"},
             {"S093", "No method '%s' matches the arguments provided"},
             {"S094", "An internal compiler error occurred, phase: '%s', message: '%s'"},
             {"S095", "Module '%s' not found"},
-            {"S096", "Import statements can only appear at the top-level (cannot exist within any scope)"},
+            {"S096", "Import statements can only appear at top-level (outside all scopes)"},
             {"S097", "Name collision, '%s' is defined in multiple places"},
             {"S098", "Unterminated mutli-line comment"},
             {"S099", "Type name expected"},
@@ -234,11 +242,11 @@ struct error_catalog {
             {"S109", "'>' expected"},
             {"S110", "At least one generic parameter is required"},
             {"S111", "Duplicate generic parameter '%s'"},
-			{"S112", "Interface methods cannot have a body"},
+            {"S112", "Interface methods cannot have a body"},
             {"S113", "An interface cannot be derived from any type"},
             {"S114", "Structs cannot be derived from any type"},
             {"S115", "Classes can only derive from one base class"},
-			{"S116", "The base class '%s' must be first in the implementation list"},
+            {"S116", "The base class '%s' must be first in the implementation list"},
             {"S117", "No overridden method '%s' found in any base class or interface"},
             {"S118", "Class '%s' does not implement interface method '%s'"},
             {"S119", "':' expected"},
@@ -247,6 +255,15 @@ struct error_catalog {
             {"S122", "Array initializer can only be used to initialize arrays"},
             {"S123", "Type mismatch in array initializer. Expected '%s' but got '%s'"},
             {"S124", "Cannot infer type from initializer"},
+            {"S125", "Local variable '%s' shadows generic parameter '%s'"},
+            {"S126", "Generic parameter '%s' shadows local variable '%s'"},
+            {"S127", "Ambiguous constructor call to '%s' with the given argument types"},
+            {"S128", "Ambiguous method call to '%s' with the given argument types"},
+            {"S129", "Ambiguous function call to '%s' with the given argument types"},
+            {"S130", "Generic functions cannot be marked as 'override'"},
+            {"S131", "Failed to infer type"},
+            {"S132", "Invalid escape sequence: '%s'"},
+
         };
         return errors[code - 1];
     }
