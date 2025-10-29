@@ -210,6 +210,7 @@ std::shared_ptr<type_declaration> parser::parse_type_declaration(token& kind_tok
 
 	if (ENABLE_GENERICS && match(TT_LESS)) {
 		type_decl->generics = parse_generics();
+		type_decl->is_generic = true;
 	}
 
 	std::vector<type_ptr> base_types;
@@ -313,6 +314,9 @@ ast_ptr parser::parse_statement() {
 	}
 	else if (match(TT_RETURN)) {
 		return parse_return_statement();
+	}
+	else if (match(TT_BREAK)) {
+		return parse_break_statement();
 	}
 	return parse_expression_statement();
 }
@@ -466,8 +470,31 @@ std::shared_ptr<return_statement> parser::parse_return_statement() {
 		return nullptr;
 	}
 
-	// Construct the return_statement with value and condition (either or both may be nullptr)
 	return make_ast<return_statement>(return_token, value, condition);
+}
+std::shared_ptr<break_statement> parser::parse_break_statement() {
+	token& break_token = previous();
+
+	// is conditional?
+	std::shared_ptr<expression> condition = nullptr;
+	if (match(TT_IF)) {
+		if (!match(TT_LPAREN)) {
+			ERROR_TOKEN(ERR_LPAREN_EXPECTED, peek());
+			return nullptr;
+		}
+		condition = parse_expression();
+		if (!match(TT_RPAREN)) {
+			ERROR_TOKEN(ERR_RPAREN_EXPECTED, peek());
+			return nullptr;
+		}
+	}
+
+	if (!match(TT_SEMICOLON)) {
+		ERROR_TOKEN(ERR_SEMICOLON_EXPECTED, peek());
+		return nullptr;
+	}
+
+	return make_ast<break_statement>(break_token, condition);
 }
 ast_ptr parser::parse_expression_statement() {
 	token& expr_token = peek();
@@ -745,6 +772,26 @@ type_ptr parser::parse_type() {
 		return nullptr;
 	}
 	type->modifiers = type_mods;
+
+	// generic type args (if any)
+	if (ENABLE_GENERICS && match(TT_LESS)) {
+		std::vector<type_ptr> generic_args;
+		do {
+			type_ptr gen_type = parse_type();
+			if (gen_type) {
+				generic_args.push_back(gen_type);
+			}
+			else {
+				ERROR_TOKEN(ERR_TYPENAME_EXPECTED, peek());
+				return nullptr;
+			}
+		} while (match(TT_COMMA));
+		if (!match(TT_GREATER)) {
+			ERROR_TOKEN(ERR_ANGLE_RIGHT_EXPECTED, peek());
+			return nullptr;
+		}
+		type->generic_args = generic_args;
+	}
 
 	// parse through any pointer/array modifiers
 	while (true) {

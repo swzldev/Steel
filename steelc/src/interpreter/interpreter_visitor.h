@@ -42,6 +42,7 @@ public:
 	virtual void visit(std::shared_ptr<for_loop> for_loop) override;
 	virtual void visit(std::shared_ptr<while_loop> while_loop) override;
 	virtual void visit(std::shared_ptr<return_statement> ret_stmt) override;
+	virtual void visit(std::shared_ptr<break_statement> brk_stmt) override;
 
 private:
 	std::vector<std::map<std::string, std::shared_ptr<runtime_value>>> variables;
@@ -55,7 +56,9 @@ private:
 	std::shared_ptr<runtime_value> this_object;
 	std::vector<std::shared_ptr<runtime_value>> this_stack;
 
+	val_ptr new_val(const type_ptr type); // initializes to default value of type
 	val_ptr new_val(const type_ptr type, const std::string& value);
+	val_ptr new_val(val_ptr other);
 	val_ptr new_pointer(std::shared_ptr<runtime_value> pointee);
 	val_ptr new_array(const type_ptr elem_type, const std::vector<std::shared_ptr<runtime_value>>& elements);
 

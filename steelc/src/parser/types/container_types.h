@@ -71,9 +71,6 @@ public:
 	bool operator==(const type_ptr& other) const override;
 	
 	std::string name() const override {
-		if (declaration && declaration->substitution) {
-			return declaration->substitution->name();
-		}
 		return identifier;
 	}
 
@@ -88,5 +85,5 @@ public:
 		return false;
 	}
 
-	std::shared_ptr<generic_parameter> declaration = nullptr;
+	int generic_param_index = 0;
 };

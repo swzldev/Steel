@@ -166,19 +166,4 @@ std::vector<std::shared_ptr<function_declaration>> symbol_resolver::get_function
 
 	return candidates;
 }
-std::vector<std::shared_ptr<function_declaration>> symbol_resolver::get_ctor_candidates(const std::string& name, size_t arity) const {
-	std::vector<std::shared_ptr<function_declaration>> candidates;
 
-	const auto& result = get_type(name);
-	if (result.error != LOOKUP_OK) {
-		return candidates;
-	}
-
-	auto& type = std::get<std::shared_ptr<type_declaration>>(result.value);
-	for (const auto& ctor : type->constructors) {
-		if (ctor->parameters.size() == arity) {
-			candidates.push_back(ctor);
-		}
-	}
-	return candidates;
-}

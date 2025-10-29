@@ -10,6 +10,7 @@ void type_resolver::visit(std::shared_ptr<function_declaration> func) {
 	sym_table->push_scope();
 	// add generics to the current scope
 	for (const auto& generic : func->generics) {
+		generic->param_index = cur_generic_index++;
 		auto err = sym_table->add_generic(generic);
 		if (err == ERR_DUPLICATE_GENERIC) {
 			ERROR(ERR_DUPLICATE_GENERIC, func->position, generic->identifier.c_str());
@@ -38,6 +39,17 @@ void type_resolver::visit(std::shared_ptr<variable_declaration> var) {
 	resolve_type(var->type);
 }
 void type_resolver::visit(std::shared_ptr<type_declaration> decl) {
+	sym_table->push_scope();
+	// add generics to the current scope
+	for (const auto& generic : decl->generics) {
+		generic->param_index = cur_generic_index++;
+		auto err = sym_table->add_generic(generic);
+		if (err == ERR_DUPLICATE_GENERIC) {
+			ERROR(ERR_DUPLICATE_GENERIC, decl->position, generic->identifier.c_str());
+			continue;
+		}
+	}
+
 	// resolve member types
 	for (auto& member : decl->fields) {
 		resolve_type(member->type);
@@ -59,6 +71,7 @@ void type_resolver::visit(std::shared_ptr<type_declaration> decl) {
 	for (type_ptr& base : decl->base_types) {
 		resolve_type(base);
 	}
+	sym_table->pop_scope();
 }
 void type_resolver::visit(std::shared_ptr<module_declaration> decl) {
 	resolver.current_module = decl->module_info;
@@ -77,29 +90,79 @@ void type_resolver::visit(std::shared_ptr<function_call> func_call) {
 }
 
 void type_resolver::resolve_type(type_ptr& type) {
+	// resolve pointer types
+	if (type->is_pointer()) {
+		auto ptr = type->as_pointer();
+		if (ptr && ptr->base_type) {
+			resolve_type(ptr->base_type);
+		}
+		return;
+	}
+	// resolve array types
+	if (type->is_array()) {
+		auto arr = type->as_array();
+		if (arr && arr->base_type) {
+			resolve_type(arr->base_type);
+		}
+		return;
+	}
+
+	// resolve custom types and generics to their declarations
 	if (auto custom = type->as_custom()) {
 		const std::string& type_name = custom->name();
-		// generic type
+
 		auto generic = sym_table->get_generic(type_name);
+		auto decl = resolver.get_type(type_name);
+
+		// generic type
 		if (generic.error == LOOKUP_OK) {
 			auto gn = std::make_shared<generic_type>(type_name);
-			gn->declaration = std::get<std::shared_ptr<generic_parameter>>(generic.value);
-			gn->declaration->add_reference(gn);
+			auto& param = std::get<std::shared_ptr<generic_parameter>>(generic.value);
+			gn->generic_param_index = param->param_index;
 			type = gn;
+		}
+
+		// custom type
+		else if (decl.error == LOOKUP_OK) {
+			custom->declaration = std::get<std::shared_ptr<type_declaration>>(decl.value);
+		}
+		else if (decl.error == LOOKUP_COLLISION) {
+			ERROR(ERR_NAME_COLLISION, type->position, type_name.c_str());
 			return;
 		}
-		// custom type
-		auto decl = resolver.get_type(type_name);
-		if (decl.error != LOOKUP_OK) {
-			if (decl.error == LOOKUP_COLLISION) {
-				ERROR(ERR_NAME_COLLISION, type->position, type_name.c_str());
-				return;
-			}
+		else if (decl.error == LOOKUP_NO_MATCH) {
 			ERROR(ERR_UNKNOWN_TYPE, type->position, type_name.c_str());
 			return;
 		}
-		custom->declaration = std::get<std::shared_ptr<type_declaration>>(decl.value);
-		return;
 	}
-	// other types are self-contained and should not need resolving
+	// resolve & check generic args (if applicable)
+	if (type->generic_args.size() > 0) {
+		if (!type->is_custom()) {
+			ERROR(ERR_GENERIC_ARGS_ON_NONCUSTOM_TYPE, type->position, type->name().c_str());
+			return;
+		}
+
+		auto custom = type->as_custom();
+		if (custom->declaration) {
+			if (!custom->declaration->is_generic) {
+				ERROR(ERR_GENERIC_ARGS_ON_NONGENERIC_TYPE, type->position, type->name().c_str());
+				return;
+			}
+
+			if (custom->declaration->generics.size() != type->generic_args.size()) {
+				std::string args;
+				for (auto& arg : custom->declaration->generics) {
+					if (!args.empty()) args += ", ";
+					args += arg->identifier;
+				}
+				ERROR(ERR_INCORRECT_NUMBER_OF_GENERIC_ARGS, type->position, type->name().c_str(), args.c_str());
+				return;
+			}
+		}
+
+		// resolve all args
+		for (auto& gen_arg : type->generic_args) {
+			resolve_type(gen_arg);
+		}
+	}
 }

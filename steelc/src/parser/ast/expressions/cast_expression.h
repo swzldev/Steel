@@ -9,16 +9,24 @@ class cast_expression : public expression, public std::enable_shared_from_this<c
 public:
 	ENABLE_ACCEPT(cast_expression)
 
-	cast_expression(type_ptr cast_type, std::shared_ptr<expression> expression)
-		: cast_type(cast_type), expression(expression) {
+	cast_expression(type_ptr cast_type, std::shared_ptr<expression> expr)
+		: cast_type(cast_type), expr(expr) {
 	}
 
 	std::string string(int indent) const override {
 		std::string ind = indent_s(indent);
 		std::string result = ind + "Cast Expression:\n";
 		result += ind + " Cast Type: " + cast_type->name() + "\n";
-		result += ind + " Expression: " + expression->string(indent + 1) + "\n";
+		result += ind + " Expression: " + expr->string(indent + 1) + "\n";
 		return result;
+	}
+
+	ast_ptr clone() const override {
+		auto cloned = std::make_shared<cast_expression>(
+			cast_type,
+			std::dynamic_pointer_cast<expression>(expr->clone())
+		);
+		return cloned;
 	}
 
 	type_ptr type() const override {
@@ -32,5 +40,5 @@ public:
 	}
 
 	type_ptr cast_type;
-	std::shared_ptr<expression> expression;
+	std::shared_ptr<expression> expr;
 };

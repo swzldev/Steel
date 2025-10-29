@@ -34,6 +34,14 @@ public:
 		return result;
 	}
 
+	ast_ptr clone() const override {
+		auto cloned = std::make_shared<while_loop>(
+			std::dynamic_pointer_cast<expression>(condition->clone()),
+			body->clone()
+		);
+		return cloned;
+	}
+
 	std::shared_ptr<expression> condition;
 	ast_ptr body;
 };

@@ -17,6 +17,12 @@ public:
 		return indent_s(indent) + "This Expression";
 	}
 
+	ast_ptr clone() const override {
+		auto cloned = std::make_shared<this_expression>();
+		cloned->parent_type = parent_type;
+		return cloned;
+	}
+
 	type_ptr type() const override {
 		return parent_type;
 	}

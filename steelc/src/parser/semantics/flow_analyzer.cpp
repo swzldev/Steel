@@ -54,6 +54,12 @@ void flow_analyzer::visit(std::shared_ptr<return_statement> ret_stmt) {
 		return;
 	}
 }
+void flow_analyzer::visit(std::shared_ptr<break_statement> brk_stmt) {
+	if (!in_loop) {
+		ERROR(ERR_BREAK_OUTSIDE_LOOP, brk_stmt->position);
+		return;
+	}
+}
 void flow_analyzer::visit(std::shared_ptr<if_statement> if_stmt) {
 	// check for an always true condition
 	if (auto lit = std::dynamic_pointer_cast<literal>(if_stmt->condition)) {
@@ -84,7 +90,15 @@ void flow_analyzer::visit(std::shared_ptr<if_statement> if_stmt) {
 		current_returns = false; // no returns in either branch
 	}
 }
-//void flow_analyzer::visit(std::shared_ptr<for_loop> for_loop) {
-//}
-//void flow_analyzer::visit(std::shared_ptr<while_loop> while_loop) {
-//}
+void flow_analyzer::visit(std::shared_ptr<for_loop> for_loop) {
+	bool was_in_loop = in_loop;
+	in_loop = true;
+	for_loop->body->accept(*this);
+	in_loop = was_in_loop;
+}
+void flow_analyzer::visit(std::shared_ptr<while_loop> while_loop) {
+	bool was_in_loop = in_loop;
+	in_loop = true;
+	while_loop->body->accept(*this);
+	in_loop = was_in_loop;
+}

@@ -18,6 +18,12 @@ public:
 		return indent_s(indent) + "Identifier \"" + identifier + "\"";
 	}
 
+	ast_ptr clone() const override {
+		auto cloned = std::make_shared<identifier_expression>(identifier);
+		cloned->declaration = declaration;
+		return cloned;
+	}
+
 	type_ptr type() const override {
 		return declaration ? declaration->type : data_type::UNKNOWN;
 	}

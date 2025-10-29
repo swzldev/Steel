@@ -38,6 +38,10 @@ private:
 	module_manager& module_manager;
 	std::shared_ptr<function_declaration> current_function = nullptr;
 
+	std::map<std::shared_ptr<function_declaration>, std::vector<std::shared_ptr<function_declaration>>> generic_function_instances;
+	std::map<std::shared_ptr<type_declaration>, std::vector<std::shared_ptr<type_declaration>>> generic_type_instances;
+	std::vector<type_ptr> generic_substitutions;
+
 	struct candidate_score {
 		std::shared_ptr<function_declaration> candidate;
 		int score = 0;
@@ -50,5 +54,8 @@ private:
 
 	int score_candidate(std::shared_ptr<function_declaration> candidate, const std::vector<type_ptr>& arg_types);
 
+	void try_unbox_type(type_ptr& type);
+
 	std::shared_ptr<function_declaration> unbox_generic_func(std::shared_ptr<function_declaration> generic_func, const std::vector<type_ptr>& types);
+	std::shared_ptr<type_declaration> unbox_generic_type(std::shared_ptr<type_declaration> generic_type, const std::vector<type_ptr>& types);
 };

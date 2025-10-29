@@ -32,6 +32,17 @@ public:
 		return result;
 	}
 
+	ast_ptr clone() const override {
+		auto cloned = std::make_shared<return_statement>();
+		if (value) {
+			cloned->value = std::dynamic_pointer_cast<expression>(value->clone());
+		}
+		if (condition) {
+			cloned->condition = std::dynamic_pointer_cast<expression>(condition->clone());
+		}
+		return cloned;
+	}
+
 	inline bool is_conditional() const {
 		return condition != nullptr;
 	}

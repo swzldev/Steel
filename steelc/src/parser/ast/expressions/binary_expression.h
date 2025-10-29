@@ -25,6 +25,16 @@ public:
 		return result;
 	}
 
+	ast_ptr clone() const override {
+		auto cloned = std::make_shared<binary_expression>(
+			std::dynamic_pointer_cast<expression>(left->clone()),
+			std::dynamic_pointer_cast<expression>(right->clone()),
+			oparator
+		);
+		cloned->result_type = result_type;
+		return cloned;
+	}
+
 	type_ptr type() const override {
 		if (!result_type) {
 			return data_type::UNKNOWN;

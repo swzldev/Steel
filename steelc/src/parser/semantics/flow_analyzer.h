@@ -17,9 +17,10 @@ public:
 	void visit(std::shared_ptr<function_declaration> func) override;
 	void visit(std::shared_ptr<code_block> block) override;
 	void visit(std::shared_ptr<return_statement> ret_stmt) override;
+	void visit(std::shared_ptr<break_statement> brk_stmt) override;
 	void visit(std::shared_ptr<if_statement> if_stmt) override;
-	//void visit(std::shared_ptr<class for_loop> for_loop) override;
-	//void visit(std::shared_ptr<class while_loop> while_loop) override;
+	void visit(std::shared_ptr<for_loop> for_loop) override;
+	void visit(std::shared_ptr<while_loop> while_loop) override;
 
 private:
 	std::shared_ptr<function_declaration> current_function;

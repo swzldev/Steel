@@ -24,6 +24,14 @@ public:
 		return result;
 	}
 
+	ast_ptr clone() const override {
+		auto cloned = std::make_shared<unary_expression>(
+			oparator,
+			std::dynamic_pointer_cast<expression>(operand->clone())
+		);
+		return cloned;
+	}
+
 	type_ptr type() const override {
 		return operand->type();
 	}

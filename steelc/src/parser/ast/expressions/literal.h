@@ -17,6 +17,11 @@ public:
 		return indent_s(indent) + value;
 	}
 
+	ast_ptr clone() const override {
+		auto cloned = std::make_shared<literal>(primitive, value);
+		return cloned;
+	}
+
 	// accept is removed as this is a base class only,
 	// in the future i may consider making this the only literal class
 	// as all derived classes only use string values anyway

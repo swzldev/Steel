@@ -126,8 +126,8 @@ void name_resolver::visit(std::shared_ptr<function_call> func_call) {
 		// check if its a constructor call
 		auto result = resolver.get_type(func_call->identifier);
 		if (result.error == LOOKUP_OK) {
-			auto ctor_candidates = resolver.get_ctor_candidates(func_call->identifier, func_call->args.size());
-			func_call->declaration_candidates = ctor_candidates;
+			// DONT RESOLVE CANDIDATES YET - GENERIC CONSTRUCTORS HAVNT BEEN INSTANTIATED
+			// we can still set the constructor type with the generic definition for later use
 			func_call->ctor_type = std::get<std::shared_ptr<type_declaration>>(result.value);
 		}
 		else if (result.error == LOOKUP_COLLISION) {

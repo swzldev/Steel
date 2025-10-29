@@ -8,12 +8,20 @@ void ast_visitor::visit(std::shared_ptr<compilation_unit> program) {
 	}
 }
 void ast_visitor::visit(std::shared_ptr<function_declaration> func) {
+	for (const auto& gen : func->generics) {
+		gen->accept(*this);
+	}
+	for (const auto& param : func->parameters) {
+		param->accept(*this);
+	}
 	if (func->body) {
 		func->body->accept(*this);
 	}
 }
 void ast_visitor::visit(std::shared_ptr<variable_declaration> var) {
-
+	if (var->has_initializer()) {
+		var->initializer->accept(*this);
+	}
 }
 void ast_visitor::visit(std::shared_ptr<type_declaration> decl) {
 	for (const auto& constructor : decl->constructors) {
@@ -74,7 +82,7 @@ void ast_visitor::visit(std::shared_ptr<this_expression> expr) {
 
 }
 void ast_visitor::visit(std::shared_ptr<cast_expression> expr) {
-	expr->expression->accept(*this);
+	expr->expr->accept(*this);
 }
 void ast_visitor::visit(std::shared_ptr<initializer_list> init) {
 	for (const auto& value : init->values) {
@@ -131,8 +139,16 @@ void ast_visitor::visit(std::shared_ptr<while_loop> while_loop) {
 	while_loop->body->accept(*this);
 }
 void ast_visitor::visit(std::shared_ptr<return_statement> ret_stmt) {
+	if (ret_stmt->condition) {
+		ret_stmt->condition->accept(*this);
+	}
 	if (ret_stmt->value) {
 		ret_stmt->value->accept(*this);
+	}
+}
+void ast_visitor::visit(std::shared_ptr<break_statement> brk_stmt) {
+	if (brk_stmt->condition) {
+		brk_stmt->condition->accept(*this);
 	}
 }
 void ast_visitor::visit(std::shared_ptr<generic_parameter> param) {

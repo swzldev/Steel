@@ -53,6 +53,7 @@ enum token_type {
 	TT_WHILE,
 	TT_FOR,
 	TT_RETURN,
+	TT_BREAK,
 	// Keywords (built-in variables)
 	TT_TRUE,
 	TT_FALSE,

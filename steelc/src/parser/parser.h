@@ -30,6 +30,7 @@ public:
 	std::shared_ptr<for_loop> parse_for_loop();
 	std::shared_ptr<while_loop> parse_while_loop();
 	std::shared_ptr<return_statement> parse_return_statement();
+	std::shared_ptr<break_statement> parse_break_statement();
 	ast_ptr parse_expression_statement();
 	std::shared_ptr<expression> parse_expression();
 	std::shared_ptr<expression> parse_binary_expression(int precedence = 0);

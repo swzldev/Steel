@@ -17,6 +17,17 @@ std::vector<std::shared_ptr<function_declaration>> get_method_candidates(std::sh
 	return candidates;
 }
 
+std::vector<std::shared_ptr<function_declaration>> get_ctor_candidates(std::shared_ptr<const type_declaration> type, size_t arity) {
+	std::vector<std::shared_ptr<function_declaration>> candidates;
+
+	for (const auto& ctor : type->constructors) {
+		if (ctor->parameters.size() == arity) {
+			candidates.push_back(ctor);
+		}
+	}
+	return candidates;
+}
+
 int size_of_primitive(primitive_type primitive) {
 	switch (primitive) {
 	case DT_I16: return 2;

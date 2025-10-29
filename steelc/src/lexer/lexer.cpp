@@ -214,11 +214,12 @@ bool lexer::check_for_char(std::string& src, size_t& index) {
 	}
 
 	// ensure char literal has an end
-	if (literal.length() < 2 || src[i] != '\'') {
+	if (src[i] != '\'') {
 		ERROR(ERR_UNTERMINATED_CHAR_LITERAL, { line, column });
 	}
 
 	// parse result
+	size_t true_length = literal.length();
 	literal = parse_text_literal(literal);
 
 	// ensure that the char literal is exactly one character long
@@ -226,11 +227,11 @@ bool lexer::check_for_char(std::string& src, size_t& index) {
 		ERROR(ERR_TOO_MANY_CHARS_IN_CHAR_LITERAL, { line, column });
 	}
 
-	column += (i - index + 1);
+	column += true_length + 1;
 
 	// add literal token
 	add_token(literal, TT_CHAR_LITERAL);
-	index += literal.length() - 1;
+	index += true_length + 1;
 
 	return true;
 }
@@ -251,18 +252,19 @@ bool lexer::check_for_string(std::string& src, size_t& index) {
 	}
 
 	// ensure string literal has an end
-	if (literal.length() < 2 || src[i] != '\"') {
+	if (src[i] != '\"') {
 		ERROR(ERR_UNTERMINATED_STRING_LITERAL, { line, column });
 	}
 
-	column += (i - index + 1);
-
 	// parse result
+	size_t true_length = literal.length();
 	literal = parse_text_literal(literal);
+
+	column += true_length + 1;
 
 	// add literal token
 	add_token(literal, TT_STRING_LITERAL);
-	index += literal.length() - 1;
+	index += true_length + 1;
 
 	return true;
 }
@@ -276,9 +278,10 @@ std::string lexer::parse_text_literal(std::string& literal) {
 			return literal[idx + 1];
 		}
 		return '\0';
-		};
+	};
 
-	for (char c : literal) {
+	for (; idx < literal.length(); idx++) {
+		char c = literal[idx];
 		// catch all escape sequences here
 		if (c == '\\') {
 			char nc = next();
@@ -310,7 +313,6 @@ std::string lexer::parse_text_literal(std::string& literal) {
 		else {
 			result += c;
 		}
-		idx++;
 	}
 	return result;
 }

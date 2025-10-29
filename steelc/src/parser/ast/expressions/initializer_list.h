@@ -30,6 +30,16 @@ public:
 		return result;
 	}
 
+	ast_ptr clone() const override {
+		auto cloned = std::make_shared<initializer_list>(std::vector<std::shared_ptr<expression>>{});
+		for (const auto& val : values) {
+			cloned->values.push_back(std::dynamic_pointer_cast<expression>(val->clone()));
+		}
+		cloned->result_type = result_type;
+		cloned->is_array_initializer = is_array_initializer;
+		return cloned;
+	}
+
 	type_ptr type() const override {
 		return result_type ? result_type : data_type::UNKNOWN;
 	}

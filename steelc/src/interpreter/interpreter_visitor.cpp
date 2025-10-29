@@ -9,6 +9,7 @@
 #include <Windows.h>
 
 #include "classes/runtime_exception.h"
+#include "classes/break_out.h"
 #include "../parser/ast/ast.h"
 #include "../parser/types/custom_type.h"
 
@@ -41,7 +42,7 @@ void interpreter_visitor::visit(std::shared_ptr<variable_declaration> var) {
 				std::vector<std::shared_ptr<runtime_value>> elements;
 				for (auto& val : init_list->values) {
 					val->accept(*this);
-					elements.push_back(new_val(expression_result->type, expression_result->value));
+					elements.push_back(new_val(expression_result));
 				}
 				expression_result = new_array(var->type, elements);
 				add_var(var->identifier, expression_result);
@@ -55,14 +56,14 @@ void interpreter_visitor::visit(std::shared_ptr<variable_declaration> var) {
 				for (size_t i = 0; i < init_list->values.size(); i++) {
 					auto& member_decl = custom->declaration->fields[i];
 					init_list->values[i]->accept(*this);
-					obj->set_member(member_decl->identifier, new_val(expression_result->type, expression_result->value));
+					obj->set_member(member_decl->identifier, new_val(expression_result));
 				}
 				add_var(var->identifier, obj);
 				return;
 			}
 		}
 		var->initializer->accept(*this);
-		add_var(var->identifier, new_val(expression_result->type, expression_result->value));
+		add_var(var->identifier, new_val(expression_result));
 	}
 	else {
 		// handle default initialization for custom types
@@ -86,9 +87,9 @@ void interpreter_visitor::visit(std::shared_ptr<expression_statement> expr) {
 }
 void interpreter_visitor::visit(std::shared_ptr<binary_expression> expr) {
 	expr->left->accept(*this);
-	auto left = new_val(expression_result->type, expression_result->value);
+	auto left = new_val(expression_result);
 	expr->right->accept(*this);
-	auto right = new_val(expression_result->type, expression_result->value);
+	auto right = new_val(expression_result);
 	switch (expr->oparator) {
 	default:
 		switch (expr->oparator) {
@@ -383,8 +384,8 @@ void interpreter_visitor::visit(std::shared_ptr<this_expression> expr) {
 	expression_result = this_object;
 }
 void interpreter_visitor::visit(std::shared_ptr<cast_expression> expr) {
-	expr->expression->accept(*this);
-	if (expr->expression->type()->is_pointer()) {
+	expr->expr->accept(*this);
+	if (expr->expr->type()->is_pointer()) {
 		// this is janky, but the whole interpreter is just for testing anyway
 		expression_result = new_val(to_data_type(DT_I32), expression_result->as_string());
 	}
@@ -426,10 +427,10 @@ void interpreter_visitor::visit(std::shared_ptr<function_call> func_call) {
 	if (func_call->declaration && func_call->declaration->is_constructor) {
 		// allocate object of the correct type
 		auto custom = std::dynamic_pointer_cast<custom_type>(func_call->declaration->return_type);
-		auto obj = new_val(custom, "");
+		auto obj = new_val(custom);
 		if (custom && custom->declaration) {
 			for (auto& member : custom->declaration->fields) {
-				obj->set_member(member->identifier, new_val(member->type, ""));
+				obj->set_member(member->identifier, new_val(member->type));
 			}
 			build_vftable(obj, custom);
 		}
@@ -443,7 +444,7 @@ void interpreter_visitor::visit(std::shared_ptr<function_call> func_call) {
 	}
 	if (func_call->identifier == "Print") {
 		func_call->args[0]->accept(*this);
-		auto val = new_val(expression_result->type, expression_result->value);
+		auto val = new_val(expression_result);
 		std::cout << val->as_string();
 		std::cout.flush();
 		expression_result = new_val(to_data_type(DT_VOID), "");
@@ -541,7 +542,12 @@ void interpreter_visitor::visit(std::shared_ptr<for_loop> for_loop) {
 		if (!expression_result->as_bool()) {
 			break;
 		}
-		for_loop->body->accept(*this);
+		try {
+			for_loop->body->accept(*this);
+		}
+		catch (const break_out&) {
+			break;
+		}
 		if (for_loop->increment) {
 			for_loop->increment->accept(*this);
 		}
@@ -555,7 +561,12 @@ void interpreter_visitor::visit(std::shared_ptr<while_loop> while_loop) {
 		if (!expression_result->as_bool()) {
 			break;
 		}
-		while_loop->body->accept(*this);
+		try {
+			while_loop->body->accept(*this);
+		}
+		catch (const break_out&) {
+			break;
+		}
 	}
 	pop_scope();
 }
@@ -574,6 +585,16 @@ void interpreter_visitor::visit(std::shared_ptr<return_statement> ret_stmt) {
 	else {
 		throw function_return(runtime_value(to_data_type(DT_VOID), ""));
 	}
+}
+void interpreter_visitor::visit(std::shared_ptr<break_statement> brk_stmt) {
+ 	if (brk_stmt->is_conditional()) {
+		brk_stmt->condition->accept(*this);
+		if (!expression_result->as_bool()) {
+			// condition is false, do not break
+			return;
+		}
+	}
+	throw break_out();
 }
 
 void interpreter_visitor::push_scope() {
@@ -624,8 +645,14 @@ void interpreter_visitor::set_var(const std::string& identifier, std::shared_ptr
 	throw_exception("Variable \"" + identifier + "\" not found", position{ 0, 0 });
 }
 
+val_ptr interpreter_visitor::new_val(const type_ptr type) {
+	return std::make_shared<runtime_value>(type);
+}
 val_ptr interpreter_visitor::new_val(const type_ptr type, const std::string& value) {
 	return std::make_shared<runtime_value>(type, value);
+}
+val_ptr interpreter_visitor::new_val(val_ptr other) {
+	return std::make_shared<runtime_value>(*other);
 }
 val_ptr interpreter_visitor::new_pointer(std::shared_ptr<runtime_value> pointee) {
 	return std::make_shared<runtime_value>(pointee);

@@ -30,7 +30,11 @@ set(SOURCES
     "src/parser/types/core.cpp"
     "src/parser/types/custom_type.cpp"
     "src/stproj/stproj_file.cpp"
-    "src/parser/types/type_utils.cpp" "src/utils/iclonable.h")
+    "src/parser/types/type_utils.cpp"
+    "src/utils/iclonable.h"
+    "src/parser/ast/statements/control_flow/break_statement.h"
+    "src/interpreter/classes/break_out.h"
+     "src/parser/semantics/generic_substitutor.h" "src/parser/semantics/generic_substitutor.cpp")
 
 # Add source to this project's executable.
 add_executable ( steelc ${SOURCES} )

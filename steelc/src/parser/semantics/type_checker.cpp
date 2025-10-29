@@ -5,6 +5,7 @@
 #include <unordered_set>
 #include <algorithm>
 
+#include "generic_substitutor.h"
 #include "../ast/ast.h"
 #include "../types/data_type.h"
 #include "../types/custom_type.h"
@@ -14,8 +15,13 @@
 #include "../../utils/language_constants.h"
 
 void type_checker::visit(std::shared_ptr<function_declaration> func) {
-	if (func->is_generic && !func->is_constrained) {
+	if (func->is_generic && !func->is_generic_instance) {
 		return;
+	}
+
+	try_unbox_type(func->return_type);
+	for (const auto& param : func->parameters) {
+		try_unbox_type(param->type);
 	}
 
 	if (is_valid_entry_point(func)) {
@@ -40,6 +46,11 @@ void type_checker::visit(std::shared_ptr<function_declaration> func) {
 	current_function = nullptr;
 }
 void type_checker::visit(std::shared_ptr<variable_declaration> var) {
+	if (var->type != data_type::UNKNOWN) {
+		// only try and unbox for explicitly typed variables
+		try_unbox_type(var->type);
+	}
+
 	// accept initializer early to prevent double visits
 	if (var->has_initializer()) {
 		var->initializer->accept(*this);
@@ -52,16 +63,6 @@ void type_checker::visit(std::shared_ptr<variable_declaration> var) {
 			if (init_type == data_type::UNKNOWN) {
 				ERROR(ERR_CANNOT_INFER_TYPE_UNKNOWN_INIT, var->position, var->identifier.c_str());
 				return;
-			}
-			if (auto init_gen = init_type->as_generic()) {
-				// substitute from substitution (if possible)
-				if (!init_gen->declaration || !init_gen->declaration->substitution) {
-					ERROR(ERR_CANNOT_INFER_TYPE, var->initializer->position);
-					return;
-				}
-				else {
-					init_type = init_gen->declaration->substitution;
-				}
 			}
 			var->type = var->initializer->type();
 		}
@@ -123,17 +124,7 @@ void type_checker::visit(std::shared_ptr<variable_declaration> var) {
 				ERROR(ERR_CANNOT_INFER_TYPE_UNKNOWN_INIT, var->position, var->identifier.c_str());
 				return;
 			}
-			if (auto init_gen = init_type->as_generic()) {
-				// substitute from substitution (if possible)
-				if (!init_gen->declaration || !init_gen->declaration->substitution) {
-					ERROR(ERR_CANNOT_INFER_TYPE, var->initializer->position);
-					return;
-				}
-				else {
-					init_type = init_gen->declaration->substitution;
-				}
-			}
-			if (var_type != init_type && !is_valid_conversion(init_type, var_type, true, var->initializer->position)) {
+			if (*var_type != init_type && !is_valid_conversion(init_type, var_type, true, var->initializer->position)) {
 				ERROR(ERR_TYPE_ASSIGNMENT_MISMATCH, var->position, var->type->name().c_str(), var->initializer->type()->name().c_str());
 				return;
 			}
@@ -141,6 +132,10 @@ void type_checker::visit(std::shared_ptr<variable_declaration> var) {
 	}
 }
 void type_checker::visit(std::shared_ptr<type_declaration> decl) {
+	if (decl->is_generic && !decl->is_generic_instance) {
+		return;
+	}
+
 	std::unordered_map<std::shared_ptr<function_declaration>, bool> interface_funcs;
 	if (decl->type_kind == CT_CLASS) {
 		bool first = true;
@@ -192,15 +187,7 @@ void type_checker::visit(std::shared_ptr<type_declaration> decl) {
 		member->accept(*this);
 	}
 	for (const auto& method : decl->methods) {
-		// accept method as normal
-		method->accept(*this);
-
-		// methods in interfaces should have no statements
-		if (decl->type_kind == CT_INTERFACE && method->body) {
-			ERROR(ERR_INTERFACE_METHOD_HAS_BODY, method->position);
-			return;
-		}
-
+		// check method
 		if (method->is_override) {
 			bool found = false;
 			// check if it matches an interface function
@@ -218,6 +205,15 @@ void type_checker::visit(std::shared_ptr<type_declaration> decl) {
 				ERROR(ERR_OVERRIDE_NOT_FOUND, method->position, method->identifier.c_str());
 				return;
 			}
+		}
+
+		// accept method as normal
+		method->accept(*this);
+
+		// methods in interfaces should have no body
+		if (decl->type_kind == CT_INTERFACE && method->body) {
+			ERROR(ERR_INTERFACE_METHOD_HAS_BODY, method->position);
+			return;
 		}
 	}
 	for (const auto& op : decl->operators) {
@@ -243,18 +239,6 @@ void type_checker::visit(std::shared_ptr<binary_expression> expr) {
 	// if either type is UNKNOWN we can just ignore it, error flagged elsewhere
 	if (left_type == data_type::UNKNOWN || right_type == data_type::UNKNOWN) {
 		return;
-	}
-
-	// for generic types we can subsitute
-	if (auto gen = left_type->as_generic()) {
-		if (gen->declaration && gen->declaration->substitution) {
-			left_type = gen->declaration->substitution;
-		}
-	}
-	if (auto gen = right_type->as_generic()) {
-		if (gen->declaration && gen->declaration->substitution) {
-			right_type = gen->declaration->substitution;
-		}
 	}
 
 	const auto& builtin_operators = get_core_operators();
@@ -327,7 +311,7 @@ void type_checker::visit(std::shared_ptr<assignment_expression> expr) {
 	}
 
 	// mismatch assignment
-	if (left_type != right_type && !is_valid_conversion(right_type, left_type, true, expr->right->position)) {
+	if (*left_type != right_type && !is_valid_conversion(right_type, left_type, true, expr->right->position)) {
 		ERROR(ERR_TYPE_ASSIGNMENT_MISMATCH, expr->position, left_type->name().c_str(), right_type->name().c_str());
 		return;
 	}
@@ -392,9 +376,9 @@ void type_checker::visit(std::shared_ptr<index_expression> expr) {
 	}
 }
 void type_checker::visit(std::shared_ptr<cast_expression> expr) {
-	expr->expression->accept(*this);
+	expr->expr->accept(*this);
 
-	auto from = expr->expression->type();
+	auto from = expr->expr->type();
 	auto& to = expr->cast_type;
 
 	if (!is_valid_conversion(from, to, false, expr->position)) {
@@ -465,9 +449,31 @@ void type_checker::visit(std::shared_ptr<function_call> func_call) {
 	}
 	std::vector<type_ptr> generic_types;
 	for (const auto& gen : func_call->generic_args) {
+		// add to generics list
 		generic_types.push_back(gen);
 	}
 
+	// we need to resolve constructor candidates here in case its a generic type
+	if (func_call->is_constructor()) {
+		auto& ctor_type = func_call->ctor_type;
+		if (!ctor_type) {
+			ERROR(ERR_INTERNAL_ERROR, func_call->position, "Type Checker", "Constructor type not set");
+			return;
+		}
+
+		if (ctor_type->is_generic && !ctor_type->is_generic_instance) {
+			// instantiate generic type
+			ctor_type = unbox_generic_type(ctor_type, generic_types);
+			if (!ctor_type) {
+				ERROR(ERR_INTERNAL_ERROR, func_call->position, "Type Checker", "Failed to unbox generic type for constructor");
+				return;
+			}
+		}
+
+		// get constructor candidates
+		auto ctor_candidates = get_ctor_candidates(ctor_type, func_call->args.size());
+		func_call->declaration_candidates = ctor_candidates;
+	}
 	// we need to resolve candidates here if the function call
 	// is a method, as it cant be done in the name resolver pass
 	if (func_call->is_method()) {
@@ -528,11 +534,8 @@ void type_checker::visit(std::shared_ptr<function_call> func_call) {
 		}
 
 		// set explicit generics if they exist for scoring
-		if (candidate->is_generic && func_call->generic_args.size() > 0) {
-			for (size_t i = 0; i < func_call->generic_args.size() && i < candidate->generics.size(); i++) {
-				auto& gen_param = candidate->generics[i];
-				gen_param->substitution = func_call->generic_args[i];
-			}
+		for (auto& gen_arg : func_call->generic_args) {
+			generic_substitutions.push_back(gen_arg);
 		}
 
 		int score = score_candidate(candidate, arg_types);
@@ -541,8 +544,8 @@ void type_checker::visit(std::shared_ptr<function_call> func_call) {
 		}
 
 		// reset generics
-		for (const auto& gen_param : candidate->generics) {
-			gen_param->substitution = nullptr;
+		for (size_t i = 0; i < func_call->generic_args.size(); i++) {
+			generic_substitutions.pop_back();
 		}
 	}
 	if (matches.empty()) {
@@ -576,7 +579,7 @@ void type_checker::visit(std::shared_ptr<function_call> func_call) {
 			}
 			return;
 		}
-		auto best_match = matches[0].candidate;
+		std::shared_ptr<function_declaration> best_match = matches[0].candidate;
 		if (best_match->is_generic) {
 			best_match = unbox_generic_func(best_match, generic_types);
 			if (!best_match) {
@@ -654,7 +657,14 @@ void type_checker::visit(std::shared_ptr<return_statement> ret) {
 		}
 	}
 
-	auto func_type = current_function->return_type;
+	try_unbox_type(current_function->return_type);
+
+	type_ptr func_type = current_function->return_type;
+	// if its an override, we should use the base function return type as overrides
+	// do not redefine it
+	if (current_function->is_override && current_function->overridden_function) {
+		func_type = current_function->overridden_function->return_type;
+	}
 	if (ret->value) {
 		// check if its a constructor
 		if (current_function->is_constructor) {
@@ -674,14 +684,6 @@ void type_checker::visit(std::shared_ptr<return_statement> ret) {
 		if (ret_type == data_type::UNKNOWN) {
 			// assume error has already been reported
 			return;
-		}
-		if (ret_type->is_generic()) {
-			// try and use substitution
-			if (auto gen = ret_type->as_generic()) {
-				if (gen->declaration && gen->declaration->substitution) {
-					ret_type = gen->declaration->substitution;
-				}
-			}
 		}
 		if (!ret_type || *func_type != ret_type) {
 			ERROR(ERR_FUNCTION_RETURN_TYPE_MISMATCH, ret->position, current_function->identifier.c_str(), func_type->name().c_str(), ret_type->name().c_str());
@@ -783,28 +785,20 @@ bool type_checker::is_valid_entry_point(std::shared_ptr<function_declaration> fu
 
 int type_checker::score_candidate(std::shared_ptr<function_declaration> candidate, const std::vector<type_ptr>& arg_types) {
 	auto expected = candidate->get_expected_types();
+
+	if (expected.empty() && arg_types.empty()) {
+		return 2; // perfect match for no-arg functions
+	}
+
 	// mostly for safety, should never happen
 	if (expected.size() != arg_types.size()) return 0;
 	int score = 0;
 
 	for (size_t i = 0; i < expected.size(); ++i) {
+		try_unbox_type(expected[i]);
+
 		if (*expected[i] == arg_types[i]) {
 			score += 2; // exact match
-		}
-		else if (expected[i]->is_generic()) {
-			auto generic = expected[i]->as_generic();
-			if (generic->declaration && generic->declaration->substitution) {
-				// check if arg_type can be assigned to the substitution
-				if (*generic->declaration->substitution == arg_types[i]) {
-					score += 1; // generic parameter with substitution match
-				}
-				else {
-					return 0; // no match
-				}
-			}
-			else {
-				score += 1; // unconstrained generic parameter
-			}
 		}
 		else {
 			return 0; // no match
@@ -814,31 +808,123 @@ int type_checker::score_candidate(std::shared_ptr<function_declaration> candidat
 	return score;
 }
 
+void type_checker::try_unbox_type(type_ptr& type) {
+	if (type->is_custom() && type->generic_args.size() > 0) {
+		auto custom = type->as_custom();
+		custom->declaration = unbox_generic_type(custom->declaration, type->generic_args);
+	}
+}
+
 std::shared_ptr<function_declaration> type_checker::unbox_generic_func(std::shared_ptr<function_declaration> func, const std::vector<type_ptr>& types) {
 	if (types.size() != func->generics.size()) {
 		ERROR(ERR_INTERNAL_ERROR, func->position, "Type Checker", "Generic function unboxing called with incorrect number of types");
 		return nullptr;
 	}
 
-	// type check before unboxing as any generic types in the statements wont update
-	// to the unboxed version and will still hold references to the generic version
-	std::shared_ptr<function_declaration> original_func = current_function;
-	for (size_t i = 0; i < func->generics.size(); i++) {
-		func->generics[i]->substitution = types[i];
+	// check if already unboxed
+	if (generic_function_instances.find(func) != generic_function_instances.end()) {
+		for (const auto& unboxed : generic_function_instances[func]) {
+			bool matches = true;
+			for (size_t i = 0; i < unboxed->generics.size(); i++) {
+				if (*unboxed->generics[i]->substitution != types[i]) {
+					matches = false;
+					break;
+				}
+			}
+			if (matches) {
+				return unboxed;
+			}
+		}
 	}
-	func->is_constrained = true;
-	func->accept(*this);
-	func->is_constrained = false;
-	current_function = original_func;
+	
+	// add substitutions to generic substitutions list
+	for (const auto& type : types) {
+		generic_substitutions.push_back(type);
+	}
 
-	// type checking is complete, create a fake version
-	auto unboxed = make_ast<function_declaration>(func->position, func->return_type, func->identifier, func->parameters, func->body, false);
-	unboxed->is_generic_instance = true;
-	for (size_t i = 0; i < func->generics.size(); i++) {
-		unboxed->generic_substitutions.push_back(types[i]);
-		auto gen_param = make_ast<generic_parameter>(func->generics[i]->position, func->generics[i]->identifier);
-		gen_param->substitution = types[i];
-		unboxed->generics.push_back(gen_param);
+	// clone the function
+	auto new_func = std::dynamic_pointer_cast<function_declaration>(func->clone());
+	new_func->is_generic_instance = true;
+
+	// set parameters
+	for (size_t i = 0; i < new_func->generics.size(); i++) {
+		new_func->generics[i]->substitution = types[i];
 	}
-	return unboxed;
+
+	// store instance
+	generic_function_instances[func].push_back(new_func);
+
+	// substitute
+	generic_substitutor substitutor(pass_unit, generic_substitutions);
+	new_func->accept(substitutor);
+
+	// type check instance
+	std::shared_ptr<function_declaration> old_current = current_function;
+	new_func->accept(*this);
+	current_function = old_current;
+
+	// erase from substitutions list
+	for (size_t i = 0; i < types.size(); i++) {
+		generic_substitutions.pop_back();
+	}
+
+	return new_func;
+}
+std::shared_ptr<type_declaration> type_checker::unbox_generic_type(std::shared_ptr<type_declaration> type, const std::vector<type_ptr>& types) {
+	if (types.size() != type->generics.size()) {
+		ERROR(ERR_INTERNAL_ERROR, type->position, "Type Checker", "Generic type unboxing called with incorrect number of types");
+		return nullptr;
+	}
+
+	// check if already unboxed
+	if (generic_type_instances.find(type) != generic_type_instances.end()) {
+		for (const auto& unboxed : generic_type_instances[type]) {
+			bool matches = true;
+			for (size_t i = 0; i < unboxed->generics.size(); i++) {
+				if (*unboxed->generics[i]->substitution != types[i]) {
+					matches = false;
+					break;
+				}
+			}
+			if (matches) {
+				return unboxed;
+			}
+		}
+	}
+
+	// add substitutions to generic substitutions list
+	for (const auto& type : types) {
+		generic_substitutions.push_back(type);
+	}
+
+	// clone the type
+	auto new_type = std::dynamic_pointer_cast<type_declaration>(type->clone());
+	new_type->is_generic_instance = true;
+
+	// set parameters
+	for (size_t i = 0; i < new_type->generics.size(); i++) {
+		new_type->generics[i]->substitution = types[i];
+	}
+
+	// store instance
+	generic_type_instances[type].push_back(new_type);
+
+	// ensure constructors point to the new type
+	for (const auto& ctor : new_type->constructors) {
+		ctor->return_type = new_type->type();
+	}
+
+	// substitute
+	generic_substitutor substitutor(pass_unit, generic_substitutions);
+	new_type->accept(substitutor);
+
+	// type check instance
+	new_type->accept(*this);
+
+	// erase from substitutions list
+	for (size_t i = 0; i < types.size(); i++) {
+		generic_substitutions.pop_back();
+	}
+
+	return new_type;
 }

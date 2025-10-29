@@ -29,6 +29,7 @@ private:
 	symbol_resolver resolver;
 	module_manager& module_manager;
 	symbol_table* sym_table = nullptr;
+	unsigned int cur_generic_index = 0;
 
 	void resolve_type(type_ptr& type);
 };

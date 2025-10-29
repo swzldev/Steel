@@ -21,7 +21,7 @@ public:
         : type(t), value(v) {
     }
     runtime_value(const type_ptr t)
-        : type(t), value("") {
+        : type(t), value(get_default_value(t)) {
     }
     runtime_value(std::shared_ptr<runtime_value> pointee)
         : type(make_pointer(pointee->type)), value(std::to_string((long long)pointee.get())), pointee(pointee) {
@@ -111,6 +111,35 @@ public:
     }
     bool operator>=(const runtime_value& other) const {
         return !(*this < other);
+    }
+
+private:
+    std::string get_default_value(type_ptr type) {
+		if (type->is_primitive()) {
+			switch (type->primitive) {
+			case DT_I16:
+			case DT_I32:
+			case DT_I64:
+				return "0";
+			case DT_FLOAT:
+			case DT_DOUBLE:
+				return "0.0";
+			case DT_CHAR:
+				return "\0";
+			case DT_STRING:
+				return "";
+			case DT_BOOL:
+				return "false";
+			case DT_VOID:
+				return "";
+			default:
+				return "";
+			}
+		}
+		else if (type->is_pointer() || type->is_array()) {
+			return "0";
+		}
+		return "";
     }
 };
 

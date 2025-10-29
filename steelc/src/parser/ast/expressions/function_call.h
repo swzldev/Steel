@@ -38,6 +38,24 @@ public:
 		return result;
 	}
 
+	ast_ptr clone() const override {
+		auto cloned = std::make_shared<function_call>(
+			identifier,
+			std::vector<std::shared_ptr<expression>>{}
+		);
+		if (callee) {
+			cloned->callee = std::dynamic_pointer_cast<expression>(callee->clone());
+		}
+		for (const auto& arg : args) {
+			cloned->args.push_back(std::dynamic_pointer_cast<expression>(arg->clone()));
+		}
+		cloned->override_return_type = override_return_type;
+		cloned->declaration = declaration;
+		cloned->generic_args = generic_args;
+		cloned->ctor_type = ctor_type;
+		return cloned;
+	}
+
 	type_ptr type() const override {
 		if (override_return_type) {
 			return override_return_type;

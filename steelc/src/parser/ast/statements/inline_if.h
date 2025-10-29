@@ -34,6 +34,14 @@ public:
 		return result;
 	}
 
+	ast_ptr clone() const override {
+		auto cloned = std::make_shared<inline_if>(
+			std::dynamic_pointer_cast<expression>(condition->clone()),
+			std::dynamic_pointer_cast<expression>(statement->clone())
+		);
+		return cloned;
+	}
+
 	std::shared_ptr<expression> condition;
 	std::shared_ptr<expression> statement;
 };

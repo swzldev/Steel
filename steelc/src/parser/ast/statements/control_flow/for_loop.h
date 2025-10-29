@@ -48,6 +48,16 @@ public:
 		return result;
 	}
 
+	ast_ptr clone() const override {
+		auto cloned = std::make_shared<for_loop>(
+			initializer->clone(),
+			std::dynamic_pointer_cast<expression>(condition->clone()),
+			std::dynamic_pointer_cast<expression>(increment->clone()),
+			body->clone()
+		);
+		return cloned;
+	}
+
 	ast_ptr initializer;
 	std::shared_ptr<expression> condition;
 	std::shared_ptr<expression> increment;

@@ -30,6 +30,15 @@ public:
 		return result;
 	}
 
+	ast_ptr clone() const override {
+		auto cloned = std::make_shared<member_expression>(
+			std::dynamic_pointer_cast<expression>(object->clone()),
+			member
+		);
+		cloned->declaration = declaration;
+		return cloned;
+	}
+
 	virtual type_ptr type() const override {
 		if (!declaration || !declaration->type) {
 			return data_type::UNKNOWN;

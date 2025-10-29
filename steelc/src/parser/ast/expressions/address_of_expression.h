@@ -21,6 +21,13 @@ public:
 		return result;
 	}
 
+	ast_ptr clone() const override {
+		auto cloned = std::make_shared<address_of_expression>(
+			std::dynamic_pointer_cast<expression>(value->clone())
+		);
+		return cloned;
+	}
+
 	type_ptr type() const override {
 		return make_pointer(value->type());
 	}

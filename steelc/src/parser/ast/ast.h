@@ -12,6 +12,7 @@
 #include "statements/import_statement.h"
 #include "statements/inline_if.h"
 #include "statements/control_flow/return_statement.h"
+#include "statements/control_flow/break_statement.h"
 #include "statements/control_flow/if_statement.h"
 #include "statements/control_flow/for_loop.h"
 #include "statements/control_flow/while_loop.h"

@@ -16,19 +16,22 @@ public:
 	ENABLE_ACCEPT(generic_parameter)
 	
 	generic_parameter(const std::string& identifier, generic_param_type type = GENERIC_TYPE)
-		: identifier(identifier), type(type) {
+		: identifier(identifier), type(type), param_index(0), substitution(data_type::UNKNOWN) {
 	}
 
 	std::string string(int indent) const override {
 		return indent_s(indent) + "Generic Parameter: '" + identifier + "'";
 	}
 
-	void add_reference(const std::shared_ptr<class generic_type>& gen_type) {
-		references.push_back(gen_type);
+	ast_ptr clone() const override { 
+		auto cloned = std::make_shared<generic_parameter>(identifier, type);
+		cloned->param_index = param_index;
+		return cloned;
 	}
 
 	std::string identifier;
 	generic_param_type type;
+	int param_index;
+	// (doesnt actually do anything, purely for type rememering)
 	type_ptr substitution;
-	std::vector<std::shared_ptr<class generic_type>> references;
 };

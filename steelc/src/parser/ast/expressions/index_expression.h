@@ -26,6 +26,14 @@ public:
 		return result;
 	}
 
+	ast_ptr clone() const override {
+		auto cloned = std::make_shared<index_expression>(
+			std::dynamic_pointer_cast<expression>(base->clone()),
+			std::dynamic_pointer_cast<expression>(indexer->clone())
+		);
+		return cloned;
+	}
+
 	type_ptr type() const override {
 		auto t = base->type();
 		if (t->is_array()) {
@@ -42,7 +50,6 @@ public:
 	bool is_rvalue() const override {
 		return true;
 	}
-
 
 	std::shared_ptr<expression> base;
 	std::shared_ptr<expression> indexer;

@@ -32,6 +32,20 @@ public:
 		return result;
 	}
 
+	ast_ptr clone() const override {
+		auto cloned = std::make_shared<variable_declaration>(
+			is_const,
+			type,
+			identifier
+		);
+		if (initializer) {
+			cloned->initializer = std::dynamic_pointer_cast<expression>(initializer->clone());
+		}
+		cloned->initialized = initialized;
+		cloned->is_parameter = is_parameter;
+		return cloned;
+	}
+
 	inline bool has_initializer() const {
 		return initializer != nullptr;
 	}

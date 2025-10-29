@@ -36,5 +36,6 @@ public:
 	virtual void visit(std::shared_ptr<for_loop> for_loop);
 	virtual void visit(std::shared_ptr<while_loop> while_loop);
 	virtual void visit(std::shared_ptr<return_statement> ret_stmt);
+	virtual void visit(std::shared_ptr<break_statement> brk_stmt);
 	virtual void visit(std::shared_ptr<generic_parameter> param);
 };

@@ -93,6 +93,11 @@ public:
 		return primitive == DT_REFERENCE;
 	}
 	inline bool is_generic() const {
+		// IMPORTANT!
+		// generic types are used to represent generic parameter usages
+		// NOT types with generic arguments
+		// to check if a type is a generic type instantiation you should
+		// check that generic_args.size() > 0
 		return primitive == DT_GENERIC;
 	}
 
@@ -113,5 +118,6 @@ public:
 
 	primitive_type primitive; 
 	std::vector<data_type_modifier> modifiers;
+	std::vector<type_ptr> generic_args;
 	position position;
 };

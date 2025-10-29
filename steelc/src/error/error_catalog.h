@@ -125,6 +125,10 @@ enum error_code {
     ERR_OVERRIDE_CANT_BE_GENERIC,
     ERR_CANNOT_INFER_TYPE,
     ERR_UNKNOWN_ESCAPE_SEQUENCE,
+    ERR_BREAK_OUTSIDE_LOOP,
+    ERR_GENERIC_ARGS_ON_NONCUSTOM_TYPE,
+    ERR_GENERIC_ARGS_ON_NONGENERIC_TYPE,
+	ERR_INCORRECT_NUMBER_OF_GENERIC_ARGS,
 };
 
 enum warning_code {
@@ -263,6 +267,10 @@ struct error_catalog {
             {"S130", "Generic functions cannot be marked as 'override'"},
             {"S131", "Failed to infer type"},
             {"S132", "Invalid escape sequence: '%s'"},
+            {"S133", "Break statement outside loop"},
+            {"S134", "Generic arguments cannot be used on non-custom type '%s'"},
+            {"S135", "Generic arguments cannot be used on non-generic type '%s'"},
+            {"S136", "Missing required generic arguments for generic type '%s', types are: %s"},
 
         };
         return errors[code - 1];

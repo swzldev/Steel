@@ -1,15 +1,21 @@
-class Ref<T> {
-	constructor(T* x) {
-		this.value = x;
+
+class SmartPointer<T> {
+	constructor(T* ptr) {
+		this.ptr = ptr;
 	}
 
-	value: T*;
+	func Get() -> T* {
+		return ptr;
+	}
+
+	ptr: T*;
 }
 
-func Add<T>(T a, T b) -> T {
-	return a + b;
-}
+func Main() -> int {
+	const val = 42;
+	const ptr = SmartPointer<int>(&val);
 
-func Main() -> i32 {
-	return Add<i32>(3, 4);
+	Print(ptr.Get());
+
+	return 0;
 }

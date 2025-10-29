@@ -18,5 +18,12 @@ public:
 		return indent_s(indent) + "Expression Statement:\n" + expr->string(indent + 1);
 	}
 
+	ast_ptr clone() const override {
+		auto cloned = std::make_shared<expression_statement>(
+			std::dynamic_pointer_cast<expression>(expr->clone())
+		);
+		return cloned;
+	}
+
 	std::shared_ptr<expression> expr;
 };

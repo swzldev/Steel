@@ -41,6 +41,20 @@ public:
 		return result;
 	}
 
+	ast_ptr clone() const override {
+		auto cloned = std::make_shared<if_statement>();
+		if (condition) {
+			cloned->condition = std::dynamic_pointer_cast<expression>(condition->clone());
+		}
+		if (then_block) {
+			cloned->then_block = then_block->clone();
+		}
+		if (else_node) {
+			cloned->else_node = else_node->clone();
+		}
+		return cloned;
+	}
+
 	std::shared_ptr<expression> condition;
 	ast_ptr then_block;
 	ast_ptr else_node;

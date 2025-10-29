@@ -2,9 +2,11 @@
 
 #include <string>
 #include <vector>
+#include <unordered_set>
 
 #include "declaration.h"
 #include "variable_declaration.h"
+#include "../generics/generic_parameter.h"
 #include "../../parser_utils.h"
 #include "../../types/data_type.h"
 
@@ -75,17 +77,38 @@ public:
 		return expected_types;
 	}
 
+	ast_ptr clone() const override {
+		auto cloned = std::make_shared<function_declaration>();
+		cloned->return_type = return_type;
+		cloned->identifier = identifier;
+		for (const auto& gen : generics) {
+			cloned->generics.push_back(std::dynamic_pointer_cast<generic_parameter>(gen->clone()));
+		}
+		for (const auto& param : parameters) {
+			cloned->parameters.push_back(std::dynamic_pointer_cast<variable_declaration>(param->clone()));
+		}
+		if (body) {
+			cloned->body = body->clone();
+		}
+		cloned->is_method = is_method;
+		cloned->is_generic = is_generic;
+		cloned->is_override = is_override;
+		cloned->is_constructor = is_constructor;
+		cloned->is_generic_instance = is_generic_instance;
+		cloned->overridden_function = overridden_function;
+		// note: overridden_function is not cloned
+		return cloned;
+	}
+
 	type_ptr return_type;
 	std::string identifier;
 	std::vector<std::shared_ptr<generic_parameter>> generics;
-	std::vector<type_ptr> generic_substitutions;
 	std::vector<std::shared_ptr<variable_declaration>> parameters;
 	ast_ptr body;
 	bool is_method = false;
 	bool is_generic = false;
 	bool is_override = false;
 	bool is_constructor = false;
-	bool is_constrained = false;
 	bool is_generic_instance = false;
 	std::shared_ptr<function_declaration> overridden_function = nullptr;
 };

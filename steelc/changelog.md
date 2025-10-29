@@ -172,3 +172,36 @@
 ### 19-10-2025
 - Added a new version of make_ast that supports a direct position object rather than a token.
 - The parser now sets the is_body flag of standalone and non-standalone code blocks correctly.
+- Added support for break statements within loops.
+
+### 20-10-2025
+- Renamed i16, i32, and i64 to short, int and long.
+
+### 21-10-2025
+- Redesigned the generic system:
+    - Generic types now store an index instead of a direct shared pointer to the parameter.
+	- This allows lookup to be re-done within the type checker which means it is much easier
+	  and safer when type checking generic function instantiations.
+	- Generic types also no longer subsitute, as the functions are now completely seperate, and not
+	  just substituted whilst type checking. Instead, the generic types are completely replaced
+	  with the concrete types, which also means that type checking is much simpler.
+
+### 23-10-2025
+- All appropriate AST nodes now have their clone function defined.
+- Added a generic_args member to data_type for use with generic types.
+
+### 25-10-2025
+- Fixed a bug in the type resolver where pointer/array types do not have their base type resolved.
+
+### 28-10-2025
+- Moved the get_ctor_candidates function into type_utils as it no longer looks up the type by name,
+  instead, it takes the type as an argument.
+- Constructor candidates are now resolved in the type checker, allowing for generic type constructors.
+- Added a new generic_substitutor pass for immediate substitution instead of runtime looking during type
+  checking which is bloated and unnescessary.
+- Added a generic function and type map to the type checker so that generic instantiations can be stored
+  and reused.
+- When instantiating types the new type is set as the constructors return type, as otherwise it points to
+  the non-instantiated version.
+- Custom types now store instantiated versions as well in a generic_type_map so that custom_type::get()
+  can return the correct instantiated type rather than the generic one.

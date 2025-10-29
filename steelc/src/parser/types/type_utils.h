@@ -4,6 +4,7 @@
 #include "../ast/ast_fwd.h"
 
 std::vector<std::shared_ptr<function_declaration>> get_method_candidates(std::shared_ptr<const type_declaration> type, const std::string& name, size_t arity);
+std::vector<std::shared_ptr<function_declaration>> get_ctor_candidates(std::shared_ptr<const type_declaration> type, size_t arity);
 
 int size_of_primitive(primitive_type primitive);
 int size_of_pointer();
