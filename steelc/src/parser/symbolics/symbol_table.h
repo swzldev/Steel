@@ -39,13 +39,17 @@ public:
 	lookup_result(std::shared_ptr<type_declaration> type)
 		: error(LOOKUP_OK), value(std::move(type)) {
 	}
+	lookup_result(std::shared_ptr<enum_declaration> enm)
+		: error(LOOKUP_OK), value(std::move(enm)) {
+	}
 
 	lookup_error error = LOOKUP_OK;
 	std::variant<
 		std::shared_ptr<variable_declaration>,
 		std::shared_ptr<generic_parameter>,
 		std::shared_ptr<function_declaration>,
-		std::shared_ptr<type_declaration>
+		std::shared_ptr<type_declaration>,
+		std::shared_ptr<enum_declaration>
 	> value;
 };
 
@@ -65,6 +69,7 @@ public:
 	error_code add_function(std::shared_ptr<function_declaration> func);
 	error_code add_method(std::shared_ptr<type_declaration> type, std::shared_ptr<function_declaration> func);
 	error_code add_type(std::shared_ptr<type_declaration> type);
+	error_code add_enum(std::shared_ptr<enum_declaration> enm);
 
 	inline bool has_variable(const std::string& name) const {
 		return get_variable(nullptr, name).error == LOOKUP_OK;
@@ -75,11 +80,15 @@ public:
 	inline bool has_type(const std::string& name) const {
 		return types.find(name) != types.end();
 	}
+	inline bool has_enum(const std::string& name) const {
+		return enums.find(name) != enums.end();
+	}
 
 	lookup_result get_variable(std::shared_ptr<const type_declaration> type, const std::string& name) const;
 	lookup_result get_generic(const std::string& name) const;
 	lookup_result get_function(const std::string& name, type_ptr return_type, std::vector<type_ptr> param_types) const;
 	lookup_result get_type(const std::string& name) const;
+	lookup_result get_enum(const std::string& name) const;
 	std::vector<std::shared_ptr<function_declaration>> get_function_candidates(const std::string& name, size_t arity, size_t generics) const;
 
 private:
@@ -87,4 +96,5 @@ private:
 	std::vector<std::map<std::string, std::shared_ptr<generic_parameter>>> generic_scopes;
 	std::vector<std::pair<std::string, std::shared_ptr<function_declaration>>> functions;
 	std::unordered_map<std::string, std::shared_ptr<type_declaration>> types;
+	std::unordered_map<std::string, std::shared_ptr<enum_declaration>> enums;
 };

@@ -43,18 +43,18 @@ void init_checker::visit(std::shared_ptr<assignment_expression> expr) {
 	expr->right->accept(*this);
 
 	auto id = std::dynamic_pointer_cast<identifier_expression>(expr->left);
-	if (id && id->declaration) {
-		initialized.insert(id->declaration);
-		id->declaration->initialized = true;
+	if (id && id->id_type == IDENTIFIER_VARIABLE) {
+		initialized.insert(id->variable_declaration);
+		id->variable_declaration->initialized = true;
 	}
 }
 void init_checker::visit(std::shared_ptr<identifier_expression> expr) {
-	if (!expr->declaration) {
-		// if it hasnt been resolved, it means its probably invalid, so we can ignore it
+	// if its not a variable we can safely ignore this
+	if (expr->id_type != IDENTIFIER_VARIABLE) {
 		return;
 	}
-	// assuming identifier is variable access
-	if (initialized.find(expr->declaration) == initialized.end()) {
+
+	if (initialized.find(expr->variable_declaration) == initialized.end()) {
 		ERROR(ERR_UNINITIALIZED_VARIABLE, expr->position, expr->identifier.c_str());
 		return;
 	}

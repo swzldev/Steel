@@ -16,7 +16,7 @@
 #include "codegen/codegen.h"
 #include "interpreter/interpreter.h"
 
-bool compiler::compile(std::vector<source_file> sources) {
+bool compiler::compile(compile_config cfg) {
 	for (auto& file : sources) {
 		auto unit = std::make_shared<compilation_unit>();
 		unit->source_file = std::make_shared<source_file>(file);

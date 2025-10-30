@@ -81,6 +81,7 @@ const std::map<std::string, token_type>& get_keywords() {
 		{"struct", TT_STRUCT},
 		{"class", TT_CLASS},
 		{"interface", TT_INTERFACE},
+		{"enum", TT_ENUM},
 		{"true", TT_TRUE},
 		{"false", TT_FALSE},
 		{"null", TT_NULL},

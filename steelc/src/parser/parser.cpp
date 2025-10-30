@@ -77,9 +77,15 @@ ast_ptr parser::parse_declaration() {
 		token& kind_token = previous();
 		return parse_type_declaration(kind_token);
 	}
+	// enum declaration
+	else if (match(TT_ENUM)) {
+		return parse_enum_declaration();
+	}
+	// function declaration
 	else if (match(TT_FUNC) || match(TT_OVERRIDE)) {
 		return parse_function_declaration(false, previous().type == TT_OVERRIDE);
 	}
+	// variable declaration
 	else if (match(TT_CONST) || match(TT_LET)) {
 		bool is_const = previous().type == TT_CONST;
 		return parse_variable_declaration(is_const);
@@ -276,6 +282,39 @@ std::shared_ptr<type_declaration> parser::parse_type_declaration(token& kind_tok
 	}
 
 	return type_decl;
+}
+std::shared_ptr<enum_declaration> parser::parse_enum_declaration() {
+	token& identifier_token = peek();
+	if (!match(TT_IDENTIFIER)) {
+		ERROR_TOKEN(ERR_ID_EXPECTED, peek());
+		return nullptr;
+	}
+
+	if (!match(TT_LBRACE)) {
+		ERROR_TOKEN(ERR_LBRACE_EXPECTED, peek());
+		return nullptr;
+	}
+
+	std::vector<enum_option> options;
+	while (!is_at_end() && !check(TT_RBRACE)) {
+		if (!match(TT_IDENTIFIER)) {
+			ERROR_TOKEN(ERR_ENUM_OPTION_NAME_EXPECTED, peek());
+			advance();
+			continue;
+		}
+		token& option_name_token = previous();
+		options.push_back({ option_name_token.value });
+		
+		if (!match(TT_COMMA)) {
+			break;
+		}
+	}
+	if (!match(TT_RBRACE)) {
+		ERROR_TOKEN(ERR_RBRACE_EXPECTED, peek());
+		return nullptr;
+	}
+
+	return make_ast<enum_declaration>(identifier_token, identifier_token.value, options);
 }
 std::shared_ptr<variable_declaration> parser::parse_parameter() {
 	// parse parameter type

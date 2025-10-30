@@ -47,6 +47,7 @@ enum token_type {
 	TT_STRUCT,
 	TT_CLASS,
 	TT_INTERFACE,
+	TT_ENUM,
 	// Keywords (control-flow)
 	TT_IF,
 	TT_ELSE,

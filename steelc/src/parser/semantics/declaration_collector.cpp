@@ -109,6 +109,10 @@ void declaration_collector::visit(std::shared_ptr<type_declaration> decl) {
 		ERROR(ERR_TYPE_ALREADY_DEFINED, decl->position, decl->name().c_str());
 		return;
 	}
+	else if (err == ERR_ENUM_ALREADY_DEFINED) {
+		ERROR(ERR_ENUM_ALREADY_DEFINED, decl->position, decl->name().c_str());
+		return;
+	}
 
 	// types cannot be nested (yet)
 	if (current_type || current_function || current_constructor) {
@@ -186,6 +190,24 @@ void declaration_collector::visit(std::shared_ptr<module_declaration> mod) {
 	// returns the parent of the current module (or the global module)
 	current_module = current_module->parent_module;
 	sym_table = &current_module->symbols;
+}
+void declaration_collector::visit(std::shared_ptr<enum_declaration> enm) {
+	// check if type is already defined
+	auto err = sym_table->add_enum(enm);
+	if (err == ERR_ENUM_ALREADY_DEFINED) {
+		ERROR(ERR_ENUM_ALREADY_DEFINED, enm->position, enm->name().c_str());
+		return;
+	}
+	else if (err == ERR_TYPE_ALREADY_DEFINED) {
+		ERROR(ERR_TYPE_ALREADY_DEFINED, enm->position, enm->name().c_str());
+		return;
+	}
+
+	// enums cannot be nested
+	if (current_type || current_function || current_constructor) {
+		ERROR(ERR_NESTED_ENUM_NOT_ALLOWED, enm->position);
+		return;
+	}
 }
 
 void declaration_collector::visit(std::shared_ptr<import_statement> import_stmt) {

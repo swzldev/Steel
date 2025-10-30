@@ -12,7 +12,7 @@ public:
 	ENABLE_ACCEPT(member_expression)
 
 	member_expression(std::shared_ptr<expression> object, std::string member)
-		: object(object), member(member) {
+		: object(object), member(member), resolved_type(nullptr) {
 	}
 
 	std::string string(int indent) const override {
@@ -35,21 +35,18 @@ public:
 			std::dynamic_pointer_cast<expression>(object->clone()),
 			member
 		);
-		cloned->declaration = declaration;
+		cloned->resolved_type = resolved_type;
 		return cloned;
 	}
 
 	virtual type_ptr type() const override {
-		if (!declaration || !declaration->type) {
-			return data_type::UNKNOWN;
-		}
-		return declaration->type;
+		return resolved_type ? resolved_type : data_type::UNKNOWN;
 	}
 	bool is_rvalue() const override {
-		return false;
+		throw "Not implemented";
 	}
 
 	std::shared_ptr<expression> object;
 	std::string member;
-	std::shared_ptr<variable_declaration> declaration;
+	type_ptr resolved_type;
 };

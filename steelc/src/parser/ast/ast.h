@@ -8,6 +8,7 @@
 #include "declarations/module_declaration.h"
 #include "declarations/conversion_declaration.h"
 #include "declarations/operator_declaration.h"
+#include "declarations/enum_declaration.h"
 #include "statements/block_statement.h"
 #include "statements/import_statement.h"
 #include "statements/inline_if.h"

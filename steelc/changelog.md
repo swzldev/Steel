@@ -205,3 +205,25 @@
   the non-instantiated version.
 - Custom types now store instantiated versions as well in a generic_type_map so that custom_type::get()
   can return the correct instantiated type rather than the generic one.
+- Begin working on enum support:
+    - Added 'enum' as a keyword (TT_ENUM).
+	- Created a new ast node enum_declaration for storing enum declarations.
+	- Created a new data type enum_type for representing different enums which allows them to be
+	  clearly seperated from other types and ensures type safety.
+	- The parser can now parse enum declarations.
+
+### 30-10-2025
+- Continued working on enum support:
+    - enum_type is now fully complete.
+	- The type resolver now uses a simplified function resolve_custom(type) for resolving custom types
+	  including enums, which allows for early return without bypassing the generic arg resolving logic.
+- The compiler class now takes a compile_config object and now stores the sources in the class itself
+  rather than through the compile function, this may be extra useful later but for now its just for
+  simplicity.
+- Identifier ast nodes are now much more complex as they are able to store much more than just variable
+  declarations, they can now be functions (TODO), types, and enum identifiers, which will allow static
+  member access and enum option access later.
+- The name resolver now resolves all different types of identifiers correctly, in the order of
+  variable > func (not implemented yet) > type > enum.
+- Adding support for enum instance comparison in the type checker.
+- Added enum support to the interpreter.

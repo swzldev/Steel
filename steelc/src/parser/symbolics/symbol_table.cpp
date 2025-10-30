@@ -113,7 +113,20 @@ error_code symbol_table::add_type(std::shared_ptr<type_declaration> type) {
 	if (types.find(type->name()) != types.end()) {
 		return ERR_TYPE_ALREADY_DEFINED;
 	}
+	if (enums.find(type->name()) != enums.end()) {
+		return ERR_ENUM_ALREADY_DEFINED;
+	}
 	types[type->name()] = type;
+	return ERR_SUCCESS;
+}
+error_code symbol_table::add_enum(std::shared_ptr<enum_declaration> enm) {
+	if (enums.find(enm->name()) != enums.end()) {
+		return ERR_ENUM_ALREADY_DEFINED;
+	}
+	if (types.find(enm->name()) != types.end()) {
+		return ERR_TYPE_ALREADY_DEFINED;
+	}
+	enums[enm->name()] = enm;
 	return ERR_SUCCESS;
 }
 
@@ -162,6 +175,14 @@ lookup_result symbol_table::get_type(const std::string& name) const {
 	// local lookup
 	auto it = types.find(name);
 	if (it != types.end()) {
+		return { it->second };
+	}
+	return { LOOKUP_NO_MATCH };
+}
+lookup_result symbol_table::get_enum(const std::string& name) const {
+	// local lookup
+	auto it = enums.find(name);
+	if (it != enums.end()) {
 		return { it->second };
 	}
 	return { LOOKUP_NO_MATCH };

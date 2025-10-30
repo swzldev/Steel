@@ -32,4 +32,5 @@ private:
 	unsigned int cur_generic_index = 0;
 
 	void resolve_type(type_ptr& type);
+	void resolve_custom(type_ptr& custom);
 };

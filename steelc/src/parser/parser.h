@@ -23,6 +23,7 @@ public:
 	std::shared_ptr<function_declaration> parse_function_declaration(bool is_constructor, bool is_override);
 	std::shared_ptr<variable_declaration> parse_variable_declaration(bool is_const);
 	std::shared_ptr<type_declaration> parse_type_declaration(token& kind_token);
+	std::shared_ptr<enum_declaration> parse_enum_declaration();
 	std::shared_ptr<variable_declaration> parse_parameter();
 	ast_ptr parse_statement();
 	std::shared_ptr<code_block> parse_block(bool is_body = true);

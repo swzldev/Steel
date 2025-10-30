@@ -48,6 +48,8 @@ void ast_visitor::visit(std::shared_ptr<conversion_declaration> conv) {
 void ast_visitor::visit(std::shared_ptr<operator_declaration> op) {
 
 }
+void ast_visitor::visit(std::shared_ptr<enum_declaration> enum_decl) {
+}
 void ast_visitor::visit(std::shared_ptr<expression_statement> expr) {
 	expr->expr->accept(*this);
 }

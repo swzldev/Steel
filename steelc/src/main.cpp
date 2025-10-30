@@ -80,8 +80,17 @@ int main(int argc, char** argv) {
 
 	//stproj_file proj = stproj_file::load(argv[1]);
 	stproj_file proj = stproj_file::load(R"(C:\Users\maxmt\source\repos\Steel\steelc\demo\ArrayDemo.stproj)");
-	compiler compiler;
-	compiler.compile(proj.sources);
+	compiler compiler(proj.sources);
+
+	compile_config cfg;
+
+	// -- CONFIG --
+	cfg.print_src = false;
+	cfg.print_tokens = false;
+	cfg.print_tokenized_input = false;
+	cfg.print_ast = false;
+
+	compiler.compile(cfg);
 
 	if (compiler.has_errors()) {
 		std::cerr << "\033[1;31mCompilation failed:\033[0m\n";

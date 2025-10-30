@@ -45,6 +45,7 @@ public:
     inline bool is_void()      const { return type->is_primitive() && type->primitive == DT_VOID; }
     inline bool is_pointer()   const { return type->is_pointer(); }
     inline bool is_array()     const { return type->is_array(); }
+	inline bool is_enum()      const { return type->is_enum(); }
     inline bool is_unknown()   const { return type->is_unknown(); }
     inline bool is_number()    const { return is_int() || is_float(); }
 

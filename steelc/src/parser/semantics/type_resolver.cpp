@@ -108,33 +108,10 @@ void type_resolver::resolve_type(type_ptr& type) {
 	}
 
 	// resolve custom types and generics to their declarations
-	if (auto custom = type->as_custom()) {
-		const std::string& type_name = custom->name();
-
-		auto generic = sym_table->get_generic(type_name);
-		auto decl = resolver.get_type(type_name);
-
-		// generic type
-		if (generic.error == LOOKUP_OK) {
-			auto gn = std::make_shared<generic_type>(type_name);
-			auto& param = std::get<std::shared_ptr<generic_parameter>>(generic.value);
-			gn->generic_param_index = param->param_index;
-			type = gn;
-		}
-
-		// custom type
-		else if (decl.error == LOOKUP_OK) {
-			custom->declaration = std::get<std::shared_ptr<type_declaration>>(decl.value);
-		}
-		else if (decl.error == LOOKUP_COLLISION) {
-			ERROR(ERR_NAME_COLLISION, type->position, type_name.c_str());
-			return;
-		}
-		else if (decl.error == LOOKUP_NO_MATCH) {
-			ERROR(ERR_UNKNOWN_TYPE, type->position, type_name.c_str());
-			return;
-		}
+	if (type->is_custom()) {
+		resolve_custom(type);
 	}
+
 	// resolve & check generic args (if applicable)
 	if (type->generic_args.size() > 0) {
 		if (!type->is_custom()) {
@@ -165,4 +142,41 @@ void type_resolver::resolve_type(type_ptr& type) {
 			resolve_type(gen_arg);
 		}
 	}
+}
+
+void type_resolver::resolve_custom(type_ptr& custom) {
+	const std::string& type_name = custom->name();
+
+	// generic type
+	auto generic = sym_table->get_generic(type_name);
+	if (generic.error == LOOKUP_OK) {
+		auto gn = std::make_shared<generic_type>(type_name);
+		auto& param = std::get<std::shared_ptr<generic_parameter>>(generic.value);
+		gn->generic_param_index = param->param_index;
+		custom = gn;
+	}
+
+	// custom type
+	auto decl = resolver.get_type(type_name);
+	if (decl.error == LOOKUP_OK) {
+		custom->as_custom()->declaration = std::get<std::shared_ptr<type_declaration>>(decl.value);
+	}
+	else if (decl.error == LOOKUP_COLLISION) {
+		ERROR(ERR_NAME_COLLISION, custom->position, type_name.c_str());
+		return;
+	}
+
+	// enum type
+	auto enm = resolver.get_enum(type_name);
+	if (enm.error == LOOKUP_OK) {
+		custom = std::get<std::shared_ptr<enum_declaration>>(enm.value)->type();
+	}
+	else if (enm.error == LOOKUP_COLLISION) {
+		ERROR(ERR_NAME_COLLISION, custom->position, type_name.c_str());
+		return;
+	}
+
+	// unknown
+	ERROR(ERR_UNKNOWN_TYPE, custom->position, type_name.c_str());
+	return;
 }

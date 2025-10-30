@@ -103,12 +103,40 @@ void name_resolver::visit(std::shared_ptr<binary_expression> expr) {
 	expr->right->accept(*this);
 }
 void name_resolver::visit(std::shared_ptr<identifier_expression> expr) {
+	// variable identifier
 	auto var_decl = resolver.get_variable(current_type, expr->identifier);
-	if (var_decl.error != LOOKUP_OK) {
-		ERROR(ERR_UNKNOWN_IDENTIFIER, expr->position, expr->identifier.c_str());
+	if (var_decl.error == LOOKUP_OK) {
+		expr->id_type = IDENTIFIER_VARIABLE;
+		expr->variable_declaration = std::get<std::shared_ptr<variable_declaration>>(var_decl.value);
 		return;
 	}
-	expr->declaration = std::get<std::shared_ptr<variable_declaration>>(var_decl.value);
+
+	// function identifier
+	/*auto func_decl = resolver.get_function(expr->identifier);
+	if (var_decl.error == LOOKUP_OK) {
+		expr->id_type = IDENTIFIER_VARIABLE;
+		expr->function_declaration = std::get<std::shared_ptr<function_declaration>>(var_decl.value);
+		return;
+	} WE DONT SUPPORT METHOD POINTERS ETC CURRENTLY SO THIS IS JUST COMMENTED */
+
+	// type identifier
+	auto type_decl = resolver.get_type(expr->identifier);
+	if (type_decl.error == LOOKUP_OK) {
+		expr->id_type = IDENTIFIER_TYPE;
+		expr->type_declaration = std::get<std::shared_ptr<type_declaration>>(type_decl.value);
+		return;
+	}
+	// TODO: support for errors like collisions im just too lazy to implement them currently
+
+	// enum identifier
+	auto enum_decl = resolver.get_enum(expr->identifier);
+	if (enum_decl.error == LOOKUP_OK) {
+		expr->id_type = IDENTIFIER_ENUM;
+		expr->enum_declaration = std::get<std::shared_ptr<enum_declaration>>(enum_decl.value);
+		return;
+	}
+
+	ERROR(ERR_UNKNOWN_IDENTIFIER, expr->position, expr->identifier.c_str());
 }
 void name_resolver::visit(std::shared_ptr<this_expression> expr) {
 	if (!current_type && !current_func && !current_ctor) {

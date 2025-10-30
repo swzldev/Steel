@@ -261,6 +261,25 @@ void interpreter_visitor::visit(std::shared_ptr<assignment_expression> expr) {
 	}
 }
 void interpreter_visitor::visit(std::shared_ptr<member_expression> expr) {
+	if (auto id_expr = std::dynamic_pointer_cast<identifier_expression>(expr->object)) {
+		// if the lhs is an identifier we can check if its an enum before
+		// accepting it which would throw an error since it might not be
+		// a variable
+		if (id_expr->id_type == IDENTIFIER_ENUM) {
+			auto& enum_decl = id_expr->enum_declaration;
+
+			for (auto& option : enum_decl->options) {
+				if (option.identifier == expr->member) {
+					expression_result = new_val(enum_decl->type(), option.identifier);
+					return;
+				}
+			}
+
+			throw_exception("Enum member \"" + expr->member + "\" not found", expr->position);
+			return;
+		}
+	}
+
 	// evaluate the object expression
 	expr->object->accept(*this);
 	auto& obj = expression_result;
@@ -374,7 +393,12 @@ void interpreter_visitor::visit(std::shared_ptr<index_expression> expr) {
 	}
 }
 void interpreter_visitor::visit(std::shared_ptr<identifier_expression> expr) {
-	expression_result = get_var(expr->identifier);
+	if (expr->id_type == IDENTIFIER_VARIABLE) {
+		expression_result = get_var(expr->identifier);
+	}
+	else {
+		throw_exception("Unsupported identifier type in interpreter", expr->position);
+	}
 }
 void interpreter_visitor::visit(std::shared_ptr<this_expression> expr) {
 	if (!this_object) {

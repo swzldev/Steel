@@ -149,6 +149,45 @@ lookup_result symbol_resolver::get_type(const std::string& name) const {
 
 	return { LOOKUP_NO_MATCH };
 }
+lookup_result symbol_resolver::get_enum(const std::string& name) const {
+	std::shared_ptr<module_info> module = current_module;
+	lookup_result hierarchy_result = { LOOKUP_NO_MATCH };
+
+	// search through module hierarchy
+	for (; module != nullptr; module = module->parent_module) {
+		hierarchy_result = module->symbols.get_enum(name);
+		if (hierarchy_result.error == LOOKUP_OK) {
+			break;
+		}
+	}
+
+	// search imports
+	std::vector<lookup_result> import_results;
+	for (const auto& import : import_tbl->get_imports()) {
+		auto result = import->symbols.get_enum(name);
+		if (result.error == LOOKUP_OK) {
+			import_results.push_back(result);
+		}
+	}
+
+	// check for collisions
+	if (hierarchy_result.error == LOOKUP_OK && !import_results.empty()) {
+		return { LOOKUP_COLLISION };
+	}
+
+	if (import_results.size() > 1) {
+		return { LOOKUP_COLLISION };
+	}
+
+	if (hierarchy_result.error == LOOKUP_OK) {
+		return hierarchy_result;
+	}
+	if (import_results.size() == 1) {
+		return import_results[0];
+	}
+
+	return { LOOKUP_NO_MATCH };
+}
 std::vector<std::shared_ptr<function_declaration>> symbol_resolver::get_function_candidates(const std::string& name, size_t arity, size_t generics) const {
 	std::vector<std::shared_ptr<function_declaration>> candidates;
 

@@ -21,6 +21,7 @@ public:
 	void visit(std::shared_ptr<variable_declaration> var) override;
 	void visit(std::shared_ptr<type_declaration> decl) override;
 	void visit(std::shared_ptr<module_declaration> mod) override;
+	void visit(std::shared_ptr<enum_declaration> enum_decl) override;
 
 	// top-level statements
 	void visit(std::shared_ptr<import_statement> import_stmt) override;

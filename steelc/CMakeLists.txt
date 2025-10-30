@@ -34,7 +34,11 @@ set(SOURCES
     "src/utils/iclonable.h"
     "src/parser/ast/statements/control_flow/break_statement.h"
     "src/interpreter/classes/break_out.h"
-     "src/parser/semantics/generic_substitutor.h" "src/parser/semantics/generic_substitutor.cpp")
+    "src/parser/semantics/generic_substitutor.h"
+    "src/parser/semantics/generic_substitutor.cpp"
+    "src/parser/ast/declarations/enum_declaration.h"
+    "src/parser/types/enum_type.h"
+    "src/parser/types/enum_type.cpp")
 
 # Add source to this project's executable.
 add_executable ( steelc ${SOURCES} )

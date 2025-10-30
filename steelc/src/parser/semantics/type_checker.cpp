@@ -253,6 +253,13 @@ void type_checker::visit(std::shared_ptr<binary_expression> expr) {
 		ERROR(ERR_NO_MATCHING_OPERATOR, expr->position);
 		return;
 	}
+	else if (left_type->is_enum() && right_type->is_enum()) {
+		// we can compare enums if they are the same type
+		if (*left_type == right_type && expr->oparator == TT_EQUAL || expr->oparator == TT_NOT_EQUAL) {
+			expr->result_type = to_data_type(DT_BOOL);
+			return;
+		}
+	}
 	else {
 		// if at least one side is custom, we can check user-defined operators
 		if (auto left_custom = left_type->as_custom()) {
@@ -291,9 +298,9 @@ void type_checker::visit(std::shared_ptr<assignment_expression> expr) {
 
 	// cannot assign to a const variable
 	auto left_var = std::dynamic_pointer_cast<identifier_expression>(expr->left);
-	if (left_var && left_var->declaration) {
-		if (left_var->declaration->is_const) {
-			ERROR(ERR_CONST_ASSIGNMENT, expr->position, left_var->declaration->identifier.c_str());
+	if (left_var && left_var->id_type == IDENTIFIER_VARIABLE) {
+		if (left_var->variable_declaration->is_const) {
+			ERROR(ERR_CONST_ASSIGNMENT, expr->position, left_var->variable_declaration->identifier.c_str());
 			return;
 		}
 	}
@@ -388,34 +395,47 @@ void type_checker::visit(std::shared_ptr<cast_expression> expr) {
 }
 void type_checker::visit(std::shared_ptr<member_expression> expr) {
 	expr->object->accept(*this);
-	auto type = expr->object->type();
-	if (type == data_type::UNKNOWN) {
-		// object resolution error, ignore for simplicity
-		return;
-	}
 
-	auto custom = member_access_allowed(type);
-	if (!custom) {
-		// should change this error really as it could be composite with no members like a Foo** etc.
+	auto type = expr->object->type();
+	if (!member_access_allowed(type)) {
 		ERROR(ERR_MEMBER_ACCESS_ON_NONCOMPOSITE, expr->position, type->name().c_str());
 		return;
 	}
 
-	std::shared_ptr<const type_declaration> type_decl = custom->declaration;
 	bool found = false;
-	do {
-		for (const auto& member : custom->declaration->fields) {
-			if (member->identifier == expr->member) {
-				expr->declaration = member;
+	if (auto custom = type->as_custom()) {
+		std::shared_ptr<const type_declaration> type_decl = custom->declaration;
+		do {
+			for (const auto& member : custom->declaration->fields) {
+				if (member->identifier == expr->member) {
+					expr->resolved_type = member->type;
+					found = true;
+					break;
+				}
+			}
+			type_decl = type_decl->base_class;
+		} while (type_decl != nullptr);
+	}
+	else if (auto enm = type->as_enum()) {
+		for (const auto& option : enm->declaration->options) {
+			if (option.identifier == expr->member) {
+				expr->resolved_type = enm->declaration->type();
 				found = true;
 				break;
 			}
 		}
-		type_decl = type_decl->base_class;
-	} while (type_decl != nullptr);
+	}
+	else {
+		ERROR(ERR_INTERNAL_ERROR, expr->position, "Type Checker", "Member access on unsupported composite type");
+		return;
+	}
 
 	if (!found) {
-		ERROR(ERR_NO_MEMBER_WITH_NAME, expr->position, custom->name().c_str(), expr->member.c_str());
+		if (type->is_enum()) {
+			ERROR(ERR_NO_ENUM_MEMBER_WITH_NAME, expr->position, type->name().c_str(), expr->member.c_str());
+			return;
+		}
+		ERROR(ERR_NO_MEMBER_WITH_NAME, expr->position, type->name().c_str(), expr->member.c_str());
 		return;
 	}
 }
@@ -482,20 +502,19 @@ void type_checker::visit(std::shared_ptr<function_call> func_call) {
 			member->object->accept(*this);
 
 			auto type = member->object->type();
-			if (type == data_type::UNKNOWN) {
-				// object resolution error, ignore for simplicity
-				return;
-			}
-
-			auto custom = member_access_allowed(type);
-			if (!custom) {
+			if (!method_access_allowed(type)) {
 				// should change this error really as it could be composite with no members like a Foo** etc.
-				ERROR(ERR_MEMBER_ACCESS_ON_NONCOMPOSITE, func_call->position, type->name().c_str());
+				ERROR(ERR_METHOD_ACCESS_ON_NONCOMPOSITE, func_call->position, type->name().c_str());
 				return;
 			}
 
-			// find method - dont check for return type as its UNKNOWN in a call
-			auto method_candidates = get_method_candidates(custom->declaration, func_call->identifier, func_call->args.size());
+			if (!type->is_custom()) {
+				// if this is ever thrown, it means there must be a problem with method_access_allowed
+				ERROR(ERR_INTERNAL_ERROR, func_call->position, "Type Checker", "Method call on non-custom type");
+			}
+
+			// find method - dont check for return type as its unknown in a call
+			auto method_candidates = get_method_candidates(type->as_custom()->declaration, func_call->identifier, func_call->args.size());
 			func_call->declaration_candidates = method_candidates;
 		}
 		else {
@@ -699,15 +718,14 @@ void type_checker::visit(std::shared_ptr<return_statement> ret) {
 	}
 }
 
-std::shared_ptr<custom_type> type_checker::member_access_allowed(type_ptr type) {
-	// check if its a pointer, if it is we can dereference it automatically (ONCE)
-	// -> operator does not exist in steel
-	auto custom = type->as_custom();
-	if (!custom && type->is_pointer()) {
-		auto ptr = type->as_pointer();
-		custom = ptr->base_type->as_custom();
-	}
-	return custom;
+bool type_checker::member_access_allowed(type_ptr type) {
+	if (type->is_custom()) return true;
+	if (type->is_enum()) return true;
+	return false;
+}
+bool type_checker::method_access_allowed(type_ptr type) {
+	if (type->is_custom()) return true;
+	return false;
 }
 bool type_checker::is_valid_conversion(type_ptr from, type_ptr to, bool implicit, position pos) {
 	if (from->is_custom()) {

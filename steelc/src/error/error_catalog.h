@@ -129,6 +129,11 @@ enum error_code {
     ERR_GENERIC_ARGS_ON_NONCUSTOM_TYPE,
     ERR_GENERIC_ARGS_ON_NONGENERIC_TYPE,
 	ERR_INCORRECT_NUMBER_OF_GENERIC_ARGS,
+    ERR_ENUM_OPTION_NAME_EXPECTED,
+	ERR_ENUM_ALREADY_DEFINED,
+    ERR_NESTED_ENUM_NOT_ALLOWED,
+    ERR_METHOD_ACCESS_ON_NONCOMPOSITE,
+    ERR_NO_ENUM_MEMBER_WITH_NAME,
 };
 
 enum warning_code {
@@ -271,6 +276,11 @@ struct error_catalog {
             {"S134", "Generic arguments cannot be used on non-custom type '%s'"},
             {"S135", "Generic arguments cannot be used on non-generic type '%s'"},
             {"S136", "Missing required generic arguments for generic type '%s', types are: %s"},
+            {"S137", "Expected an identifier for enum option"},
+            {"S138", "Enum '%s' is already defined"},
+            {"S139", "Enum inside enum is not allowed"},
+            {"S087", "Method access not allowed on non-composite type '%s'"},
+            {"S087", "The enum '%s' does not contain an option named '%s'"},
 
         };
         return errors[code - 1];

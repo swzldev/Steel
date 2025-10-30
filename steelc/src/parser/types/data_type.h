@@ -10,6 +10,7 @@
 enum primitive_type {
 	DT_UNKNOWN,
 	DT_CUSTOM,
+	DT_ENUM,
 
 	DT_I16,
 	DT_I32,
@@ -41,6 +42,7 @@ class data_type;
 class custom_type;
 class array_type;
 class pointer_type;
+class enum_type;
 class generic_type;
 
 using type_ptr = std::shared_ptr<data_type>;
@@ -92,6 +94,9 @@ public:
 	inline bool is_reference() const {
 		return primitive == DT_REFERENCE;
 	}
+	inline bool is_enum() const {
+		return primitive == DT_ENUM;
+	}
 	inline bool is_generic() const {
 		// IMPORTANT!
 		// generic types are used to represent generic parameter usages
@@ -105,6 +110,7 @@ public:
 	std::shared_ptr<array_type> as_array();
 	std::shared_ptr<pointer_type> as_pointer();
 	std::shared_ptr<data_type> as_reference();
+	std::shared_ptr<enum_type> as_enum();
 	std::shared_ptr<generic_type> as_generic();
 
 	virtual bool is_primitive() const;

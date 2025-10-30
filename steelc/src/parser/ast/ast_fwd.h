@@ -9,6 +9,7 @@ class type_declaration;
 class module_declaration;
 class conversion_declaration;
 class operator_declaration;
+class enum_declaration;
 
 class code_block;
 class import_statement;
