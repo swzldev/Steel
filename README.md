@@ -19,13 +19,15 @@
 <li><s>VS Code extension to allow for syntax highlighting and quick code compilation.</s> (Coming soon)</li>
 </ul>
 
+<h2>Important notes</h3>
+<p>Steel is currently in pre-alpha, this means many features are not fully functional and may contain plenty of bugs, this version is not meant to be released publicly. Currently the language uses a built in interpreter meaning it is significantly slower than intended. Additionally, there is little to no optimisation as the languages core features are still being built. Bare this in mind when downloading an old release like this one.</p>
+
 <h2>Getting started</h2>
 <p>To begin first download the <a href="https://github.com/swzldev/Steel/releases/">latest release</a> of the compiler. This is nescessary for converting your Steel code into a functional executable.</p>
 
 <p>After downloading the compiler (which currently has the interpreter built-in), you can begin to create your first Steel project. Steel projects use TOML, and use the *.stproj extension. You can use the template below to create your project:</p>
 
-<pre><code>
-name = "MyProject"
+<pre><code>name = "MyProject"
 version = "1.0.0"
 type = "executable"
 
@@ -34,8 +36,7 @@ sources = ["Main.s"]
 
 <p>Now, make a "Main.s" file in the same directory, this will be the file for your entry point. The entry point must be called "Main" and return an i32:</p>
 
-<pre><code>
-func Main() -> i32 {
+<pre><code>func Main() -> i32 {
     Print("Hello, World!");
     return 0;
 }
@@ -46,9 +47,6 @@ func Main() -> i32 {
 
 <p>If you did everything correctly you should see the following output:</p>
 <img width="366" height="159" alt="image" src="https://github.com/user-attachments/assets/594d3a01-22ac-4cb8-a215-abba97bc7aa3" />
-
-<h3>Important notes</h3>
-<p>Steel is currently in pre-alpha, this means many features are not fully functional and may contain plenty of bugs, this version is not meant to be released publicly. Currently the language uses a built in interpreter meaning it is significantly slower than intended. Additionally, there is little to no optimisation as the languages core features are still being built. Bare this in mind when downloading an old release like this one.</p>
 
 <h2>Changelog</h2>
 <p>To view the full changelog, click <a href="./steelc/changelog.md">here</a>.</p>
