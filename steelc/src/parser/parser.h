@@ -60,5 +60,6 @@ private:
 	bool match(token_type type);
 	bool check(token_type type);
 	void advance();
+	void synchronize();
 	bool is_at_end();
 };

@@ -20,7 +20,45 @@ public:
 	bool compile(compile_config cfg);
 
 	inline bool has_errors() const {
-		return !lexer_errors.empty() || !parsing_errors.empty() || !semantic_errors.empty();
+		return !get_errors().empty();
+	}
+	inline std::vector<error> get_errors() const {
+		std::vector<error> errors;
+		for (const auto& err : lexer_errors) {
+			if (err.type == ERR_ERROR) {
+				errors.push_back(err);
+			}
+		}
+		for (const auto& err : parsing_errors) {
+			if (err.type == ERR_ERROR) {
+				errors.push_back(err);
+			}
+		}
+		for (const auto& err : semantic_errors) {
+			if (err.type == ERR_ERROR) {
+				errors.push_back(err);
+			}
+		}
+		return errors;
+	}
+	inline std::vector<error> get_warnings() const {
+		std::vector<error> warnings;
+		for (const auto& wrn : lexer_errors) {
+			if (wrn.type == ERR_WARNING) {
+				warnings.push_back(wrn);
+			}
+		}
+		for (const auto& wrn : parsing_errors) {
+			if (wrn.type == ERR_WARNING) {
+				warnings.push_back(wrn);
+			}
+		}
+		for (const auto& wrn : semantic_errors) {
+			if (wrn.type == ERR_WARNING) {
+				warnings.push_back(wrn);
+			}
+		}
+		return warnings;
 	}
 
 	std::vector<std::shared_ptr<compilation_unit>> compilation_units;

@@ -38,7 +38,7 @@ set(SOURCES
     "src/parser/semantics/generic_substitutor.cpp"
     "src/parser/ast/declarations/enum_declaration.h"
     "src/parser/types/enum_type.h"
-    "src/parser/types/enum_type.cpp")
+    "src/parser/types/enum_type.cpp" "src/parser/ast/enums/enum_option.h" "src/interpreter/debugging/interpreter_debugger.h" "src/interpreter/debugging/debug_console.h" "src/interpreter/debugging/debug_console.cpp")
 
 # Add source to this project's executable.
 add_executable ( steelc ${SOURCES} )

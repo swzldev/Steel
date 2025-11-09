@@ -19,9 +19,9 @@ void type_checker::visit(std::shared_ptr<function_declaration> func) {
 		return;
 	}
 
-	try_unbox_type(func->return_type);
+	check_type(func->return_type);
 	for (const auto& param : func->parameters) {
-		try_unbox_type(param->type);
+		check_type(param->type);
 	}
 
 	if (is_valid_entry_point(func)) {
@@ -48,7 +48,7 @@ void type_checker::visit(std::shared_ptr<function_declaration> func) {
 void type_checker::visit(std::shared_ptr<variable_declaration> var) {
 	if (var->type != data_type::UNKNOWN) {
 		// only try and unbox for explicitly typed variables
-		try_unbox_type(var->type);
+		check_type(var->type);
 	}
 
 	// accept initializer early to prevent double visits
@@ -61,6 +61,7 @@ void type_checker::visit(std::shared_ptr<variable_declaration> var) {
 		if (var->has_initializer()) {
 			auto init_type = var->initializer->type();
 			if (init_type == data_type::UNKNOWN) {
+				return; // might change this later
 				ERROR(ERR_CANNOT_INFER_TYPE_UNKNOWN_INIT, var->position, var->identifier.c_str());
 				return;
 			}
@@ -121,6 +122,7 @@ void type_checker::visit(std::shared_ptr<variable_declaration> var) {
 			auto& var_type = var->type;
 			auto init_type = var->initializer->type();
 			if (init_type == data_type::UNKNOWN) {
+				return; // might change this later
 				ERROR(ERR_CANNOT_INFER_TYPE_UNKNOWN_INIT, var->position, var->identifier.c_str());
 				return;
 			}
@@ -250,7 +252,7 @@ void type_checker::visit(std::shared_ptr<binary_expression> expr) {
 				return;
 			}
 		}
-		ERROR(ERR_NO_MATCHING_OPERATOR, expr->position);
+		ERROR(ERR_NO_MATCHING_OPERATOR, expr->position, left_type->name().c_str(), right_type->name().c_str());
 		return;
 	}
 	else if (left_type->is_enum() && right_type->is_enum()) {
@@ -354,13 +356,13 @@ void type_checker::visit(std::shared_ptr<unary_expression> expr) {
 		}
 		break;
 	case TT_INCREMENT:
-		if (!operand_type->is_primitive() || !operand_type->is_integer()) {
+		if (!operand_type->is_primitive() || !operand_type->is_integral()) {
 			ERROR(ERR_INCREMENT_INTEGER_ONLY, expr->position);
 			return;
 		}
 		break;
 	case TT_DECREMENT:
-		if (!operand_type->is_primitive() || !operand_type->is_integer()) {
+		if (!operand_type->is_primitive() || !operand_type->is_integral()) {
 			ERROR(ERR_DECREMENT_INTEGER_ONLY, expr->position);
 			return;
 		}
@@ -377,7 +379,7 @@ void type_checker::visit(std::shared_ptr<index_expression> expr) {
 	}
 	expr->indexer->accept(*this);
 	auto indexer_type = expr->indexer->type();
-	if (!indexer_type->is_primitive() || !indexer_type->is_integer()) {
+	if (!indexer_type->is_primitive() || !indexer_type->is_integral()) {
 		ERROR(ERR_INDEXER_NOT_INTEGER, expr->indexer->position);
 		return;
 	}
@@ -397,7 +399,20 @@ void type_checker::visit(std::shared_ptr<member_expression> expr) {
 	expr->object->accept(*this);
 
 	auto type = expr->object->type();
+
+	if (type == data_type::UNKNOWN) {
+		// some other error occured
+		return;
+	}
+
+	// single auto-dereference
+	type = auto_deref(type);
+
 	if (!member_access_allowed(type)) {
+		if (auto enm = type->as_enum()) {
+			ERROR(ERR_ENUM_OPTION_MEMBER_ACCESS, expr->position, type->name().c_str());
+			return;
+		}
 		ERROR(ERR_MEMBER_ACCESS_ON_NONCOMPOSITE, expr->position, type->name().c_str());
 		return;
 	}
@@ -418,8 +433,11 @@ void type_checker::visit(std::shared_ptr<member_expression> expr) {
 	}
 	else if (auto enm = type->as_enum()) {
 		for (const auto& option : enm->declaration->options) {
-			if (option.identifier == expr->member) {
-				expr->resolved_type = enm->declaration->type();
+			if (option->identifier == expr->member) {
+				auto option_type = option->type()->clone()->as_enum();
+				option_type->is_enum_option = true;
+				option_type->option_identifier = option->identifier;
+				expr->resolved_type = option_type;
 				found = true;
 				break;
 			}
@@ -542,6 +560,19 @@ void type_checker::visit(std::shared_ptr<function_call> func_call) {
 		func_call->override_return_type = to_data_type(DT_BOOL);
 		return;
 	}
+	if (func_call->identifier == "Sin") {
+		func_call->override_return_type = to_data_type(DT_FLOAT);
+		return;
+	}
+	if (func_call->identifier == "Cos") {
+		func_call->override_return_type = to_data_type(DT_FLOAT);
+		return;
+	}
+	if (func_call->identifier == "Sqrt") {
+		func_call->override_return_type = to_data_type(DT_FLOAT);
+		return;
+	}
+	if (func_call->identifier == "__break") return;
 
 	// check any candidates match arguments provided
 	std::vector<candidate_score> matches;
@@ -676,7 +707,7 @@ void type_checker::visit(std::shared_ptr<return_statement> ret) {
 		}
 	}
 
-	try_unbox_type(current_function->return_type);
+	check_type(current_function->return_type);
 
 	type_ptr func_type = current_function->return_type;
 	// if its an override, we should use the base function return type as overrides
@@ -704,7 +735,7 @@ void type_checker::visit(std::shared_ptr<return_statement> ret) {
 			// assume error has already been reported
 			return;
 		}
-		if (!ret_type || *func_type != ret_type) {
+		if (!ret_type || !is_valid_conversion(ret_type, func_type, true, ret->position)) {
 			ERROR(ERR_FUNCTION_RETURN_TYPE_MISMATCH, ret->position, current_function->identifier.c_str(), func_type->name().c_str(), ret_type->name().c_str());
 			return;
 		}
@@ -720,7 +751,10 @@ void type_checker::visit(std::shared_ptr<return_statement> ret) {
 
 bool type_checker::member_access_allowed(type_ptr type) {
 	if (type->is_custom()) return true;
-	if (type->is_enum()) return true;
+	if (auto enm = type->as_enum()) {
+		if (enm->is_enum_option) return false;
+		return true;
+	}
 	return false;
 }
 bool type_checker::method_access_allowed(type_ptr type) {
@@ -728,14 +762,18 @@ bool type_checker::method_access_allowed(type_ptr type) {
 	return false;
 }
 bool type_checker::is_valid_conversion(type_ptr from, type_ptr to, bool implicit, position pos) {
+	if (*from == to) {
+		// always convertable
+		return true;
+	}
 	if (from->is_custom()) {
 		return is_valid_upcast(from, to, pos);
 	}
 	else if (from->is_primitive()) {
 		const auto& builtin_conversions = get_core_conversions(from->primitive);
 		for (const auto& conv : builtin_conversions) {
-			if (conv.to == to) {
-				if (!implicit && !conv.implicit) {
+			if (*conv.to == to) {
+				if (implicit == conv.implicit) {
 					return true;
 				}
 				else if (!implicit && conv.implicit) {
@@ -813,10 +851,13 @@ int type_checker::score_candidate(std::shared_ptr<function_declaration> candidat
 	int score = 0;
 
 	for (size_t i = 0; i < expected.size(); ++i) {
-		try_unbox_type(expected[i]);
+		check_type(expected[i]);
 
 		if (*expected[i] == arg_types[i]) {
 			score += 2; // exact match
+		}
+		else if (is_valid_conversion(arg_types[i], expected[i], true, candidate->position)) {
+			score += 1; // valid implicit conversion
 		}
 		else {
 			return 0; // no match
@@ -826,11 +867,39 @@ int type_checker::score_candidate(std::shared_ptr<function_declaration> candidat
 	return score;
 }
 
-void type_checker::try_unbox_type(type_ptr& type) {
+void type_checker::check_type(type_ptr& type) {
 	if (type->is_custom() && type->generic_args.size() > 0) {
-		auto custom = type->as_custom();
-		custom->declaration = unbox_generic_type(custom->declaration, type->generic_args);
+		unbox_type(type);
 	}
+	if (auto ptr = type->as_pointer()) {
+		check_type(ptr->base_type);
+	}
+	if (auto arr = type->as_array()) {
+		check_type(arr->base_type);
+		if (arr->size_expression) {
+			arr->size_expression->accept(*this);
+
+			auto size_expr_type = arr->size_expression->type();
+			if (size_expr_type->is_unknown() || !size_expr_type->is_integral()) {
+				ERROR(ERR_ARRAY_SIZE_MUST_BE_INTEGER, arr->size_expression->position);
+				return;
+			}
+		}
+	}
+}
+void type_checker::unbox_type(type_ptr& type) {
+	auto custom = type->as_custom();
+	for (auto& arg : type->generic_args) {
+		check_type(arg);
+	}
+	custom->declaration = unbox_generic_type(custom->declaration, type->generic_args);
+}
+
+type_ptr type_checker::auto_deref(type_ptr type) {
+	if (auto ptr = type->as_pointer()) {
+		return ptr->base_type;
+	}
+	return type;
 }
 
 std::shared_ptr<function_declaration> type_checker::unbox_generic_func(std::shared_ptr<function_declaration> func, const std::vector<type_ptr>& types) {

@@ -93,6 +93,7 @@ const std::map<std::string, token_type>& get_keywords() {
 		{"export", TT_EXPORT},
 		{"and", TT_AND},
 		{"or", TT_OR},
+		{"as", TT_AS},
 	};
 	return keywords;
 }

@@ -104,7 +104,7 @@ public:
 	custom_type_type type_kind;
 	std::string identifier;
 	std::vector<type_ptr> base_types;
-	std::shared_ptr<const type_declaration> base_class;
+	std::shared_ptr<type_declaration> base_class;
 	std::vector<std::shared_ptr<generic_parameter>> generics;
 	std::vector<std::shared_ptr<function_declaration>> constructors;
 	std::vector<std::shared_ptr<variable_declaration>> fields;

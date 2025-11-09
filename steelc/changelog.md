@@ -227,3 +227,33 @@
   variable > func (not implemented yet) > type > enum.
 - Adding support for enum instance comparison in the type checker.
 - Added enum support to the interpreter.
+
+### 31-10-2025
+- Added a new enum_option_type to represent enum options which prevents ambiguity and stops chained
+  option access like Enum.Option.Option.
+- Converted enum_option to an actual AST node which allows for better error reporting and seperation
+  of concerns from the enum declaration itself.
+- The declaration collector now ensures that enums do not have multiple options with the same
+  identifier.
+- Variables with unknown type assignments no longer print an error as that error should be picked
+  up elsewhere and this just clutters the output from testing.
+
+### 01-11-2025
+- Removed the enum_option_type as it caused more bugs than it solved. Instead, enum_type now
+  contains a simple flag that denotes if its an option or the actual declaration.
+- Fixed an interpreter bug where it was pushing extra scopes when entering non-standalone
+  code block nodes, it now checks if its a body node before pushing a new scope.
+- Fixed a few bugs in the is_valid_conversion method and also allowed implicit conversions
+  when returning values that are a different type as the function for example returning an
+  int from a float function.
+
+### 02-11-2025
+- Generic functions and types now use ! to denote generic parameters as otherwise it becomes
+  ambiguous with less/greater than operators.
+- Added a synchronize function into the parser to allow for better error recovery and continued
+  parsing after an error occurs.
+- Removed the old c-style cast parsing and replaced it with as-cast expressions using the new 'as'
+  keyword, this is much clearer and takes inspiration from Rust casting.
+- Added a default_initialized method to the init checker to check if a type can be default initialized.
+  This allows for arrays to be default initialized correctly.
+- Added support for default initialization of arrays in the interpreter.

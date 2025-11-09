@@ -1,7 +1,7 @@
 import Core.Math;
 import Game;
 
-func Main() -> i32 {
+func Main() -> int {
 	const player = Player();
 	player.position.x = 50;
 	player.position.y = 5;
@@ -9,7 +9,7 @@ func Main() -> i32 {
 	while (true) {
 		player.Tick();
 		Render(&player);
-		Wait(0.1);
+		Wait(0.06);
 	}
 	
 	return 0;

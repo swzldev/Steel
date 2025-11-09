@@ -49,6 +49,11 @@ void ast_visitor::visit(std::shared_ptr<operator_declaration> op) {
 
 }
 void ast_visitor::visit(std::shared_ptr<enum_declaration> enum_decl) {
+	for (const auto& option : enum_decl->options) {
+		option->accept(*this);
+	}
+}
+void ast_visitor::visit(std::shared_ptr<enum_option> enum_decl) {
 }
 void ast_visitor::visit(std::shared_ptr<expression_statement> expr) {
 	expr->expr->accept(*this);

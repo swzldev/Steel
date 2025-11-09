@@ -3,15 +3,16 @@
 #include <memory>
 
 #include "data_type.h"
+#include "../ast/expressions/expression.h"
 #include "../ast/generics/generic_parameter.h"
 
 class array_type : public data_type {
 public:
 	array_type(type_ptr base_type)
-		: base_type(base_type), data_type(DT_ARRAY) {
+		: base_type(base_type), data_type(DT_ARRAY), size_expression(nullptr) {
 	}
-	array_type(type_ptr base_type, size_t size)
-		: base_type(base_type), data_type(DT_ARRAY) {
+	array_type(type_ptr base_type, std::shared_ptr<expression> size_expr)
+		: base_type(base_type), data_type(DT_ARRAY), size_expression(size_expr) {
 	}
 
 	bool operator==(const type_ptr& other) const override;
@@ -32,6 +33,7 @@ public:
 	}
 
 	type_ptr base_type;
+	std::shared_ptr<expression> size_expression;
 };
 
 class pointer_type : public data_type {

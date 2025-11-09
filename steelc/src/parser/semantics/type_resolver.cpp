@@ -154,12 +154,14 @@ void type_resolver::resolve_custom(type_ptr& custom) {
 		auto& param = std::get<std::shared_ptr<generic_parameter>>(generic.value);
 		gn->generic_param_index = param->param_index;
 		custom = gn;
+		return;
 	}
 
 	// custom type
 	auto decl = resolver.get_type(type_name);
 	if (decl.error == LOOKUP_OK) {
 		custom->as_custom()->declaration = std::get<std::shared_ptr<type_declaration>>(decl.value);
+		return;
 	}
 	else if (decl.error == LOOKUP_COLLISION) {
 		ERROR(ERR_NAME_COLLISION, custom->position, type_name.c_str());
@@ -170,6 +172,7 @@ void type_resolver::resolve_custom(type_ptr& custom) {
 	auto enm = resolver.get_enum(type_name);
 	if (enm.error == LOOKUP_OK) {
 		custom = std::get<std::shared_ptr<enum_declaration>>(enm.value)->type();
+		return;
 	}
 	else if (enm.error == LOOKUP_COLLISION) {
 		ERROR(ERR_NAME_COLLISION, custom->position, type_name.c_str());

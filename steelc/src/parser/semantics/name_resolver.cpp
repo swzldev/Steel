@@ -49,6 +49,11 @@ void name_resolver::visit(std::shared_ptr<function_declaration> func) {
 		current_ctor = nullptr;
 		sym_table->pop_scope();
 	}
+
+	resolve_type_names(func->return_type);
+	for (const auto& param : func->parameters) {
+		resolve_type_names(param->type);
+	}
 }
 void name_resolver::visit(std::shared_ptr<variable_declaration> var) {
 	// only check local variables here - globals are already handled
@@ -69,6 +74,8 @@ void name_resolver::visit(std::shared_ptr<variable_declaration> var) {
 	if (var->initializer) {
 		var->initializer->accept(*this);
 	}
+
+	resolve_type_names(var->type);
 }
 void name_resolver::visit(std::shared_ptr<type_declaration> decl) {
 	sym_table->push_scope();
@@ -218,4 +225,17 @@ void name_resolver::visit(std::shared_ptr<while_loop> while_loop) {
 	sym_table->push_scope();
 	while_loop->body->accept(*this);
 	sym_table->pop_scope();
+}
+
+void name_resolver::resolve_type_names(type_ptr& type) {
+	if (auto ptr = type->as_pointer()) {
+		resolve_type_names(ptr->base_type);
+	}
+	else if (auto arr = type->as_array()) {
+		resolve_type_names(arr->base_type);
+
+		if (arr->size_expression) {
+			arr->size_expression->accept(*this);
+		}
+	}
 }

@@ -134,6 +134,9 @@ enum error_code {
     ERR_NESTED_ENUM_NOT_ALLOWED,
     ERR_METHOD_ACCESS_ON_NONCOMPOSITE,
     ERR_NO_ENUM_MEMBER_WITH_NAME,
+    ERR_ENUM_OPTION_ALREADY_DEFINED,
+    ERR_ENUM_OPTION_MEMBER_ACCESS,
+    ERR_ARRAY_SIZE_MUST_BE_INTEGER,
 };
 
 enum warning_code {
@@ -193,7 +196,7 @@ struct error_catalog {
             {"S038", "Array initializers are unsupported"},
             {"S039", "Initializer list can only be used with custom types"},
             {"S040", "Variable of type '%s' cannot be assigned a value of type \"%s\""},
-            {"S041", "No built-in operator matches the types provided"},
+            {"S041", "No built-in operator matches the types provided, types are '%s', '%s'"},
             {"S042", "The type '%s' is not defined"},
             {"S043", "Expected member name"},
             {"S044", "The type '%s' has no member named '%s'"},
@@ -279,9 +282,11 @@ struct error_catalog {
             {"S137", "Expected an identifier for enum option"},
             {"S138", "Enum '%s' is already defined"},
             {"S139", "Enum inside enum is not allowed"},
-            {"S087", "Method access not allowed on non-composite type '%s'"},
-            {"S087", "The enum '%s' does not contain an option named '%s'"},
-
+            {"S140", "Method access not allowed on non-composite type '%s'"},
+            {"S141", "The enum '%s' does not contain an option named '%s'"},
+            {"S142", "The enum '%s' already contains an option named '%s'"},
+            {"S143", "Member access not allowed on enum option '%s'"},
+            {"S144", "Array size must be an integer"},
         };
         return errors[code - 1];
     }

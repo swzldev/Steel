@@ -48,7 +48,8 @@ public:
 		return base->type();
 	}
 	bool is_rvalue() const override {
-		return true;
+		return false; // usually indexed values are lvalues
+		// but i might be wrong
 	}
 
 	std::shared_ptr<expression> base;

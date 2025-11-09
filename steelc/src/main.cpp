@@ -79,7 +79,7 @@ int main(int argc, char** argv) {
 	}
 
 	//stproj_file proj = stproj_file::load(argv[1]);
-	stproj_file proj = stproj_file::load(R"(C:\Users\maxmt\source\repos\Steel\steelc\demo\ArrayDemo.stproj)");
+	stproj_file proj = stproj_file::load(R"(C:\Users\maxmt\source\repos\Steel\steelc\demo\donut\Donut.stproj)");
 	compiler compiler(proj.sources);
 
 	compile_config cfg;

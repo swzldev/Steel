@@ -8,17 +8,14 @@
 #include "variable_declaration.h"
 #include "function_declaration.h"
 #include "operator_declaration.h"
+#include "../ast_fwd.h"
 #include "../../types/enum_type.h"
-
-struct enum_option {
-	std::string identifier;
-};
 
 class enum_declaration : public declaration, public std::enable_shared_from_this<enum_declaration> {
 public:
 	ENABLE_ACCEPT(enum_declaration)
 
-	enum_declaration(const std::string& identifier, std::vector<enum_option> options)
+	enum_declaration(const std::string& identifier, std::vector<std::shared_ptr<enum_option>> options)
 		: identifier(identifier), options(options) {
 	}
 
@@ -31,19 +28,16 @@ public:
 			result += ind + "  <None>\n";
 		}
 		else {
-			for (const auto& option : options) {
-				result += ind + "  - " + option.identifier + "\n";
-			}
+			
 		}
 		return result;
 	}
 
 	type_ptr type() {
-		static type_ptr type;
-		if (!type) {
-			type = std::make_shared<enum_type>(identifier, shared_from_this());
+		if (!cached_type) {
+			cached_type = std::make_shared<enum_type>(identifier, shared_from_this());
 		}
-		return type;
+		return cached_type;
 	}
 	std::string name() const {
 		return identifier;
@@ -57,5 +51,8 @@ public:
 
 	std::string identifier;
 	type_ptr base_type;
-	std::vector<enum_option> options;
+	std::vector<std::shared_ptr<enum_option>> options;
+
+private:
+	type_ptr cached_type;
 };

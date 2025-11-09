@@ -86,6 +86,14 @@ std::vector<operator_declaration> get_core_operators(token_type filter) {
         {DT_BOOL,      DT_FLOAT,     TT_LESS_EQ,    DT_FLOAT},
         {DT_BOOL,      DT_FLOAT,     TT_GREATER,    DT_FLOAT},
         {DT_BOOL,      DT_FLOAT,     TT_GREATER_EQ, DT_FLOAT},
+        {DT_BOOL,      DT_FLOAT,     TT_LESS,       DT_I32},
+        {DT_BOOL,      DT_FLOAT,     TT_LESS_EQ,    DT_I32},
+        {DT_BOOL,      DT_FLOAT,     TT_GREATER,    DT_I32},
+        {DT_BOOL,      DT_FLOAT,     TT_GREATER_EQ, DT_I32},
+        {DT_BOOL,      DT_I32,     TT_LESS,         DT_FLOAT},
+        {DT_BOOL,      DT_I32,     TT_LESS_EQ,      DT_FLOAT},
+        {DT_BOOL,      DT_I32,     TT_GREATER,      DT_FLOAT},
+        {DT_BOOL,      DT_I32,     TT_GREATER_EQ,   DT_FLOAT},
 
         // logical
         {DT_BOOL,      DT_BOOL,      TT_AND,        DT_BOOL},

@@ -33,6 +33,7 @@
 #include "expressions/function_call.h"
 #include "expressions/literal.h"
 #include "generics/generic_parameter.h"
+#include "enums/enum_option.h"
 
 template<typename T, typename... Args>
 inline std::shared_ptr<T> make_ast(token& ast_token, Args... args) {

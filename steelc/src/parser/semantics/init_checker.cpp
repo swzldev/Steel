@@ -35,9 +35,13 @@ void init_checker::visit(std::shared_ptr<function_declaration> func) {
 void init_checker::visit(std::shared_ptr<variable_declaration> var) {
 	if (var->has_initializer()) {
 		var->initializer->accept(*this);
-		initialized.insert(var);
-		var->initialized = true;
 	}
+	else if (!default_initialized(var->type)) {
+		return;
+	}
+
+	initialized.insert(var);
+	var->initialized = true;
 }
 void init_checker::visit(std::shared_ptr<assignment_expression> expr) {
 	expr->right->accept(*this);
@@ -124,5 +128,12 @@ void init_checker::traverse_block(std::shared_ptr<code_block>& block, bool resto
 	}
 	if (restore) {
 		initialized = before;
+	}
+}
+
+bool init_checker::default_initialized(type_ptr type) {
+	// for now we can allow fixed-size arrays but more will be allowed later
+	if (auto arr = type->as_array()) {
+		return arr->size_expression != nullptr;
 	}
 }

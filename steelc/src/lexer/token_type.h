@@ -88,6 +88,8 @@ enum token_type {
 	TT_GREATER_EQ,
 	TT_ACCESS,
 	TT_ARROW,
+	// Keywords (casting)
+	TT_AS,
 
 	TT_EOF,
 };

@@ -11,10 +11,10 @@ module Game {
 
         func Tick() {
             // left and right movement
-            if (GetKey('a')) {
+            if (GetKey('A')) {
                 this.velocity.x = -3;
             }
-            else if (GetKey('d')) {
+            else if (GetKey('D')) {
                 this.velocity.x = 3;
             }
             else {

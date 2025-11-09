@@ -21,7 +21,8 @@ public:
         : type(t), value(v) {
     }
     runtime_value(const type_ptr t)
-        : type(t), value(get_default_value(t)) {
+        : type(t), value("") {
+        init_default_val(t);
     }
     runtime_value(std::shared_ptr<runtime_value> pointee)
         : type(make_pointer(pointee->type)), value(std::to_string((long long)pointee.get())), pointee(pointee) {
@@ -50,6 +51,9 @@ public:
     inline bool is_number()    const { return is_int() || is_float(); }
 
     int as_int() const {
+		if (is_float()) {
+			return static_cast<int>(std::stod(value));
+		}
         if (!is_int()) throw std::runtime_error("runtime_value: not an int");
         return std::stoi(value);
     }
@@ -92,7 +96,7 @@ public:
     }
 
     bool operator==(const runtime_value& other) const {
-        return type == other.type && value == other.value;
+        return *type == other.type && value == other.value;
     }
     bool operator!=(const runtime_value& other) const {
         return !(*this == other);
@@ -115,32 +119,37 @@ public:
     }
 
 private:
-    std::string get_default_value(type_ptr type) {
+    void init_default_val(type_ptr type) {
 		if (type->is_primitive()) {
-			switch (type->primitive) {
-			case DT_I16:
-			case DT_I32:
-			case DT_I64:
-				return "0";
-			case DT_FLOAT:
-			case DT_DOUBLE:
-				return "0.0";
-			case DT_CHAR:
-				return "\0";
-			case DT_STRING:
-				return "";
-			case DT_BOOL:
-				return "false";
-			case DT_VOID:
-				return "";
-			default:
-				return "";
-			}
+			value = prim_default_val(type);
 		}
-		else if (type->is_pointer() || type->is_array()) {
-			return "0";
+        else if (type->is_array()) {
+			throw std::runtime_error("runtime_value: default value for array type not supported");
+        }
+		else if (type->is_pointer()) {
+            value = "0"; // (NULL)
 		}
-		return "";
+    }
+    std::string prim_default_val(type_ptr prim) {
+        switch (type->primitive) {
+        case DT_I16:
+        case DT_I32:
+        case DT_I64:
+            return "0";
+        case DT_FLOAT:
+        case DT_DOUBLE:
+            return "0.0";
+        case DT_CHAR:
+            return "0";
+        case DT_STRING:
+            return "";
+        case DT_BOOL:
+            return "false";
+        case DT_VOID:
+            return "";
+        default:
+            return "";
+        }
     }
 };
 

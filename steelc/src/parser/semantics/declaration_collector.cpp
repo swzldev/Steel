@@ -192,6 +192,11 @@ void declaration_collector::visit(std::shared_ptr<module_declaration> mod) {
 	sym_table = &current_module->symbols;
 }
 void declaration_collector::visit(std::shared_ptr<enum_declaration> enm) {
+	// ensure all options reference the owner
+	for (auto& option : enm->options) {
+		option->declaration = enm;
+	}
+
 	// check if type is already defined
 	auto err = sym_table->add_enum(enm);
 	if (err == ERR_ENUM_ALREADY_DEFINED) {
@@ -207,6 +212,16 @@ void declaration_collector::visit(std::shared_ptr<enum_declaration> enm) {
 	if (current_type || current_function || current_constructor) {
 		ERROR(ERR_NESTED_ENUM_NOT_ALLOWED, enm->position);
 		return;
+	}
+
+	// cannot have more than one option with the same identifier
+	std::unordered_set<std::string> option_names;
+	for (const auto& option : enm->options) {
+		if (option_names.find(option->identifier) != option_names.end()) {
+			ERROR(ERR_ENUM_OPTION_ALREADY_DEFINED, option->position, option->identifier.c_str(), enm->name().c_str());
+			return;
+		}
+		option_names.insert(option->identifier);
 	}
 }
 

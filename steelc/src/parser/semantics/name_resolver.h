@@ -40,4 +40,6 @@ private:
 	std::shared_ptr<function_declaration> current_func;
 	std::shared_ptr<function_declaration> current_ctor;
 	std::shared_ptr<type_declaration> current_type;
+
+	void resolve_type_names(type_ptr& type);
 };

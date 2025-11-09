@@ -55,7 +55,9 @@ private:
 
 	int score_candidate(std::shared_ptr<function_declaration> candidate, const std::vector<type_ptr>& arg_types);
 
-	void try_unbox_type(type_ptr& type);
+	void check_type(type_ptr& type);
+	void unbox_type(type_ptr& type);
+	type_ptr auto_deref(type_ptr type);
 
 	std::shared_ptr<function_declaration> unbox_generic_func(std::shared_ptr<function_declaration> generic_func, const std::vector<type_ptr>& types);
 	std::shared_ptr<type_declaration> unbox_generic_type(std::shared_ptr<type_declaration> generic_type, const std::vector<type_ptr>& types);

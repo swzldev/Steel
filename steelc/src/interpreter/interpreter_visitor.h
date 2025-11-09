@@ -7,6 +7,7 @@
 
 #include "classes/function_return.h"
 #include "classes/runtime_value.h"
+#include "debugging/interpreter_debugger.h"
 #include "../parser/ast/ast_fwd.h"
 #include "../parser/ast/ast_visitor.h"
 #include "../parser/symbolics/symbol_table.h"
@@ -56,8 +57,11 @@ private:
 	std::shared_ptr<runtime_value> this_object;
 	std::vector<std::shared_ptr<runtime_value>> this_stack;
 
+	//interpreter_debugger debugger;
+
 	val_ptr new_val(const type_ptr type); // initializes to default value of type
 	val_ptr new_val(const type_ptr type, const std::string& value);
+	val_ptr new_val(const type_ptr type, const val_ptr val); // auto converts
 	val_ptr new_val(val_ptr other);
 	val_ptr new_pointer(std::shared_ptr<runtime_value> pointee);
 	val_ptr new_array(const type_ptr elem_type, const std::vector<std::shared_ptr<runtime_value>>& elements);
@@ -70,5 +74,6 @@ private:
 	void enter_function(std::shared_ptr<function_declaration> func, std::vector<std::shared_ptr<expression>> args);
 	void enter_method(std::shared_ptr<function_declaration> func, std::vector<std::shared_ptr<expression>> args, std::shared_ptr<runtime_value> object);
 
+	void handle_breakpoint(ast_ptr node);
 	void throw_exception(std::string message, position pos);
 };

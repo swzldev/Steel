@@ -43,6 +43,7 @@ class custom_type;
 class array_type;
 class pointer_type;
 class enum_type;
+class enum_option_type;
 class generic_type;
 
 using type_ptr = std::shared_ptr<data_type>;
@@ -67,14 +68,14 @@ public:
 	inline bool is_void() const {
 		return primitive == DT_VOID;
 	}
-	inline bool is_integer() const {
+	inline bool is_integral() const {
 		return primitive == DT_I16 || primitive == DT_I32 || primitive == DT_I64;
 	}
 	inline bool is_floating_point() const {
 		return primitive == DT_FLOAT || primitive == DT_DOUBLE;
 	}
 	inline bool is_numeric() const {
-		return is_integer() || is_floating_point();
+		return is_integral() || is_floating_point();
 	}
 	inline bool is_character() const {
 		return primitive == DT_CHAR || primitive == DT_WIDECHAR;

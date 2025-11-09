@@ -11,6 +11,9 @@ int size_of_pointer();
 
 type_ptr make_pointer(type_ptr base_type);
 type_ptr make_array(type_ptr base_type);
-type_ptr make_array(type_ptr base_type, size_t size);
+type_ptr make_array(type_ptr base_type, std::shared_ptr<expression> size_expr);
+
+// returns true if type derives from base
+bool derives_from(type_ptr type, type_ptr base);
 
 std::string to_string(primitive_type primitive);

@@ -5,9 +5,9 @@ module Core {
 				this.x = 0;
 				this.y = 0;
 			}
-			constructor(i32 initX, i32 initY) {
-				x = initX;
-				y = initY;
+			constructor(int x, int y) {
+				this.x = x;
+				this.y = y;
 			}
 
 			func CompoundAdd(Vector2 other) {
@@ -15,8 +15,8 @@ module Core {
 				this.y = this.y + other.y;
 			}
 
-			x: i32;
-			y: i32;
+			x: int;
+			y: int;
 		}
 	}
 }

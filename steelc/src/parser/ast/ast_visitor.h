@@ -16,6 +16,7 @@ public:
 	virtual void visit(std::shared_ptr<conversion_declaration> conv);
 	virtual void visit(std::shared_ptr<operator_declaration> op);
 	virtual void visit(std::shared_ptr<enum_declaration> enum_decl);
+	virtual void visit(std::shared_ptr<enum_option> option);
 	virtual void visit(std::shared_ptr<expression_statement> expr);
 	virtual void visit(std::shared_ptr<binary_expression> expr);
 	virtual void visit(std::shared_ptr<assignment_expression> expr);

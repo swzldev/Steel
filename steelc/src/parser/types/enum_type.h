@@ -24,12 +24,18 @@ public:
 	}
 
 	std::string name() const override {
-		return identifier;
+		if (!is_enum_option) {
+			return identifier;
+		}
+		return identifier + "." + option_identifier;
 	}
 
 	std::shared_ptr<data_type> clone() const override;
 
 	std::shared_ptr<enum_declaration> declaration;
+	// whether this is the enum declaration itself or an option within the enum
+	bool is_enum_option = false;
+	std::string option_identifier;
 
 private:
 	std::string identifier;

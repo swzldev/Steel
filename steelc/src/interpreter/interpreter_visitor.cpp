@@ -8,6 +8,10 @@
 #include <conio.h>
 #include <Windows.h>
 
+#ifdef max
+#undef max
+#endif
+
 #include "classes/runtime_exception.h"
 #include "classes/break_out.h"
 #include "../parser/ast/ast.h"
@@ -63,12 +67,11 @@ void interpreter_visitor::visit(std::shared_ptr<variable_declaration> var) {
 			}
 		}
 		var->initializer->accept(*this);
-		add_var(var->identifier, new_val(expression_result));
+		add_var(var->identifier, new_val(var->type, expression_result));
 	}
 	else {
 		// handle default initialization for custom types
-		auto custom = std::dynamic_pointer_cast<custom_type>(var->type);
-		if (custom && custom->declaration) {
+		if (auto custom = var->type->as_custom()) {
 			auto obj = new_val(var->type, "");
 			for (auto& member : custom->declaration->fields) {
 				obj->set_member(member->identifier, new_val(member->type, ""));
@@ -76,7 +79,19 @@ void interpreter_visitor::visit(std::shared_ptr<variable_declaration> var) {
 			add_var(var->identifier, obj);
 			return;
 		}
-		add_var(var->identifier, new_val(var->type, ""));
+		else if (auto arr = var->type->as_array()) {
+			// default initialize array
+			arr->size_expression->accept(*this);
+			int size = expression_result->as_int();
+			std::vector<std::shared_ptr<runtime_value>> elements;
+			for (int i = 0; i < size; i++) {
+				// default init elements
+				elements.push_back(new_val(arr->base_type));
+			}
+			add_var(var->identifier, new_array(arr->base_type, elements));
+			return;
+		}
+		add_var(var->identifier, new_val(var->type));
 	}
 }
 void interpreter_visitor::visit(std::shared_ptr<type_declaration> decl) {
@@ -100,13 +115,35 @@ void interpreter_visitor::visit(std::shared_ptr<binary_expression> expr) {
 			expression_result = new_val(to_data_type(DT_BOOL), (*left != *right ? "true" : "false"));
 			break;
 		case TT_LESS:
-			expression_result = new_val(to_data_type(DT_BOOL), (*left < *right ? "true" : "false"));
+			if (left->is_number() && right->is_number()) {
+				// If either is float, compare as float
+				if (left->is_float() || right->is_float()) {
+					expression_result = new_val(to_data_type(DT_BOOL), (left->as_float() < right->as_float() ? "true" : "false"));
+				}
+				else {
+					expression_result = new_val(to_data_type(DT_BOOL), (left->as_int() < right->as_int() ? "true" : "false"));
+				}
+			}
+			else {
+				throw_exception("Less-than comparison only supported for numeric types", expr->position);
+			}
 			break;
 		case TT_LESS_EQ:
 			expression_result = new_val(to_data_type(DT_BOOL), (left->as_int() <= right->as_int() ? "true" : "false"));
 			break;
 		case TT_GREATER:
-			expression_result = new_val(to_data_type(DT_BOOL), (left->as_int() > right->as_int() ? "true" : "false"));
+			if (left->is_number() && right->is_number()) {
+				// If either is float, compare as float
+				if (left->is_float() || right->is_float()) {
+					expression_result = new_val(to_data_type(DT_BOOL), (left->as_float() > right->as_float() ? "true" : "false"));
+				}
+				else {
+					expression_result = new_val(to_data_type(DT_BOOL), (left->as_int() > right->as_int() ? "true" : "false"));
+				}
+			}
+			else {
+				throw_exception("Greater-than comparison only supported for numeric types", expr->position);
+			}
 			break;
 		case TT_GREATER_EQ:
 			expression_result = new_val(to_data_type(DT_BOOL), (left->as_int() >= right->as_int() ? "true" : "false"));
@@ -241,10 +278,30 @@ void interpreter_visitor::visit(std::shared_ptr<binary_expression> expr) {
 	}
 }
 void interpreter_visitor::visit(std::shared_ptr<assignment_expression> expr) {
+	// assignment to indexee
+	if (auto index_expr = std::dynamic_pointer_cast<index_expression>(expr->left)) {
+		index_expr->base->accept(*this);
+		auto& base = *expression_result;
+		index_expr->indexer->accept(*this);
+		auto index = expression_result->as_int();
+		expr->right->accept(*this);
+		auto right = new_val(expression_result->type, expression_result->value);
+		if (!base.is_array()) {
+			throw_exception("Index assignment target is not an array", expr->position);
+			return;
+		}
+		if (index < 0 || index >= static_cast<int>(base.elements.size())) {
+			throw_exception("Array index out of bounds", expr->position);
+			return;
+		}
+		base.elements[index] = right;
+		expression_result = right;
+		return;
+	}
 	// assignment to variable
 	if (auto id_expr = std::dynamic_pointer_cast<identifier_expression>(expr->left)) {
 		expr->right->accept(*this);
-		auto right = new_val(expression_result->type, expression_result->value);
+		auto right = new_val(expression_result);
 		set_var(id_expr->identifier, right);
 		expression_result = right;
 		return;
@@ -254,7 +311,7 @@ void interpreter_visitor::visit(std::shared_ptr<assignment_expression> expr) {
 		member_expr->object->accept(*this);
 		auto& obj = *expression_result;
 		expr->right->accept(*this);
-		auto right = new_val(expression_result->type, expression_result->value);
+		auto right = new_val(expression_result);
 		obj.set_member(member_expr->member, right);
 		expression_result = right;
 		return;
@@ -269,8 +326,8 @@ void interpreter_visitor::visit(std::shared_ptr<member_expression> expr) {
 			auto& enum_decl = id_expr->enum_declaration;
 
 			for (auto& option : enum_decl->options) {
-				if (option.identifier == expr->member) {
-					expression_result = new_val(enum_decl->type(), option.identifier);
+				if (option->identifier == expr->member) {
+					expression_result = new_val(option->type(), option->identifier);
 					return;
 				}
 			}
@@ -369,9 +426,9 @@ void interpreter_visitor::visit(std::shared_ptr<unary_expression> expr) {
 }
 void interpreter_visitor::visit(std::shared_ptr<index_expression> expr) {
 	expr->base->accept(*this);
-	auto base = new_val(expression_result->type, expression_result->value);
+	auto base = new_val(expression_result);
 	expr->indexer->accept(*this);
-	auto index = new_val(expression_result->type, expression_result->value);
+	auto index = new_val(expression_result);
 	if (base->is_string()) {
 		int idx = index->as_int();
 		const std::string& str = base->as_string();
@@ -383,7 +440,7 @@ void interpreter_visitor::visit(std::shared_ptr<index_expression> expr) {
 		auto arr = base->as_array();
 		int idx = index->as_int();
 		if (idx < 0 || idx >= static_cast<int>(arr.size())) {
-			throw_exception("Array index out of bounds", expr->position);
+			throw_exception("Array index out of bounds (" + std::to_string(idx) + " / " + std::to_string(arr.size()) + ")", expr->position);
 		}
 		expression_result = arr[idx];
 		return;
@@ -520,13 +577,42 @@ void interpreter_visitor::visit(std::shared_ptr<function_call> func_call) {
 	}
 	if (func_call->identifier == "GetKey") {
 		func_call->args[0]->accept(*this);
-		auto x = new_val(expression_result->type, expression_result->value);
+		auto x = new_val(expression_result);
 		if (!x->is_char()) {
 			throw_exception("GetKey expects a character", func_call->position);
 			return;
 		}
-		char ch = _getch();
-		expression_result = new_val(to_data_type(DT_BOOL), (ch == x->as_char()) ? "true" : "false");
+		int vk = static_cast<int>(x->as_char());
+		SHORT state = GetAsyncKeyState(vk);
+		expression_result = new_val(to_data_type(DT_BOOL), ((state & 0x8000) != 0) ? "true" : "false");
+		return;
+	}
+	if (func_call->identifier == "Sin") {
+		func_call->args[0]->accept(*this);
+		auto angle = new_val(expression_result);
+		if (!angle->is_number()) {
+			throw_exception("Sin function expects a numeric argument", func_call->position);
+			return;
+		}
+		double radians = angle->as_float();
+		double result = sin(radians);
+		expression_result = new_val(to_data_type(DT_FLOAT), std::to_string(result));
+		return;
+	}
+	if (func_call->identifier == "Cos") {
+		func_call->args[0]->accept(*this);
+		auto angle = new_val(expression_result);
+		if (!angle->is_number()) {
+			throw_exception("Cos function expects a numeric argument", func_call->position);
+			return;
+		}
+		double radians = angle->as_float();
+		double result = cos(radians);
+		expression_result = new_val(to_data_type(DT_FLOAT), std::to_string(result));
+		return;
+	}
+	if (func_call->identifier == "__break") {
+		handle_breakpoint(func_call);
 		return;
 	}
 	enter_function(func_call->declaration, func_call->args);
@@ -535,11 +621,15 @@ void interpreter_visitor::visit(std::shared_ptr<literal> literal) {
 	expression_result = new_val(to_data_type(literal->primitive), literal->value);
 }
 void interpreter_visitor::visit(std::shared_ptr<code_block> block) {
-	push_scope();
+	if (!block->is_body) {
+		push_scope();
+	}
 	for (int i = 0; i < block->body.size(); i++) {
 		block->body[i]->accept(*this);
 	}
-	pop_scope();
+	if (!block->is_body) {
+		pop_scope();
+	}
 }
 void interpreter_visitor::visit(std::shared_ptr<if_statement> if_stmt) {
 	if_stmt->condition->accept(*this);
@@ -567,7 +657,9 @@ void interpreter_visitor::visit(std::shared_ptr<for_loop> for_loop) {
 			break;
 		}
 		try {
+			push_scope();
 			for_loop->body->accept(*this);
+			pop_scope();
 		}
 		catch (const break_out&) {
 			break;
@@ -579,20 +671,20 @@ void interpreter_visitor::visit(std::shared_ptr<for_loop> for_loop) {
 	pop_scope();
 }
 void interpreter_visitor::visit(std::shared_ptr<while_loop> while_loop) {
-	push_scope();
 	while (true) {
 		while_loop->condition->accept(*this);
 		if (!expression_result->as_bool()) {
 			break;
 		}
 		try {
+			push_scope();
 			while_loop->body->accept(*this);
+			pop_scope();
 		}
 		catch (const break_out&) {
 			break;
 		}
 	}
-	pop_scope();
 }
 void interpreter_visitor::visit(std::shared_ptr<return_statement> ret_stmt) {
 	if (ret_stmt->is_conditional()) {
@@ -640,8 +732,11 @@ void interpreter_visitor::add_var(const std::string& identifier, std::shared_ptr
 	current[identifier] = value;
 }
 std::shared_ptr<runtime_value> interpreter_visitor::get_var(const std::string& identifier) {
-	// if were in a method, we should check the current types fields first
+	// if were in a method, we should check the current params then the object fields first
 	if (this_object) {
+		auto param = variables.back().find(identifier);
+		if (param != variables.back().end()) return param->second;
+
 		auto member_ptr = this_object->get_member(identifier);
 		if (member_ptr) return member_ptr;
 	}
@@ -674,6 +769,14 @@ val_ptr interpreter_visitor::new_val(const type_ptr type) {
 }
 val_ptr interpreter_visitor::new_val(const type_ptr type, const std::string& value) {
 	return std::make_shared<runtime_value>(type, value);
+}
+val_ptr interpreter_visitor::new_val(const type_ptr type, const val_ptr val) {
+	auto new_val = std::make_shared<runtime_value>(*val);
+	new_val->type = type;
+	return new_val;
+	// essentially here we just re assign the type and remain the value
+	// this is dangerous however technically semantic analysis should prevent
+	// all invalid conversions so we should never have a problem
 }
 val_ptr interpreter_visitor::new_val(val_ptr other) {
 	return std::make_shared<runtime_value>(*other);
@@ -719,7 +822,7 @@ void interpreter_visitor::enter_function(std::shared_ptr<function_declaration> f
 	// add function parameters to scope
 	for (int i = 0; i < func->parameters.size(); i++) {
 		args[i]->accept(*this);
-		add_var(func->parameters[i]->identifier, new_val(expression_result->type, expression_result->value));
+		add_var(func->parameters[i]->identifier, new_val(expression_result));
 	}
 	try {
 		func->body->accept(*this);
@@ -738,7 +841,7 @@ void interpreter_visitor::enter_method(std::shared_ptr<function_declaration> fun
 	// add function parameters to scope
 	for (int i = 0; i < func->parameters.size(); i++) {
 		args[i]->accept(*this);
-		add_var(func->parameters[i]->identifier, new_val(expression_result->type, expression_result->value));
+		add_var(func->parameters[i]->identifier, new_val(expression_result));
 	}
 
 	set_this(object);
@@ -759,6 +862,13 @@ void interpreter_visitor::enter_method(std::shared_ptr<function_declaration> fun
 	remove_this();
 	pop_scope();
 	function_stack.pop_back();
+}
+
+void interpreter_visitor::handle_breakpoint(ast_ptr node) {
+#ifdef _DEBUG
+	__debugbreak();
+#endif
+	//debugger.breakpoint(node);
 }
 void interpreter_visitor::throw_exception(std::string message, position pos) {
 	throw runtime_exception(message, pos);

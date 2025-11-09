@@ -29,4 +29,5 @@ private:
 	bool in_method = false;
 
 	void traverse_block(std::shared_ptr<code_block>& block, bool restore);
+	bool default_initialized(type_ptr type);
 };

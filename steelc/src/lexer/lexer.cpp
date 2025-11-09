@@ -157,6 +157,8 @@ bool lexer::check_for_number(std::string& src, size_t& index) {
 	std::string literal;
 	bool seen_dot = false;
 
+	token_type literal_type = TT_INTEGER_LITERAL;
+
 	while (index < src.length()) {
 		char c = src[index];
 
@@ -171,6 +173,7 @@ bool lexer::check_for_number(std::string& src, size_t& index) {
 				ERROR(ERR_INVALID_FLOAT_MULTIPLE_DECIMAL, { line, column });
 				return true;
 			}
+			literal_type = TT_FLOAT_LITERAL;
 			seen_dot = true;
 			literal += c;
 			index++;
@@ -186,13 +189,8 @@ bool lexer::check_for_number(std::string& src, size_t& index) {
 			break;
 		}
 	}
-
-	if (seen_dot) {
-		add_token(literal, TT_FLOAT_LITERAL);
-	}
-	else {
-		add_token(literal, TT_INTEGER_LITERAL);
-	}
+	
+	add_token(literal, literal_type);
 
 	index--;
 	return true;

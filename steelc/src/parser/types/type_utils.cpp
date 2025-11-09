@@ -56,8 +56,25 @@ type_ptr make_pointer(type_ptr base_type) {
 type_ptr make_array(type_ptr base_type) {
 	return std::make_shared<array_type>(base_type);
 }
-type_ptr make_array(type_ptr base_type, size_t size) {
-	return std::make_shared<array_type>(base_type, size);
+type_ptr make_array(type_ptr base_type, std::shared_ptr<expression> size_expr) {
+	return std::make_shared<array_type>(base_type, size_expr);
+}
+
+bool derives_from(type_ptr type, type_ptr base) {
+	if (!type->is_custom() || !base->is_custom()) {
+		return false;
+	}
+
+	std::shared_ptr<type_declaration> custom = type->as_custom()->declaration;
+
+	do {
+		if (custom->type() == base) {
+			return true;
+		}
+		custom = custom->base_class;
+	} while (custom != nullptr);
+
+	return false;
 }
 
 std::string to_string(primitive_type primitive) {

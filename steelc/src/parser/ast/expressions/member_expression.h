@@ -43,10 +43,11 @@ public:
 		return resolved_type ? resolved_type : data_type::UNKNOWN;
 	}
 	bool is_rvalue() const override {
-		throw "Not implemented";
+		return !is_lvalue;
 	}
 
 	std::shared_ptr<expression> object;
 	std::string member;
 	type_ptr resolved_type;
+	bool is_lvalue = true;
 };
