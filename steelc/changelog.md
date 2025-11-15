@@ -257,3 +257,11 @@
 - Added a default_initialized method to the init checker to check if a type can be default initialized.
   This allows for arrays to be default initialized correctly.
 - Added support for default initialization of arrays in the interpreter.
+
+### 09-11-2025
+- Variable and parameter declarations now use <identifier>: <type> syntax like members for consistency.
+
+### 14-11-2025
+- Made a source file for compilation_pass to reduce clutter in the header.
+- Added an advice struct to represent advice messages, these advice messages are stored in the error
+  object and printed after the error message to give additional information on how to fix the error.

@@ -1,6 +1,4 @@
-﻿# CMakeList.txt : CMake project for steelc, include source and define
-# project specific logic here.
-#
+﻿# steelc
 
 set(SOURCES
     "src/compiler.cpp"
@@ -38,11 +36,31 @@ set(SOURCES
     "src/parser/semantics/generic_substitutor.cpp"
     "src/parser/ast/declarations/enum_declaration.h"
     "src/parser/types/enum_type.h"
-    "src/parser/types/enum_type.cpp" "src/parser/ast/enums/enum_option.h" "src/interpreter/debugging/interpreter_debugger.h" "src/interpreter/debugging/debug_console.h" "src/interpreter/debugging/debug_console.cpp")
+    "src/parser/types/enum_type.cpp"
+    "src/parser/ast/enums/enum_option.h"
+    "src/interpreter/debugging/interpreter_debugger.h"
+    "src/interpreter/debugging/debug_console.h"
+    "src/interpreter/debugging/debug_console.cpp"
+    "src/codegen/codegen.cpp"
+    "src/codegen/codegen_visitor.cpp"
+    "src/parser/compilation_pass.cpp"
+ "src/codegen/type_handling/llvm_type_converter.h")
 
 # Add source to this project's executable.
 add_executable ( steelc ${SOURCES} )
 
+# LLVM
+find_package(LLVM REQUIRED CONFIG)
+include_directories(${LLVM_INCLUDE_DIRS})
+add_definitions(${LLVM_DEFINITIONS})
+llvm_map_components_to_libnames(LLVM_LIBS
+    core
+    support
+    irreader
+)
+target_link_libraries(steelc PRIVATE ${LLVM_LIBS})
+
+# Support for includes in /lib/
 target_include_directories(steelc PRIVATE lib)
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)

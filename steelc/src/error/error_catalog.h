@@ -3,6 +3,7 @@
 #include <string>
 
 #include "error.h"
+#include "advice.h"
 
 enum error_code {
     ERR_SUCCESS = 0,
@@ -150,7 +151,7 @@ enum warning_code {
 };
 
 enum advice_code {
-
+    ADV_CONDITIONAL_NOT_GUARANTEED_TO_RETURN,
 };
 
 struct error_catalog {
@@ -288,7 +289,7 @@ struct error_catalog {
             {"S143", "Member access not allowed on enum option '%s'"},
             {"S144", "Array size must be an integer"},
         };
-        return errors[code - 1];
+        return errors[code - 1 /* -1 to avoid ERR_SUCCESS */];
     }
 
     static const error_info& get_warning_info(warning_code code) {
@@ -303,4 +304,11 @@ struct error_catalog {
         };
         return warnings[code];
     }
+
+    static const advice_info& get_advice_info(advice_code code) {
+        static const advice_info advices[] = {
+			{"SA01", "Conditional returns are not guaranteed to return, ensure an unconditional return is present incase all conditional returns are not executed"}
+        };
+        return advices[code];
+	}
 };

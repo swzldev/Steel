@@ -1,6 +1,7 @@
 #include "init_checker.h"
 
 #include "../ast/ast.h"
+#include <unordered_set>
 
 void init_checker::visit(std::shared_ptr<type_declaration> decl) {
 	// mark all fields as initialized

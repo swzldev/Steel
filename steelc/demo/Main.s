@@ -1,5 +1,9 @@
-func Main() -> int {
-    
 
-    return 0;
+
+func Main() -> int {
+    Print("Hello World!");
+
+    const x = 5;
+
+    return x;
 }

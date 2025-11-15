@@ -5,32 +5,16 @@
 
 #include "../parser/ast/ast.h"
 
-void codegen_visitor::visit(std::shared_ptr<binary_expression> expr) {
-	expr->left->accept(*this);
-	auto left = last_value;
-	expr->right->accept(*this);
-	auto right = last_value;
-	switch (expr->oparator) {
-	case TT_ADD:
-		last_value = builder.CreateAdd(left, right, "addtmp");
-		break;
-	case TT_SUBTRACT:
-		last_value = builder.CreateSub(left, right, "subtmp");
-		break;
-	case TT_MULTIPLY:
-		last_value = builder.CreateMul(left, right, "multmp");
-		break;
-	case TT_DIVIDE:
-		last_value = builder.CreateSDiv(left, right, "divtmp");
-		break;
-	default:
-		last_value = nullptr;
-		break;
-	}
-}
-void codegen_visitor::visit(std::shared_ptr<literal> literal) {
-	auto value = generate_literal(literal);
-	last_value = value;
+void codegen_visitor::visit(std::shared_ptr<function_declaration> func) {
+
+	auto linkage = llvm::Function::ExternalLinkage;
+
+	llvm::Function* func = llvm::Function::Create(
+		/* Function Type */ nullptr,
+		/* Linkage */ linkage,
+		/* Name */ func->identifier,
+		/* Module */ module
+	);
 }
 
 llvm::Value* codegen_visitor::generate_literal(std::shared_ptr<literal> lit) {

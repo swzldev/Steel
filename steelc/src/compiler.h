@@ -20,52 +20,23 @@ public:
 	bool compile(compile_config cfg);
 
 	inline bool has_errors() const {
-		return !get_errors().empty();
+		return !errors.empty();
 	}
-	inline std::vector<error> get_errors() const {
-		std::vector<error> errors;
-		for (const auto& err : lexer_errors) {
-			if (err.type == ERR_ERROR) {
-				errors.push_back(err);
-			}
-		}
-		for (const auto& err : parsing_errors) {
-			if (err.type == ERR_ERROR) {
-				errors.push_back(err);
-			}
-		}
-		for (const auto& err : semantic_errors) {
-			if (err.type == ERR_ERROR) {
-				errors.push_back(err);
-			}
-		}
+	inline bool has_warnings() const {
+		return !warnings.empty();
+	}
+
+	inline const std::vector<error>& get_errors() const {
 		return errors;
 	}
-	inline std::vector<error> get_warnings() const {
-		std::vector<error> warnings;
-		for (const auto& wrn : lexer_errors) {
-			if (wrn.type == ERR_WARNING) {
-				warnings.push_back(wrn);
-			}
-		}
-		for (const auto& wrn : parsing_errors) {
-			if (wrn.type == ERR_WARNING) {
-				warnings.push_back(wrn);
-			}
-		}
-		for (const auto& wrn : semantic_errors) {
-			if (wrn.type == ERR_WARNING) {
-				warnings.push_back(wrn);
-			}
-		}
+	inline const std::vector<error>& get_warnings() const {
 		return warnings;
 	}
 
 	std::vector<std::shared_ptr<compilation_unit>> compilation_units;
 
-	std::vector<error> lexer_errors;
-	std::vector<error> parsing_errors;
-	std::vector<error> semantic_errors;
+	std::vector<error> errors;
+	std::vector<error> warnings;
 
 	module_manager module_manager;
 private:

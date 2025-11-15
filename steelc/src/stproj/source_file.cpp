@@ -3,6 +3,7 @@
 #include <fstream>
 #include <stdexcept>
 #include <iostream>
+#include <filesystem>
 
 source_file::source_file(const std::string& path) {
 	std::ifstream file(path);
@@ -14,8 +15,14 @@ source_file::source_file(const std::string& path) {
 			content += line + "\n";
 		}
 		file.close();
+
+		name_cache = std::filesystem::path(path).filename().string();
 	}
 	else {
 		throw std::runtime_error("Could not open source file: " + path);
 	}
+}
+
+std::string source_file::name() const {
+	return name_cache;
 }

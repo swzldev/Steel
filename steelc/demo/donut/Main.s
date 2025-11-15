@@ -36,7 +36,7 @@ class ProgressBar {
 }
 
 func Main() -> int {
-	const [int] width = 80;
+	const width: int = 80;
     const [int] height = 24;
     const [float] theta_spacing = 0.07;
     const [float] phi_spacing = 0.02;

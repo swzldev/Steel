@@ -24,6 +24,9 @@ void flow_analyzer::visit(std::shared_ptr<function_declaration> func) {
 	// check if we dont return on all code paths, and the function is not void
 	if (!current_returns && func->return_type->is_primitive() && func->return_type->primitive != DT_VOID) {
 		ERROR(ERR_NOT_ALL_PATHS_RETURN_VALUE, func->position);
+		if (current_conditionally_returns) {
+			ADVISE(ADV_CONDITIONAL_NOT_GUARANTEED_TO_RETURN);
+		}
 	}
 }
 void flow_analyzer::visit(std::shared_ptr<code_block> block) {
@@ -48,6 +51,7 @@ void flow_analyzer::visit(std::shared_ptr<return_statement> ret_stmt) {
 
 	// non conditional return always returns, otherwise it may not
 	current_returns = !ret_stmt->is_conditional();
+	current_conditionally_returns = ret_stmt->is_conditional();
 
 	if (current_constructor && ret_stmt->returns_value()) {
 		ERROR(ERR_CONSTRUCTOR_RETURNS_VALUE, ret_stmt->position);

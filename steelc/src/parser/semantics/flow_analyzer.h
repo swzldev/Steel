@@ -11,7 +11,7 @@
 class flow_analyzer : public ast_visitor, public compilation_pass {
 public:
 	flow_analyzer(std::shared_ptr<compilation_unit> unit)
-		: current_function(nullptr), current_constructor(nullptr), in_loop(false), current_returns(false), compilation_pass(unit) {
+		: current_function(nullptr), current_constructor(nullptr), in_loop(false), current_returns(false), current_conditionally_returns(false), compilation_pass(unit) {
 	}
 
 	void visit(std::shared_ptr<function_declaration> func) override;
@@ -27,5 +27,6 @@ private:
 	std::shared_ptr<function_declaration> current_constructor;
 	bool in_loop;
 
+	bool current_conditionally_returns;
 	bool current_returns;
 };

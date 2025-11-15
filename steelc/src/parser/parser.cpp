@@ -11,7 +11,7 @@ void parser::parse() {
 			unit->declarations.push_back(decl);
 		}
 		else {
-			// if decl is null, it means an error occurred, so we skip to the next token
+			// error occurred, synchronize
 			synchronize();
 		}
 	}
@@ -37,7 +37,7 @@ ast_ptr parser::parse_declaration() {
 				declarations.push_back(decl);
 			}
 			else {
-				// if decl is null, it means an error occurred, so we skip to the next token
+				// error occurred, synchronize
 				synchronize();
 			}
 		}
@@ -164,25 +164,20 @@ std::shared_ptr<function_declaration> parser::parse_function_declaration(bool is
 	return nullptr;
 }
 std::shared_ptr<variable_declaration> parser::parse_variable_declaration(bool is_const) {
-	type_ptr var_type = data_type::UNKNOWN;
-	if (match(TT_LBRACKET)) {
-		var_type = parse_type();
-		if (!var_type) {
-			ERROR_TOKEN(ERR_TYPENAME_EXPECTED, peek());
-			return nullptr;
-		}
-
-		if (!match(TT_RBRACKET)) {
-			ERROR_TOKEN(ERR_RBRACKET_EXPECTED, peek());
-			return nullptr;
-		}
-	}
-
 	if (!match(TT_IDENTIFIER)) {
 		ERROR_TOKEN(ERR_VAR_NAME_EXPECTED, peek());
 		return nullptr;
 	}
 	token& identifier_token = previous();
+
+	type_ptr var_type = data_type::UNKNOWN;
+	if (match(TT_COLON)) {
+		var_type = parse_type();
+		if (!var_type) {
+			ERROR_TOKEN(ERR_TYPENAME_EXPECTED, peek());
+			return nullptr;
+		}
+	}
 
 	ast_ptr initializer = nullptr;
 	if (match(TT_ASSIGN)) {
@@ -326,19 +321,23 @@ std::shared_ptr<enum_declaration> parser::parse_enum_declaration() {
 	return make_ast<enum_declaration>(identifier_token, identifier_token.value, options);
 }
 std::shared_ptr<variable_declaration> parser::parse_parameter() {
-	// parse parameter type
-	type_ptr param_type = parse_type();
-	if (!param_type) {
-		ERROR_TOKEN(ERR_PARAM_TYPE_EXPECTED, peek());
-		return nullptr;
-	}
-
 	// parse parameter name
 	if (!match(TT_IDENTIFIER)) {
 		ERROR_TOKEN(ERR_PARAM_NAME_EXPECTED, peek());
 		return nullptr;
 	}
 	token& param_name_token = previous();
+
+	// parse parameter type
+	if (!match(TT_COLON)) {
+		ERROR_TOKEN(ERR_COLON_EXPECTED, peek());
+		return nullptr;
+	}
+	type_ptr param_type = parse_type();
+	if (!param_type) {
+		ERROR_TOKEN(ERR_PARAM_TYPE_EXPECTED, peek());
+		return nullptr;
+	}
 
 	// TODO: allow for default values in parameters
 

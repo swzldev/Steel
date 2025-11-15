@@ -3,13 +3,14 @@
 #include <memory>
 
 #include "../parser/ast/ast.h"
+#include "../parser/modules/module_manager.h"
 
 class codegen {
 public:
-	codegen(std::shared_ptr<compilation_unit> program)
-		: program(program) {
+	codegen(module_manager& module_manager)
+		: module_manager(module_manager) {
 	}
 
 private:
-	std::shared_ptr<compilation_unit> program;
+	module_manager& module_manager;
 };

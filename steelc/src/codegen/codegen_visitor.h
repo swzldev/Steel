@@ -1,7 +1,6 @@
 #pragma once
 
-#include <string>
-#include <map>
+#include <memory>
 
 #include <llvm/IR/LLVMContext.h>
 #include <llvm/IR/Module.h>
@@ -14,14 +13,13 @@ class codegen_visitor : public ast_visitor {
 public:
 	codegen_visitor() = default;
 
-	void visit(std::shared_ptr<binary_expression> expr) override;
-	void visit(std::shared_ptr<identifier_expression> id) override;
-	void visit(std::shared_ptr<literal> literal) override;
+	void visit(std::shared_ptr<function_declaration> func);
 
 private:
 	llvm::LLVMContext context;
+	llvm::Module* module;
 	llvm::IRBuilder<> builder;
-	llvm::Value* last_value;
+	llvm::Value* result;
 
 	llvm::Value* generate_literal(std::shared_ptr<literal> lit);
 };

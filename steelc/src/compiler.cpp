@@ -25,7 +25,8 @@ bool compiler::compile(compile_config cfg) {
 		std::vector<token> tokens = lexer.tokenize();
 
 		if (lexer.has_errors()) {
-			lexer_errors = lexer.get_errors();
+			auto lexer_errors = lexer.get_errors();
+			errors.insert(errors.end(), lexer_errors.begin(), lexer_errors.end());
 			return false;
 		}
 
@@ -33,7 +34,8 @@ bool compiler::compile(compile_config cfg) {
 		parser.parse();
 
 		if (parser.has_errors()) {
-			parsing_errors = parser.get_errors();
+			auto parser_errors = parser.get_errors();
+			errors.insert(errors.end(), parser_errors.begin(), parser_errors.end());
 			return false;
 		}
 
@@ -42,8 +44,8 @@ bool compiler::compile(compile_config cfg) {
 		declaration_collector collector(unit, module_manager);
 		unit->accept(collector);
 		if (collector.has_errors()) {
-			const auto& errors = collector.get_errors();
-			semantic_errors.insert(semantic_errors.end(), errors.begin(), errors.end());
+			const auto& errs = collector.get_errors();
+			errors.insert(errors.end(), errs.begin(), errs.end());
 		}
 
 		compilation_units.push_back(unit);
@@ -57,48 +59,48 @@ bool compiler::compile(compile_config cfg) {
 		import_resolver import_resolver(unit, module_manager);
 		unit->accept(import_resolver);
 		if (import_resolver.has_errors()) {
-			const auto& errors = import_resolver.get_errors();
-			semantic_errors.insert(semantic_errors.end(), errors.begin(), errors.end());
+			const auto& errs = import_resolver.get_errors();
+			errors.insert(errors.end(), errs.begin(), errs.end());
 		}
 
 		// the type resolver resolves explicit known typenames e.g. 'int'
 		type_resolver type_resolver(unit, module_manager);
 		unit->accept(type_resolver);
 		if (type_resolver.has_errors()) {
-			const auto& errors = type_resolver.get_errors();
-			semantic_errors.insert(semantic_errors.end(), errors.begin(), errors.end());
+			const auto& errs = type_resolver.get_errors();
+			errors.insert(errors.end(), errs.begin(), errs.end());
 		}
 
 		// the name resolver resolves all identifiers to their declarations
 		name_resolver name_resolver(unit, module_manager);
 		unit->accept(name_resolver);
 		if (name_resolver.has_errors()) {
-			const auto& errors = name_resolver.get_errors();
-			semantic_errors.insert(semantic_errors.end(), errors.begin(), errors.end());
+			const auto& errs = name_resolver.get_errors();
+			errors.insert(errors.end(), errs.begin(), errs.end());
 		}
 
 		type_checker type_checker(unit, module_manager);
 		unit->accept(type_checker);
 		if (type_checker.has_errors()) {
-			const auto& errors = type_checker.get_errors();
-			semantic_errors.insert(semantic_errors.end(), errors.begin(), errors.end());
+			const auto& errs = type_checker.get_errors();
+			errors.insert(errors.end(), errs.begin(), errs.end());
 		}
 
 		init_checker init_checker(unit);
 		unit->accept(init_checker);
 		if (init_checker.has_errors()) {
-			const auto& errors = init_checker.get_errors();
-			semantic_errors.insert(semantic_errors.end(), errors.begin(), errors.end());
+			const auto& errs = init_checker.get_errors();
+			errors.insert(errors.end(), errs.begin(), errs.end());
 		}
 
 		flow_analyzer flow_analyzer(unit);
 		unit->accept(flow_analyzer);
 		if (flow_analyzer.has_errors()) {
-			const auto& errors = flow_analyzer.get_errors();
-			semantic_errors.insert(semantic_errors.end(), errors.begin(), errors.end());
+			const auto& errs = flow_analyzer.get_errors();
+			errors.insert(errors.end(), errs.begin(), errs.end());
 		}
 
-		if (semantic_errors.size() > 0) {
+		if (errors.size() > 0) {
 			return false;
 		}
 	}

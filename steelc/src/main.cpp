@@ -6,13 +6,13 @@
 #include <memory>
 #include <string>
 #include <algorithm>
-#include <unordered_map>
 
 #include "compiler.h"
 #include "stproj/stproj_file.h"
-#include "lexer/token_utils.h"
+#include "config/compile_config.h"
 #include "error/error.h"
 #include "interpreter/interpreter.h"
+#include "codegen/codegen.h"
 
 #undef min
 #undef max
@@ -31,17 +31,18 @@ static void enable_ansi_escape_codes() {
 
 static void print_errors(const std::vector<error>& errors) {
 	for (const auto& error : errors) {
-		std::string file_path = "<unknown file>";
+		std::string file_name = "<unknown file>";
 		const std::vector<std::string>* src = nullptr;
 
 		if (error.unit && error.unit->source_file) {
-			file_path = error.unit->source_file->path;
+			file_name = error.unit->source_file->name();
 			src = &error.unit->source_file->lines;
 		}
 
-		std::cerr << "\033[1;31mError: \033[0m"
+		std::cerr << "\033[1;31mError "
+			<< error.info.code << ": " << "\033[0m"
 			<< "\033[1m" << error.info.message << "\033[0m"
-			<< " in \033[35m" << file_path << "\033[0m"
+			<< " in \033[35m" << file_name << "\033[0m"
 			<< " at \033[36mline " << error.pos.line << ", column " << error.pos.column << "\033[0m\n";
 
 		if (src && error.pos.line > 0 && error.pos.line <= src->size()) {
@@ -58,7 +59,6 @@ static void print_errors(const std::vector<error>& errors) {
 						<< "\033[1;31m^\033[0m HERE\n";
 				}
 			}
-			std::cerr << std::endl;
 		}
 		else if (src) {
 			std::cerr << "\033[1;31mLine number out of range.\033[0m\n";
@@ -66,6 +66,13 @@ static void print_errors(const std::vector<error>& errors) {
 		else {
 			std::cerr << "\033[1;31mSource file not found.\033[0m\n";
 		}
+
+		std::cerr << std::endl;
+		for (const auto& advice : error.advices) {
+			std::cerr << "\033[1;34mAdvice " << advice.info.code << ": \033[0m" << advice.info.message << ".\033[0m\n\n";
+		}
+		std::cerr << std::endl;
+
 	}
 }
 
@@ -78,8 +85,7 @@ int main(int argc, char** argv) {
 		return 1;
 	}
 
-	//stproj_file proj = stproj_file::load(argv[1]);
-	stproj_file proj = stproj_file::load(R"(C:\Users\maxmt\source\repos\Steel\steelc\demo\donut\Donut.stproj)");
+	stproj_file proj = stproj_file::load(argv[1]);
 	compiler compiler(proj.sources);
 
 	compile_config cfg;
@@ -94,12 +100,16 @@ int main(int argc, char** argv) {
 
 	if (compiler.has_errors()) {
 		std::cerr << "\033[1;31mCompilation failed:\033[0m\n";
-		print_errors(compiler.lexer_errors);
-		print_errors(compiler.parsing_errors);
-		print_errors(compiler.semantic_errors);
+		print_errors(compiler.get_errors());
 		std::cin.get();
 		return 1;
 	}
+	if (compiler.has_warnings()) {
+		// print warnings
+	}
+
+	//codegen codegen(compiler.module_manager);
+	
 
 	interpreter interpreter(compiler.module_manager);
 	interpreter.begin_execution();
