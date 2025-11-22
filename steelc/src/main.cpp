@@ -9,6 +9,7 @@
 
 #include "compiler.h"
 #include "stproj/stproj_file.h"
+#include "config/console_args.h"
 #include "config/compile_config.h"
 #include "error/error.h"
 #include "interpreter/interpreter.h"
@@ -79,13 +80,15 @@ static void print_errors(const std::vector<error>& errors) {
 int main(int argc, char** argv) {
 	enable_ansi_escape_codes();
 
-	if (argc < 2 && false) {
+	console_args args(argc, argv);
+
+	if (args.count() < 2) {
 		std::cerr << "Usage: SteelCompiler <project_file>" << std::endl;
 		std::cin.get();
 		return 1;
 	}
 
-	stproj_file proj = stproj_file::load(argv[1]);
+	stproj_file proj = stproj_file::load(args.get_arg(1));
 	compiler compiler(proj.sources);
 
 	compile_config cfg;
@@ -108,11 +111,16 @@ int main(int argc, char** argv) {
 		// print warnings
 	}
 
-	//codegen codegen(compiler.module_manager);
-	
+	codegen codegen(compiler.module_manager, compiler.compilation_units);
+	std::vector<llvm_ir_holder> ir_modules = codegen.generate_ir();
 
-	interpreter interpreter(compiler.module_manager);
-	interpreter.begin_execution();
+	for (const auto& ir_module : ir_modules) {
+		std::cout << "\033[1;32mGenerated LLVM IR Module:\033[0m\n";
+		std::cout << ir_module.ir << std::endl;
+	}
+	
+	//interpreter interpreter(compiler.module_manager);
+	//interpreter.begin_execution();
 
 	std::cin.get();
 }

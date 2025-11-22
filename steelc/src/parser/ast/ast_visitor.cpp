@@ -97,9 +97,9 @@ void ast_visitor::visit(std::shared_ptr<initializer_list> init) {
 	}
 }
 void ast_visitor::visit(std::shared_ptr<function_call> func_call) {
-	// accept callee for methods
+	// accept caller_obj for methods
 	if (func_call->is_method()) {
-		func_call->callee->accept(*this);
+		func_call->caller_obj->accept(*this);
 	}
 
 	// accept all args

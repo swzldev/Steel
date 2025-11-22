@@ -265,3 +265,18 @@
 - Made a source file for compilation_pass to reduce clutter in the header.
 - Added an advice struct to represent advice messages, these advice messages are stored in the error
   object and printed after the error message to give additional information on how to fix the error.
+
+### 15-11-2025
+- Begun working on the codegen.
+- Created an llvm_type_converter for lowering data types to llvm types.
+
+### 22-11-2025
+- Heavy codegen improvements.
+- Added support for codegen of:
+	- Functions
+	- Variable declarations
+	- Basic expressions
+	- If statements
+	- Return statements
+- Switched entry point from 'Main' to 'main' to prevent entry point case sensitivity issues with LLVM.
+- Renamed 'callee' to 'caller_obj' in function_call since callee is actually not correct terminology.

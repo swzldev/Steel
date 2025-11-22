@@ -32,6 +32,7 @@ void type_checker::visit(std::shared_ptr<function_declaration> func) {
 		}
 		else {
 			module_manager.entry_point = func;
+			func->is_entry_point = true;
 		}
 	}
 	else {
@@ -515,7 +516,7 @@ void type_checker::visit(std::shared_ptr<function_call> func_call) {
 	// we need to resolve candidates here if the function call
 	// is a method, as it cant be done in the name resolver pass
 	if (func_call->is_method()) {
-		if (auto member = std::dynamic_pointer_cast<member_expression>(func_call->callee)) {
+		if (auto member = std::dynamic_pointer_cast<member_expression>(func_call->caller_obj)) {
 			// resolve the object
 			member->object->accept(*this);
 
@@ -541,38 +542,7 @@ void type_checker::visit(std::shared_ptr<function_call> func_call) {
 	}
 
 	// TEMPORARY
-	if (func_call->identifier == "Print") return;
-	if (func_call->identifier == "Read") {
-		func_call->override_return_type = to_data_type(DT_STRING);
-		return;
-	}
-	if (func_call->identifier == "ReadKey") {
-		func_call->override_return_type = to_data_type(DT_CHAR);
-		return;
-	}
-	if (func_call->identifier == "ReadInt") {
-		func_call->override_return_type = to_data_type(DT_I32);
-		return;
-	}
-	if (func_call->identifier == "Wait") return;
-	if (func_call->identifier == "SetConsolePos") return;
-	if (func_call->identifier == "GetKey") {
-		func_call->override_return_type = to_data_type(DT_BOOL);
-		return;
-	}
-	if (func_call->identifier == "Sin") {
-		func_call->override_return_type = to_data_type(DT_FLOAT);
-		return;
-	}
-	if (func_call->identifier == "Cos") {
-		func_call->override_return_type = to_data_type(DT_FLOAT);
-		return;
-	}
-	if (func_call->identifier == "Sqrt") {
-		func_call->override_return_type = to_data_type(DT_FLOAT);
-		return;
-	}
-	if (func_call->identifier == "__break") return;
+	if (func_call->identifier == "printf") return;
 
 	// check any candidates match arguments provided
 	std::vector<candidate_score> matches;

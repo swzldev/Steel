@@ -1,5 +1,7 @@
 #include "console_args.h"
 
+#include <string>
+
 console_args::console_args(int argc, char** argv) {
 	for (int i = 0; i < argc; i++) {
 		args.push_back(argv[i]);

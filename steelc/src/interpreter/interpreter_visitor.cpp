@@ -477,7 +477,7 @@ void interpreter_visitor::visit(std::shared_ptr<initializer_list> init_list) {
 }
 void interpreter_visitor::visit(std::shared_ptr<function_call> func_call) {
 	if (func_call->is_method()) {
-		auto member_expr = std::dynamic_pointer_cast<member_expression>(func_call->callee);
+		auto member_expr = std::dynamic_pointer_cast<member_expression>(func_call->caller_obj);
 		if (!member_expr) {
 			throw_exception("Method call expected", func_call->position);
 		}

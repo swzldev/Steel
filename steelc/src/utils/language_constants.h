@@ -6,5 +6,5 @@
 // keywords, those are defined within the lexer.
 
 namespace language_constants {
-	constexpr auto ENTRY_POINT = "Main";
+	constexpr auto ENTRY_POINT = "main";
 }

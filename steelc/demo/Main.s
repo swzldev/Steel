@@ -1,9 +1,9 @@
+func print(message: string) {
+    printf(message);
+}
 
+func main() -> int {
+    print("Hello World!");
 
-func Main() -> int {
-    Print("Hello World!");
-
-    const x = 5;
-
-    return x;
+    return 0;
 }

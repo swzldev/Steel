@@ -1,12 +1,20 @@
 #pragma once
 
 #include <llvm/IR/Type.h>
+#include <llvm/IR/LLVMContext.h>
 
-#include 
+#include "../../parser/types/data_type.h"
 
 class llvm_type_converter {
 public:
-	llvm::Type* convert()
+	llvm_type_converter(llvm::LLVMContext& context)
+		: context(context) {
+	}
+
+	llvm::Type* convert(type_ptr t);
 
 private:
+	llvm::LLVMContext& context;
+
+	llvm::Type* get_primitive_type(type_ptr t);
 };

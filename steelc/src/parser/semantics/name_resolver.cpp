@@ -154,8 +154,8 @@ void name_resolver::visit(std::shared_ptr<this_expression> expr) {
 }
 void name_resolver::visit(std::shared_ptr<function_call> func_call) {
 	if (func_call->is_method()) {
-		// only try to resolve the callee, not the method
-		func_call->callee->accept(*this);
+		// only try to resolve the caller_obj, not the method
+		func_call->caller_obj->accept(*this);
 	}
 	else {
 		// check if its a constructor call

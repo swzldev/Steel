@@ -6,7 +6,7 @@
 
 #include "expression.h"
 #include "../declarations/function_declaration.h"
-#include "../../parser_utils.h"
+#include "../declarations/type_declaration.h"
 #include "../../types/data_type.h"
 
 class function_call : public expression, public std::enable_shared_from_this<function_call> {
@@ -16,11 +16,11 @@ public:
 	function_call(std::string function_name, std::vector<std::shared_ptr<expression>> args)
 		: identifier(function_name), args(args), declaration(nullptr) {
 	}
-	function_call(std::shared_ptr<expression> callee, std::string name, std::vector<std::shared_ptr<expression>> args)
-		: identifier(name), callee(callee), args(args), declaration(nullptr) {
+	function_call(std::shared_ptr<expression> caller_obj, std::string name, std::vector<std::shared_ptr<expression>> args)
+		: identifier(name), caller_obj(caller_obj), args(args), declaration(nullptr) {
 	}
-	function_call(std::shared_ptr<expression> callee, std::vector<std::shared_ptr<expression>> args)
-		: identifier(""), callee(callee), args(args), declaration(nullptr) {
+	function_call(std::shared_ptr<expression> caller_obj, std::vector<std::shared_ptr<expression>> args)
+		: identifier(""), caller_obj(caller_obj), args(args), declaration(nullptr) {
 	}
 
 	std::string string(int indent) const override {
@@ -43,8 +43,8 @@ public:
 			identifier,
 			std::vector<std::shared_ptr<expression>>{}
 		);
-		if (callee) {
-			cloned->callee = std::dynamic_pointer_cast<expression>(callee->clone());
+		if (caller_obj) {
+			cloned->caller_obj = std::dynamic_pointer_cast<expression>(caller_obj->clone());
 		}
 		for (const auto& arg : args) {
 			cloned->args.push_back(std::dynamic_pointer_cast<expression>(arg->clone()));
@@ -73,14 +73,14 @@ public:
 	}
 
 	inline bool is_method() const {
-		return callee != nullptr;
+		return caller_obj != nullptr;
 	}
 	inline bool is_constructor() const {
 		return ctor_type != nullptr;
 	}
 
 	std::string identifier;
-	std::shared_ptr<expression> callee;
+	std::shared_ptr<expression> caller_obj;
 	std::vector<std::shared_ptr<expression>> args;
 	type_ptr override_return_type = nullptr; // TEMPORARY
 	std::vector<std::shared_ptr<function_declaration>> declaration_candidates;

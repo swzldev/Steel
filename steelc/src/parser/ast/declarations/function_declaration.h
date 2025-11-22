@@ -96,6 +96,7 @@ public:
 		cloned->is_constructor = is_constructor;
 		cloned->is_generic_instance = is_generic_instance;
 		cloned->overridden_function = overridden_function;
+		cloned->implicitly_returns = implicitly_returns;
 		// note: overridden_function is not cloned
 		return cloned;
 	}
@@ -110,5 +111,8 @@ public:
 	bool is_override = false;
 	bool is_constructor = false;
 	bool is_generic_instance = false;
+	bool is_entry_point = false;
+	bool implicitly_returns = false;
+	std::shared_ptr<type_declaration> parent_type = nullptr;
 	std::shared_ptr<function_declaration> overridden_function = nullptr;
 };

@@ -157,6 +157,7 @@ void declaration_collector::visit(std::shared_ptr<type_declaration> decl) {
 	}
 	for (const auto& method : decl->methods) {
 		method->accept(*this);
+		method->parent_type = decl;
 	}
 	for (const auto& op : decl->operators) {
 		op->accept(*this);
