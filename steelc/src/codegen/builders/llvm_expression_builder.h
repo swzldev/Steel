@@ -13,6 +13,7 @@ public:
 	}
 
 	llvm::Value* build_binary_expr(llvm::Value* lhs, llvm::Value* rhs, token_type operation);
+	llvm::Value* build_unary_expr(llvm::Type* expr_type, llvm::Value* operand, token_type operation);
 
 private:
 	llvm::IRBuilder<>& builder;

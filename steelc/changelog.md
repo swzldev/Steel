@@ -280,3 +280,16 @@
 	- Return statements
 - Switched entry point from 'Main' to 'main' to prevent entry point case sensitivity issues with LLVM.
 - Renamed 'callee' to 'caller_obj' in function_call since callee is actually not correct terminology.
+
+### 23-11-2025
+- Added a helper function into the codegen_visitor that returns an llvm::Value* directly from accepting
+  an AST node, which is much safer and cleaner than using the result variable, which may still contain
+  an old value from previous visits.
+- Created a name_mangler class which I will use later on to mangle function names, for now its unused.
+- Created a variable class to store additional information on variables such as their type, alloca slot,
+  and name, this will be returned by lookup_local instead of directly returning the AllocaInst*, it also
+  creates an lvalue instance upon creation, which means it doesnt need to be recreated.
+
+### 24-11-2025
+- Added for loop codegen support.
+- Added unary expression codegen support.

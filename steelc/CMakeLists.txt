@@ -50,7 +50,7 @@ set(SOURCES
     "src/codegen/codegen_env.cpp"
     "src/codegen/cleanup/cleanup_action.h"
     "src/codegen/cleanup/scope.h"
- "src/codegen/cleanup/cleanup_action.cpp" "src/codegen/type_handling/llvm_type_utils.h" "src/codegen/type_handling/llvm_type_utils.cpp" "src/codegen/builders/llvm_function_builder.h" "src/codegen/builders/llvm_function_builder.cpp" "src/codegen/error/codegen_exception.h"  "src/codegen/constants/codegen_constants.h"   "src/codegen/builders/llvm_expression_builder.h" "src/codegen/builders/llvm_expression_builder.cpp")
+ "src/codegen/cleanup/cleanup_action.cpp" "src/codegen/type_handling/llvm_type_utils.h" "src/codegen/type_handling/llvm_type_utils.cpp" "src/codegen/builders/llvm_function_builder.h" "src/codegen/builders/llvm_function_builder.cpp" "src/codegen/error/codegen_exception.h"  "src/codegen/constants/codegen_constants.h"   "src/codegen/builders/llvm_expression_builder.h" "src/codegen/builders/llvm_expression_builder.cpp" "src/codegen/memory/lvalue.h" "src/codegen/memory/lvalue.cpp" "src/codegen/naming/name_mangler.h" "src/codegen/naming/name_mangler.cpp" "src/codegen/memory/variable.h")
 
 # Add source to this project's executable.
 add_executable ( steelc ${SOURCES} )

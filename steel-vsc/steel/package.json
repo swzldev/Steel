@@ -1,0 +1,25 @@
+{
+  "name": "steel",
+  "displayName": "Steel",
+  "description": "Adds syntax highlighting for Steel along with useful tools/commands for creating, building and managing Steel projects.",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.106.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "contributes": {
+    "languages": [{
+      "id": "steel",
+      "aliases": ["Steel", "steel"],
+      "extensions": [".s", ".st"],
+      "configuration": "./language-configuration.json"
+    }],
+    "grammars": [{
+      "language": "steel",
+      "scopeName": "source.steel",
+      "path": "./syntaxes/steel.tmLanguage.json"
+    }]
+  }
+}

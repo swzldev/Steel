@@ -13,18 +13,23 @@
 #include <llvm/IR/Type.h>
 #include <llvm/IR/Value.h>
 #include <llvm/Support/Casting.h>
+#include <llvm/IR/DerivedTypes.h>
 
 #include "error/codegen_exception.h"
 #include "cleanup/cleanup_action.h"
+#include "memory/variable.h"
 #include "codegen_env.h"
+#include "../parser/ast/ast_node.h"
 #include "../parser/ast/declarations/function_declaration.h"
 #include "../parser/ast/declarations/variable_declaration.h"
 #include "../parser/ast/expressions/binary_expression.h"
+#include "../parser/ast/expressions/assignment_expression.h"
 #include "../parser/ast/expressions/function_call.h"
 #include "../parser/ast/expressions/identifier_expression.h"
 #include "../parser/ast/expressions/literal.h"
 #include "../parser/ast/statements/block_statement.h"
 #include "../parser/ast/statements/control_flow/if_statement.h"
+#include "../parser/ast/statements/control_flow/for_loop.h"
 #include "../parser/ast/statements/control_flow/return_statement.h"
 #include "../parser/types/data_type.h"
 
@@ -50,8 +55,8 @@ void codegen_visitor::visit(std::shared_ptr<function_declaration> func) {
 	// allocate params
 	int i = 0;
 	for (auto& arg : fn->args()) {
-		llvm::AllocaInst* param_slot = env->alloc_local(arg.getType(), func->parameters[i]->identifier);
-		env->builder.CreateStore(&arg, param_slot);
+		auto param = env->alloc_local(arg.getType(), func->parameters[i]->identifier);
+		env->builder.CreateStore(&arg, param->get_slot());
 		i++;
 	}
 
@@ -68,51 +73,70 @@ void codegen_visitor::visit(std::shared_ptr<function_declaration> func) {
 }
 void codegen_visitor::visit(std::shared_ptr<variable_declaration> var) {
 	llvm::Type* var_type = type_converter.convert(var->type);
-	llvm::AllocaInst* var_slot = env->alloc_local(var_type, var->identifier);
+	auto var_inst = env->alloc_local(var_type, var->identifier);
 
-	cg_assert(var_slot != nullptr, "Failed to allocate local variable " + var->identifier);
+	cg_assert(var_inst != nullptr, "Failed to allocate local variable " + var->identifier);
 
-	env->emit_life_start(var_slot);
-	env->register_cleanup(cleanup_action::create_lifetime_end(var_slot));
+	//env->emit_life_start(var);
+	//env->register_cleanup(cleanup_action::create_lifetime_end(var));
 
 	// initialize variable if there is an initializer
 	if (var->initializer) {
-		var->initializer->accept(*this);
-		llvm::Value* init_value = result;
+		llvm::Value* init_value = accept(var->initializer);
 		cg_assert(init_value != nullptr, "Failed to generate initializer for variable " + var->identifier);
-		env->builder.CreateStore(init_value, var_slot);
+
+		env->builder.CreateStore(init_value, var_inst->get_slot());
 	}
 
 	// TODO: add support for destructors
 }
 void codegen_visitor::visit(std::shared_ptr<binary_expression> expr) {
-	result = nullptr;
-	expr->left->accept(*this);
-	llvm::Value* lhs = result;
-
-	result = nullptr;
-	expr->right->accept(*this);
-	llvm::Value* rhs = result;
+	llvm::Value* lhs = accept(expr->left);
+	llvm::Value* rhs = accept(expr->right);
 
 	cg_assert(lhs != nullptr, "Failed to generate left operand of binary expression");
 	cg_assert(rhs != nullptr, "Failed to generate right operand of binary expression");
 
 	result = expression_builder.build_binary_expr(lhs, rhs, expr->oparator);
 }
+void codegen_visitor::visit(std::shared_ptr<assignment_expression> expr) {
+	auto rhs = accept(expr->right);
+	cg_assert(rhs != nullptr, "Failed to generate right-hand side of assignment expression");
+
+	auto lval = env->lvalue_from_expression(expr->left);
+	cg_assert(lval->valid(), "Left-hand side of assignment is not a valid lvalue");
+
+	lval->store(env->builder, rhs);
+}
+void codegen_visitor::visit(std::shared_ptr<unary_expression> expr) {
+	llvm::Value* operand = nullptr;
+	if (op_requires_lvalue(expr->oparator)) {
+		auto lval = env->lvalue_from_expression(expr->operand);
+		cg_assert(lval->valid(), "Left-hand side of assignment is not a valid lvalue");
+		operand = lval->address();
+	}
+	else {
+		operand = accept(expr->operand);
+	}
+	cg_assert(operand != nullptr, "Failed to generate operand of unary expression");
+
+	llvm::Type* expr_type = type_converter.convert(expr->type());
+
+	result = expression_builder.build_unary_expr(expr_type, operand, expr->oparator);
+}
 void codegen_visitor::visit(std::shared_ptr<identifier_expression> id) {
 	if (id->id_type == IDENTIFIER_VARIABLE) {
-		llvm::AllocaInst* var_slot = env->lookup_local(id->identifier);
-		cg_assert(var_slot != nullptr, "Undefined variable: " + id->identifier);
-		result = env->builder.CreateLoad(var_slot->getAllocatedType(), var_slot);
+		auto var = env->lookup_local(id->identifier);
+		cg_assert(var != nullptr, "Undefined variable: " + id->identifier);
+
+		result = var->load(env->builder);
 	}
 }
 void codegen_visitor::visit(std::shared_ptr<function_call> func_call) {
 	std::vector<llvm::Value*> arg_values;
 
-	for (const auto& arg : func_call->args) {
-		result = nullptr;
-		arg->accept(*this);
-		arg_values.push_back(result);
+	for (auto& arg : func_call->args) {
+		arg_values.push_back(accept(arg));
 		cg_assert(result != nullptr, "Failed to generate argument for function call: " + func_call->identifier);
 	}
 
@@ -157,9 +181,7 @@ void codegen_visitor::visit(std::shared_ptr<code_block> block) {
 	}
 }
 void codegen_visitor::visit(std::shared_ptr<if_statement> if_stmt) {
-	result = nullptr;
-	if_stmt->condition->accept(*this);
-	llvm::Value* condition = result;
+	auto condition = accept(if_stmt->condition);
 	cg_assert(condition != nullptr, "Failed to generate condition for if statement");
 
 	auto* then_block = llvm::BasicBlock::Create(context, "if.then", &env->func);
@@ -201,6 +223,52 @@ void codegen_visitor::visit(std::shared_ptr<if_statement> if_stmt) {
 	// continue at merge block
 	env->func.insert(env->func.end(), merge_block);
 	builder.SetInsertPoint(merge_block);
+}
+void codegen_visitor::visit(std::shared_ptr<for_loop> for_loop) {
+	auto init_block = env->make_block("for.init");
+	auto cond_block = env->make_block("for.cond");
+	auto body_block = env->make_block("for.body");
+	auto incr_block = env->make_block("for.incr");
+	auto merge_block = env->make_block("for.merge");
+
+	// initialzer
+	env->builder.CreateBr(init_block);
+	env->builder.SetInsertPoint(init_block);
+	if (for_loop->initializer) {
+		for_loop->initializer->accept(*this);
+	}
+	env->builder.CreateBr(cond_block);
+
+	// condition
+	env->builder.SetInsertPoint(cond_block);
+	if (for_loop->condition) {
+		auto cond_value = accept(for_loop->condition);
+		cg_assert(cond_value != nullptr, "Failed to generate condition for for loop");
+		env->builder.CreateCondBr(cond_value, body_block, merge_block);
+	}
+	else {
+		// no condition means always true
+		env->builder.CreateBr(body_block);
+	}
+
+	// body
+	env->builder.SetInsertPoint(body_block);
+	env->enter_scope();
+	for_loop->body->accept(*this);
+	env->leave_scope_inl();
+	if (!env->builder.GetInsertBlock()->getTerminator()) {
+		env->builder.CreateBr(incr_block);
+	}
+
+	// increment
+	env->builder.SetInsertPoint(incr_block);
+	if (for_loop->increment) {
+		for_loop->increment->accept(*this);
+	}
+	env->builder.CreateBr(cond_block);
+
+	// merge
+	env->builder.SetInsertPoint(merge_block);
 }
 void codegen_visitor::visit(std::shared_ptr<return_statement> ret_stmt) {
 	llvm::Value* ret_value = nullptr;
@@ -249,4 +317,12 @@ llvm::Value* codegen_visitor::generate_literal(std::shared_ptr<literal> lit) {
 		return llvm::ConstantInt::get(context, llvm::APInt(8, bvalue, false));
 	}
 	}
+}
+
+bool codegen_visitor::op_requires_lvalue(token_type op) {
+	if (op == TT_INCREMENT ||
+		op == TT_DECREMENT) {
+		return true;
+	}
+	return false;
 }

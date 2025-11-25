@@ -7,7 +7,6 @@
 #include "declaration.h"
 #include "variable_declaration.h"
 #include "../generics/generic_parameter.h"
-#include "../../parser_utils.h"
 #include "../../types/data_type.h"
 
 class function_declaration : public declaration, public std::enable_shared_from_this<function_declaration> {
@@ -96,6 +95,7 @@ public:
 		cloned->is_constructor = is_constructor;
 		cloned->is_generic_instance = is_generic_instance;
 		cloned->overridden_function = overridden_function;
+		cloned->is_entry_point = false; // entry point status is not cloned
 		cloned->implicitly_returns = implicitly_returns;
 		// note: overridden_function is not cloned
 		return cloned;

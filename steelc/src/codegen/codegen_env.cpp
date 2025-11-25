@@ -1,16 +1,40 @@
 #include "codegen_env.h"
 
+#include <memory>
+#include <string>
+
 #include <llvm/IR/BasicBlock.h>
-#include <llvm/IR/IntrinsicEnums.inc>
 #include <llvm/IR/Function.h>
 #include <llvm/IR/Value.h>
-#include <llvm/IR/Intrinsics.h>
+#include <llvm/IR/Instructions.h>
+#include <llvm/IR/IRBuilder.h>
+#include <llvm/IR/Type.h>
+
+#include "error/codegen_exception.h"
+#include "cleanup/cleanup_action.h"
+#include "cleanup/scope.h"
+#include "memory/lvalue.h"
+#include "memory/variable.h"
+#include "../parser/ast/expressions/expression.h"
+#include "../parser/ast/expressions/identifier_expression.h"
+
+llvm::BasicBlock* codegen_env::make_block(const std::string& name, bool append_to_func) {
+	if (append_to_func) {
+		return llvm::BasicBlock::Create(ctx, name, &func);
+	}
+	else {
+		return llvm::BasicBlock::Create(ctx, name);
+	}
+}
 
 void codegen_env::enter_scope() {
 	scope_stack.push_back(scope{});
 	auto& scope = scope_stack.back();
-	// create cleanup block
+
+	// create cleanup block (default unreachable)
 	scope.cleanup_block = llvm::BasicBlock::Create(ctx, "scope.clean", &func);
+	llvm::IRBuilder<> temp_builder(scope.cleanup_block);
+	temp_builder.CreateUnreachable();
 }
 void codegen_env::leave_scope_inl() {
 	if (scope_stack.empty()) {
@@ -33,23 +57,26 @@ void codegen_env::register_cleanup(const cleanup_action& action) {
 
 void codegen_env::alloc_return_slot(llvm::Type* ret_type) {
 	if (!ret_type->isVoidTy()) {
-		ret_slot = alloc_local(ret_type, "ret.slot");
+		ret_slot = create_alloca(ret_type, "ret.slot");
 	}
 }
 
-llvm::AllocaInst* codegen_env::alloc_local(llvm::Type* type, const std::string& name) {
-	llvm::IRBuilder<> entry_builder(&func.getEntryBlock(), func.getEntryBlock().begin());
-	auto* inst = entry_builder.CreateAlloca(type, nullptr, name);
-	register_local(name, inst);
-	return inst;
-}
-void codegen_env::register_local(const std::string& name, llvm::AllocaInst* local) {
+std::shared_ptr<variable> codegen_env::alloc_local(llvm::Type* type, const std::string& name) {
+	// create alloca
+	auto* inst = create_alloca(type, name);
+
 	if (scope_stack.empty()) {
-		return; // should emit an error in the future
+		throw codegen_exception("No active scope to allocate local variable in");
 	}
-	scope_stack.back().locals_map[name] = local;
+
+	// create variable
+	auto var = std::make_shared<variable>(name, inst);
+	scope_stack.back().locals_map[name] = var;
+
+	// return variable pointer
+	return var;
 }
-llvm::AllocaInst* codegen_env::lookup_local(const std::string& name) {
+std::shared_ptr<variable> codegen_env::lookup_local(const std::string& name) {
 	for (auto it = scope_stack.rbegin(); it != scope_stack.rend(); ++it) {
 		auto found = it->locals_map.find(name);
 		if (found != it->locals_map.end()) {
@@ -57,6 +84,23 @@ llvm::AllocaInst* codegen_env::lookup_local(const std::string& name) {
 		}
 	}
 	return nullptr;
+}
+
+std::shared_ptr<lvalue> codegen_env::lvalue_from_expression(std::shared_ptr<expression> expr) {
+	if (auto id_expr = std::dynamic_pointer_cast<identifier_expression>(expr)) {
+		if (id_expr->id_type == IDENTIFIER_VARIABLE) {
+			auto var = lookup_local(id_expr->identifier);
+			if (!var) {
+				throw codegen_exception("Undefined variable: " + id_expr->identifier);
+			}
+			return var;
+		}
+	}
+
+	// add support for other lvalue expressions here
+
+	// invalid lvalue
+	throw codegen_exception("Unsupported lvalue expression (not an lvalue or not implemented)");
 }
 
 void codegen_env::emit_life_start(llvm::Value* ptr) {
@@ -90,6 +134,8 @@ void codegen_env::build_cleanup_chain() {
 			continue;
 		}
 
+		// remove unreachable terminator - this cleanup block is used
+		s.cleanup_block->getTerminator()->eraseFromParent();
 		builder.SetInsertPoint(s.cleanup_block);
 		for (auto it = s.cleanup_actions.rbegin(); it != s.cleanup_actions.rend(); ++it) {
 			emit_cleanup(*it);
@@ -116,6 +162,10 @@ void codegen_env::finalize_function() {
 	}
 }
 
+llvm::AllocaInst* codegen_env::create_alloca(llvm::Type* type, const std::string& name) {
+	llvm::IRBuilder<> entry_builder = llvm::IRBuilder<>(&func.getEntryBlock(), func.getEntryBlock().begin());
+	return entry_builder.CreateAlloca(type, nullptr, name);
+}
 void codegen_env::emit_cleanup(const cleanup_action& action) {
 	switch (action.kind) {
 	case CLEANUP_ACTION_DESTRUCTOR: {

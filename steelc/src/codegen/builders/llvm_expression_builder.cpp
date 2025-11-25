@@ -46,3 +46,26 @@ llvm::Value* llvm_expression_builder::build_binary_expr(llvm::Value* lhs, llvm::
 	}
 
 }
+llvm::Value* llvm_expression_builder::build_unary_expr(llvm::Type* expr_type, llvm::Value* operand, token_type operation) {
+	switch (operation) {
+	case TT_NOT:
+		return builder.CreateNot(operand);
+	case TT_INCREMENT: {
+		auto old = builder.CreateLoad(expr_type, operand, "old");
+		llvm::Value* one = llvm::ConstantInt::get(expr_type, 1);
+		auto inc = builder.CreateAdd(old, one, "inc");
+		builder.CreateStore(inc, operand);
+		return old;
+	}
+	case TT_DECREMENT: {
+		auto old = builder.CreateLoad(expr_type, operand, "old");
+		llvm::Value* one = llvm::ConstantInt::get(expr_type, -1);
+		auto inc = builder.CreateAdd(old, one, "inc");
+		builder.CreateStore(inc, operand);
+		return old;
+	}
+
+	default:
+		throw codegen_exception("Unsupported unary operation in LLVM expression builder");
+	}
+}
