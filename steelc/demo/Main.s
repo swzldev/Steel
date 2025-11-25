@@ -3,14 +3,7 @@ func print(message: string) {
 }
 
 func main() -> int {
-    for (let i = 0; i < 20; i++) {
-        if (i % 2 == 0) {
-            print("Hello, SteelC!\n");
-        }
-        else {
-            print("Goodbye, SteelC!\n");
-        }
-    }
+    print("Hello, World!\n");
 
-    return 0;
+    return 5;
 }

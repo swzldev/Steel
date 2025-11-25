@@ -8,9 +8,12 @@
 #include "classes/function_return.h"
 #include "classes/runtime_value.h"
 #include "debugging/interpreter_debugger.h"
+#include "../lexer/token.h"
 #include "../parser/ast/ast_fwd.h"
 #include "../parser/ast/ast_visitor.h"
-#include "../parser/symbolics/symbol_table.h"
+#include "../parser/ast/ast_node.h"
+#include "../parser/types/custom_type.h"
+#include "../parser/types/data_type.h"
 
 class interpreter_visitor : public ast_visitor {
 public:

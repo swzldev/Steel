@@ -16,13 +16,13 @@
 <li>Simple and easy to write syntax inspired by languages like C, Rust, Swift and more.</li>
 <li>Informative error and warning system to debug code easily.</li>
 <li>Comprehensive documentation on all aspects of the language.</li>
-<li><s>VS Code extension to allow for syntax highlighting and quick code compilation.</s> (Coming soon)</li>
+<li>VS Code extension to allow for syntax highlighting and quick code compilation. (In development)</li>
 </ul>
 
 <h2>Getting started</h2>
 <p>To begin first download the <a href="https://github.com/swzldev/Steel/releases/">latest release</a> of the compiler. This is nescessary for converting your Steel code into a functional executable.</p>
 
-<p>After downloading the compiler (which currently has the interpreter built-in), you can begin to create your first Steel project. Steel projects use TOML, and use the *.stproj extension. You can use the template below to create your project:</p>
+<p>After downloading the compiler, you can begin to create your first Steel project. Steel projects use TOML, and use the *.stproj extension. You can use the template below to create your project:</p>
 
 <code>
   name = "MyProject"
@@ -32,17 +32,23 @@
   sources = ["Main.s"]
 </code>
 
-<p>Now, make a "Main.s" file in the same directory, this will be the file for your entry point. The entry point must be called "Main" and return an i32:</p>
+<p>Now, make a "Main.s" file in the same directory, this will be the file for your entry point. The entry point must be called "main" and return an int:</p>
 
 <code>
-  func Main() -> i32 {
-      Print("Hello, World!");
+  func main() -> int {
+      printf("Hello, World!");
       return 0;
   }
 </code>
 
+<p>Now, to compile your project, open a terminal in the project directory and run the following command:</p>
+<code>
+  steelc "<path to your .stproj file>"
+</code>
+<p>Assuming you did everything correctly, you should now see a 'build' folder in your project directory, inside of it will be your executable.</p>
+
 <h3>Important notes</h3>
-<p>Steel is currently in pre-alpha, this means many features are not fully functional and may contain plenty of bugs, this version is not meant to be released publicly. Currently the language uses a built in interpreter meaning it is significantly slower than intended. Additionally, there is little to no optimisation as the languages core features are still being built. Bare this in mind when downloading an old release like this one.</p>
+<p>Steel is currently in pre-alpha, this means many features are not fully functional and may contain plenty of bugs, this version is not meant to be released publicly.</p>
 
 <h2>Changelog</h2>
 <p>To view the full changelog, click <a href="./steelc/changelog.md">here</a>.</p>

@@ -27,6 +27,7 @@ std::vector<llvm_ir_holder> codegen::generate_ir() {
 		// extract IR from module
 		llvm::Module& module = visitor.get_module();
 		llvm_ir_holder ir_holder;
+		ir_holder.owning_unit = unit;
 		std::string ir_string;
 		llvm::raw_string_ostream rso(ir_string);
 		module.print(rso, nullptr);

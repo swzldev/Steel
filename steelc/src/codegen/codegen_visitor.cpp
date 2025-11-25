@@ -16,7 +16,6 @@
 #include <llvm/IR/DerivedTypes.h>
 
 #include "error/codegen_exception.h"
-#include "cleanup/cleanup_action.h"
 #include "memory/variable.h"
 #include "codegen_env.h"
 #include "../parser/ast/ast_node.h"

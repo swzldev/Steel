@@ -216,7 +216,7 @@ struct error_catalog {
             {"S065", "Return statement outside of function or constructor"},
             {"S066", "Constructors cannot return a value"},
             {"S067", "Void function '%s' cannot return a value"},
-            {"S068", "Function '%s' must return a value"},
+            {"S068", "Non-void function '%s' must return a value"},
             {"S069", "Function '%s' returns type '%s' but got '%s'"},
             {"S070", "Not all code paths return a value"},
             {"S071", "The type '%s' has no method named '%s'"},
