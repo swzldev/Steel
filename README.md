@@ -30,28 +30,24 @@
 
 <p>After downloading the compiler, you can begin to create your first Steel project. Steel projects use TOML, and use the *.stproj extension. You can use the template below to create your project:</p>
 
-<code>
-  name = "MyProject"
-  version = "1.0.0"
-  type = "executable"
+<pre><code>name = "MyProject"
+version = "1.0.0"
+type = "executable"
 
-  sources = ["Main.s"]
-</code>
+sources = ["Main.s"]
+</code></pre>
 
 <p>Now, make a "Main.s" file in the same directory, this will be the file for your entry point. The entry point must be called "main" and return an int:</p>
 
-<code>
-  func main() -> int {
-      printf("Hello, World!");
-      return 0;
-  }
-</code>
+<pre><code>func main() -> int {
+    printf("Hello, World!");
+    return 0;
+}
+</code></pre>
 
-<p>To compile your project, open a terminal in the project directory and run the following command:</p>
+<p>To compile your project, open a terminal in the project directory and run the following command (make sure to change 'project.stproj' to the name/relative path of your project file if it differs):</p>
 
-<code>
-  steelc "<path to your .stproj file>"
-</code>
+<code>steelc "project.stproj"</code>
 
 <p>Assuming you did everything correctly, you should now see a 'build' folder in your project directory, with your final executable inside, the filename of the executable will be the same as the stproj filename (with the .stproj extension truncated).</p>
 <p><i>Note: If you did not add steelc to your system PATH, you will need to run the command from the directory where steelc.exe is located, or provide the full path to the steelc executable.</i></p>
