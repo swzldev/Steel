@@ -1,5 +1,0 @@
-name = "BounceDemo"
-version = "1.0.0"
-type = "executable"
-
-sources = ["Main.s", "Vector2.s", "Player.s"]

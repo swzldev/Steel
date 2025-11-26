@@ -9,7 +9,56 @@
   "categories": [
     "Programming Languages"
   ],
+  "activationEvents": [],
+  "main": "./out/extension.js",
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src --ext ts"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.106.0",
+    "@types/node": "20.x",
+    "@typescript-eslint/eslint-plugin": "^7.14.1",
+    "@typescript-eslint/parser": "^7.11.0",
+    "eslint": "^8.57.0",
+    "typescript": "^5.4.5"
+  },
   "contributes": {
+    "commands": [
+      {
+        "command": "steel.build",
+        "title": "Steel: Build Project"
+      },
+      {
+        "command": "steel.run",
+        "title": "Steel: Run Project"
+      }
+    ],
+    "menus": {
+      "commandPalette": [
+        {
+          "command": "steel.build"
+        },
+        {
+          "command": "steel.run"
+        }
+      ],
+      "editor/context": [
+        {
+          "command": "steel.build",
+          "group": "steel",
+          "when": "resourceLangId == steel"
+        },
+        {
+          "command": "steel.run",
+          "group": "steel",
+          "when": "resourceLangId == steel"
+        }
+      ]
+    },
     "languages": [{
       "id": "steel",
       "aliases": ["Steel", "steel"],

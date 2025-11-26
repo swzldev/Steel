@@ -5,6 +5,7 @@
 
 stproj_file stproj_file::load(std::string path) {
 	stproj_file proj;
+	proj.path = std::filesystem::path(path);
 	auto file = toml::parse_file(path);
 	auto root = std::filesystem::path(path).parent_path();
 
@@ -30,6 +31,12 @@ stproj_file stproj_file::load(std::string path) {
 	}
 	return proj;
 }
-void stproj_file::save(const std::string& path)
-{
+void stproj_file::save(const std::string& path) {
+}
+
+std::filesystem::path stproj_file::filename() const {
+	return path.filename();
+}
+std::filesystem::path stproj_file::filename_no_extension() const {
+	return filename().stem();
 }

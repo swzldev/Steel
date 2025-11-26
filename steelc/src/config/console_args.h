@@ -8,11 +8,12 @@ public:
 	console_args(int argc, char** argv);
 
 	bool has_arg(const std::string& arg) const;
-	inline std::string get_arg(size_t index) const {
+	int find_arg(const std::string& arg) const;
+	inline const std::string* get_arg(size_t index) const {
 		if (index < args.size()) {
-			return args[index];
+			return &args[index];
 		}
-		return "";
+		return nullptr;
 	}
 	inline size_t count() const {
 		return args.size();

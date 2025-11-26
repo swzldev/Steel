@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <string>
+#include <filesystem>
 
 #include "source_file.h"
 
@@ -15,6 +16,9 @@ public:
 	static stproj_file load(std::string path);
 	void save(const std::string& path);
 
+	std::filesystem::path filename() const;
+	std::filesystem::path filename_no_extension() const;
+
 	std::string project_name;
 	std::string project_version;
 	std::string project_type;
@@ -23,4 +27,6 @@ public:
 	
 private:
 	stproj_file() = default;
+
+	std::filesystem::path path;
 };

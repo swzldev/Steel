@@ -2,9 +2,12 @@
 
 #include <fstream>
 #include <iostream>
+#include <vector>
+#include <memory>
 
 #include "stproj/source_file.h"
 #include "lexer/lexer.h"
+#include "lexer/token.h"
 #include "parser/parser.h"
 #include "parser/semantics/declaration_collector.h"
 #include "parser/semantics/import_resolver.h"
@@ -13,13 +16,15 @@
 #include "parser/semantics/type_checker.h"
 #include "parser/semantics/init_checker.h"
 #include "parser/semantics/flow_analyzer.h"
-#include "codegen/codegen.h"
-#include "interpreter/interpreter.h"
+#include "utils/console_colors.h"
+#include "config/compile_config.h"
 
 bool compiler::compile(compile_config cfg) {
 	for (auto& file : sources) {
 		auto unit = std::make_shared<compilation_unit>();
 		unit->source_file = std::make_shared<source_file>(file);
+
+		std::cout << "Compile: " << console_colors::BLUE << file.name() << console_colors::RESET << std::endl;
 
 		lexer lexer(file.content, unit);
 		std::vector<token> tokens = lexer.tokenize();

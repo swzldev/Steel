@@ -95,7 +95,7 @@ set(SOURCES
     "src/output/code_outputter.h"
     "src/output/output_config.h"
     "src/output/code_outputter.cpp"
-)
+ "src/config/compile_config.cpp" "src/config/bad_arg_exception.h" "src/utils/maybe.h")
 
 # Add source to this project's executable.
 add_executable ( steelc ${SOURCES} )

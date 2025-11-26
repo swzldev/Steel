@@ -14,3 +14,11 @@ bool console_args::has_arg(const std::string& arg) const {
 		}
 	}
 }
+int console_args::find_arg(const std::string& arg) const {
+	for (int i = 0; i < args.size(); i++) {
+		if (arg == args[i]) {
+			return i;
+		}
+	}
+	return -1;
+}

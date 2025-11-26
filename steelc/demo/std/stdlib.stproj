@@ -1,5 +1,0 @@
-name = "std"
-version = "1.0.0"
-type = "static-lib"
-
-sources = ["stdlib.s"]

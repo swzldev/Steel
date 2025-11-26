@@ -22,9 +22,15 @@ public:
 		: project_dir(project_dir), config(cfg) {
 	}
 
-
 	code_output_error output_il(const std::string& il, const std::string& filename);
 	code_output_error output_code(const std::string& code, const std::string& filename, code_output_location location);
+
+	inline std::filesystem::path get_output_dir() const {
+		return output_dir;
+	}
+	inline std::filesystem::path get_intermediate_dir() const {
+		return intermediate_dir;
+	}
 
 private:
 	std::filesystem::path project_dir;
