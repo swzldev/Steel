@@ -28,7 +28,9 @@
 
 <p>To start writing code, first download the <a href="https://github.com/swzldev/Steel/releases/">latest release</a> of the compiler. This is nescessary for converting your Steel code into a functional executable. It is highly reccomended that you add the steelc executable to your system PATH, as it will make it much easier to compile projects located anywhere on your system.</p>
 
-<p>After downloading the compiler, you can begin to create your first Steel project. Steel projects use TOML, and use the *.stproj extension. You can use the template below to create your project:</p>
+<p>After downloading the compiler, you can begin to create your first project. Once your project folder is setup, the first step is to create a project file, this is used to configure different project settings, such as build type, name, etc, as well as which files are part of the project.</p>
+
+<p>Steel project files use TOML, and have the *.stproj extension. You can use the template below to create yours:</p>
 
 <pre><code>name = "MyProject"
 version = "1.0.0"
@@ -37,7 +39,7 @@ type = "executable"
 sources = ["Main.s"]
 </code></pre>
 
-<p>Now, make a "Main.s" file in the same directory, this will be the file for your entry point. The entry point must be called "main" and return an int:</p>
+<p>Here we gave it one source file: 'Main.s', which does not yet exist. Note that each source file is a path relative to the project file, therefore if you want to keep your source files within a source folder, you need to write it as part of the source path, e.g. 'src/Main.s'. Make a 'Main.s' file in the same directory, this will be the file for your entry point. The entry point must be called 'main' and return an int:</p>
 
 <pre><code>func main() -> int {
     printf("Hello, World!");
