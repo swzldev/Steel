@@ -8,6 +8,7 @@
 #include "config/compile_config.h"
 #include "parser/ast/compilation_unit.h"
 #include "parser/modules/module_manager.h"
+#include "codegen/ir/ir_holder.h"
 
 class source_file;
 
@@ -33,14 +34,27 @@ public:
 		return warnings;
 	}
 
+	inline const size_t get_error_count() const {
+		return errors.size();
+	}
+	inline const size_t get_warning_count() const {
+		return warnings.size();
+	}
+
+	inline const std::vector<ir_holder>& get_generated_ir() const {
+		return generated_ir;
+	}
+
+private:
 	std::vector<std::shared_ptr<compilation_unit>> compilation_units;
 
 	std::vector<error> errors;
 	std::vector<error> warnings;
 
 	module_manager module_manager;
-private:
+
 	std::vector<source_file> sources;
+	std::vector<ir_holder> generated_ir;
 
 	std::vector<std::string> read_source(std::string& path);
 };

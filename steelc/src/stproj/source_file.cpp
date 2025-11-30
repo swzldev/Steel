@@ -2,13 +2,15 @@
 
 #include <fstream>
 #include <stdexcept>
-#include <iostream>
 #include <filesystem>
+#include <string>
 
-source_file::source_file(const std::string& path) {
-	std::ifstream file(path);
+source_file::source_file(const std::string& full_path, const std::string& relative_path) {
+	this->relative_path = relative_path;
+	this->full_path = full_path;
+
+	std::ifstream file(full_path);
 	if (file.is_open()) {
-		this->path = path;
 		std::string line;
 		while (std::getline(file, line)) {
 			lines.push_back(line);
@@ -16,10 +18,10 @@ source_file::source_file(const std::string& path) {
 		}
 		file.close();
 
-		name_cache = std::filesystem::path(path).filename().string();
+		name_cache = std::filesystem::path(full_path).filename().string();
 	}
 	else {
-		throw std::runtime_error("Could not open source file: " + path);
+		throw std::runtime_error("Could not open source file: " + relative_path);
 	}
 }
 

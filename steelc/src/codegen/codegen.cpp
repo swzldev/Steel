@@ -8,8 +8,8 @@
 #include "codegen_visitor.h"
 #include "error/codegen_exception.h"
 
-std::vector<llvm_ir_holder> codegen::generate_ir() {
-	std::vector<llvm_ir_holder> ir_modules;
+std::vector<ir_holder> codegen::generate_ir() {
+	std::vector<ir_holder> ir_modules;
 
 	for (const auto& unit : compilation_units) {
 		std::string module_name = get_module_name(unit);
@@ -26,13 +26,13 @@ std::vector<llvm_ir_holder> codegen::generate_ir() {
 
 		// extract IR from module
 		llvm::Module& module = visitor.get_module();
-		llvm_ir_holder ir_holder;
-		ir_holder.owning_unit = unit;
+		ir_holder holder;
+		holder.owning_unit = unit;
 		std::string ir_string;
 		llvm::raw_string_ostream rso(ir_string);
 		module.print(rso, nullptr);
-		ir_holder.ir = rso.str();
-		ir_modules.push_back(ir_holder);
+		holder.ir = rso.str();
+		ir_modules.push_back(holder);
 	}
 
 	return ir_modules;

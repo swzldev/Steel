@@ -4,6 +4,7 @@
 #include <iostream>
 #include <vector>
 #include <memory>
+#include <string>
 
 #include "stproj/source_file.h"
 #include "lexer/lexer.h"
@@ -16,6 +17,7 @@
 #include "parser/semantics/type_checker.h"
 #include "parser/semantics/init_checker.h"
 #include "parser/semantics/flow_analyzer.h"
+#include "codegen/codegen.h"
 #include "utils/console_colors.h"
 #include "config/compile_config.h"
 
@@ -109,6 +111,10 @@ bool compiler::compile(compile_config cfg) {
 			return false;
 		}
 	}
+
+	// generate ir for all units
+	codegen codegen(module_manager, compilation_units);
+	generated_ir = codegen.generate_ir();
 
 	return true;
 }

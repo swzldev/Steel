@@ -2,6 +2,7 @@
 
 #include <filesystem>
 #include <fstream>
+#include <string>
 
 code_output_error code_outputter::output_il(const std::string& il, const std::string& filename) {
 	return output_code(il, filename, OUTPUT_LOCATION_INTERMEDIATE);
@@ -37,6 +38,9 @@ void code_outputter::init_structure() {
 	init = true;
 }
 code_output_error code_outputter::output_to(const std::string& data, const std::filesystem::path& path) {
+	// create directories (if nescessary)
+	std::filesystem::create_directories(path.parent_path());
+
 	std::ofstream file(path);
 	if (!file.is_open()) {
 		return OUTPUT_FAIL_CREATE_FILE;

@@ -3,7 +3,7 @@
 #include <memory>
 #include <vector>
 
-#include "ir/llvm_ir_holder.h"
+#include "ir/ir_holder.h"
 #include "../parser/ast/ast.h"
 #include "../parser/modules/module_manager.h"
 
@@ -13,7 +13,7 @@ public:
 		: module_manager(module_manager), compilation_units(units) {
 	}
 
-	std::vector<llvm_ir_holder> generate_ir();
+	std::vector<ir_holder> generate_ir();
 
 private:
 	module_manager& module_manager;

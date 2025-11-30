@@ -68,7 +68,7 @@ set(SOURCES
     "src/codegen/codegen.cpp"
     "src/codegen/codegen_visitor.cpp"
     "src/codegen/type_handling/llvm_type_converter.h"
-    "src/codegen/ir/llvm_ir_holder.h"
+    "src/codegen/ir/ir_holder.h"
     "src/codegen/type_handling/llvm_type_converter.cpp"
     "src/codegen/codegen_env.cpp"
     "src/codegen/cleanup/cleanup_action.h"
@@ -95,7 +95,16 @@ set(SOURCES
     "src/output/code_outputter.h"
     "src/output/output_config.h"
     "src/output/code_outputter.cpp"
- "src/config/compile_config.cpp" "src/config/bad_arg_exception.h" "src/utils/maybe.h")
+    "src/config/compile_config.cpp"
+    "src/config/bad_arg_exception.h"
+    "src/utils/maybe.h"
+    "src/building/project_builder.h"
+    "src/building/project_builder.cpp"
+    "src/output/output.h"
+    "src/output/output.cpp"
+    "src/output/log_file.h"
+    "src/output/log_file.cpp"
+ "src/utils/string_utils.h" "src/utils/string_utils.cpp" "src/stproj/bad_stproj_exception.h" )
 
 # Add source to this project's executable.
 add_executable ( steelc ${SOURCES} )
