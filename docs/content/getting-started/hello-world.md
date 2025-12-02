@@ -10,52 +10,45 @@ This quick guide walks you through creating and running a simple **Hello, World!
 Verify your install:
 
 ```bash
-steel --version
+steelc --version
 ```
 
 You should see a semantic version like `steel 0.1.0`.
 
 ## Creating the project
 
-Begin by setting up your project folder with the following layout.
+The steel compiler provides a useful project utility for managing projects, to create a basic scaffold, open a terminal in the directory you want to store your project and type the following command:
+
+```bash
+steelc project new <project name>
+```
+
+If everything succeeds, you should have a new folder that looks something like this:
 
 ```
-MyProject/
+<project name>/
   src/
     main.st
-  my_project.stproj
+  <project name>.stproj
 ```
 
-- **MyProject/** is the root directory of your project.
+- **<my project>/** is the root directory of your project.
 - **src/** contains all of your source code files.
 - **main.st** will hold your program's entry point function.
-- **my_project.stproj** is the project file used by the steel compiler.
+- **<my project>.stproj** is the project file used by the steel compiler.
 
-Once you've created all the necessary files/folders, copy and paste the following into your .stproj file:
+## The entry point
 
-```
-name = "my project"
-version = "0.1.0"
-type = "executable"
-
-sources = ["src/main.st"]
-```
-
-You do not need to know what this means for now, but it is required for compilation to succeed.
-
-*Note: If you put your ***main.st*** file in a different location, make sure to change the path in the ***sources*** array.*
-
-## Creating the entry point
-
-Open up your **main.st** file in your preferred code editor and enter the following:
+The entry point is the function invoked at the beginning of your program's execution. Steel will have automatically generated your entry point when you created your project, open up the **src/main.st** file in your preferred code editor. It should look something like this:
 
 ```
 func main() -> int {
+  // Program logic goes here
   return 0;
 }
 ```
 
-This function will be the entry point of your program. It is very important that the function takes no parameters, and returns an int. It also **must** be called 'main' (caps sensitive) or else linking will fail.
+Here we declare a standard function named **main** that takes no parameters and returns an **int**. 
 
 ## Printing to the screen
 
