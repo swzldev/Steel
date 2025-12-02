@@ -1,5 +1,8 @@
 # STEELC CHANGELOG
 
+## [Unreleased]
+- Added a verbosity option to output as well as a verbose() method which only outputs if the verbosity level is >= VERBOSITY_HIGH. Debug builds default to VERBOSITY_HIGH.
+
 ## [0.3.0] - 02-12-2025
 - Added a tests folder for language tests.
 - Added loop support into the codegen_env class (for break, continue, etc).

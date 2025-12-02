@@ -59,21 +59,25 @@ bool project_builder::build_project() {
 		generated_ir_files.push_back((outputter->get_intermediate_dir() / path).string());
 	}
 
+	output::print("Building succeeded. ", console_colors::BOLD + console_colors::GREEN);
+	output::print("(Took {:.3f} seconds)\n", console_colors::DIM, get_build_time());
+
 	// run post-build commands
 	for (const auto& cmd : post_build_commands) {
+		output::print("Running post-build command: {}\n", console_colors::BOLD + console_colors::CYAN, cmd);
 		if (int ec = run_build_command(cmd); ec != 0) {
 			output::err("Post-build command \"{}\" failed with exit code: {}\n", console_colors::BOLD + console_colors::RED, cmd, ec);
 			return false;
 		}
 	}
 
-	output::print("Building succeeded. ", console_colors::BOLD + console_colors::GREEN);
-	output::print("(Took {:.3f} seconds)\n", console_colors::DIM, get_build_time());
 	return true;
 }
 
 int project_builder::run_build_command(const std::string& command) {
-	return system(replace_vars(command).c_str());
+	std::string replaced = replace_vars(command);
+	output::verbose("Replaced build command vars: {}\n", console_colors::DIM, replaced);
+	return system(replaced.c_str());
 }
 
 double project_builder::get_build_time() const {
@@ -100,7 +104,7 @@ std::string project_builder::replace_vars(const std::string& str) {
 			}
 		}
 		else if (key == "OUTPUT_DIR") {
-			out += "\"" + outputter->get_output_dir().string() + "\"";
+			out += outputter->get_output_dir().string();
 		}
 		
 		remaining = m.suffix().str();

@@ -13,6 +13,7 @@ bool console_args::has_arg(const std::string& arg) const {
 			return true;
 		}
 	}
+	return false;
 }
 int console_args::find_arg(const std::string& arg) const {
 	for (int i = 0; i < args.size(); i++) {
