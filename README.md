@@ -25,7 +25,7 @@
 </ul>
 
 <h2>Installation</h2>
-<p>To install the steel toolchain, first download the latest release of the compiler for your platform in the <a href="https://github.com/swzldev/Steel/releases/>releases</a> page.</p>
+<p>To install the steel toolchain, first download the latest release of the compiler for your platform in the <a href="https://github.com/swzldev/Steel/releases/">releases</a> page.</p>
 
 <p>After downloading, extract the contents of the zip file to a folder of your choice. It is <strong>highly</strong> recommended to add the folder containing the steelc executable to your system PATH, as some tools (like the Steel VS Code extension) wont function if if you don't. Additionally, it will make compiling Steel code from anywhere on your system much easier.</p>
 
