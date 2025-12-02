@@ -3,7 +3,7 @@
 STEEL-VSC is a Visual Studio Code extension that provides support for the Steel programming language. It offers features such as syntax highlighting, code completion, and project scaffolding to enhance the development experience for Steel developers.
 
 ## Important notice
-This extension is currently in the early stages of development, and more features will be added in future updates. Features that are planned and not yet implemented are indicated with ~~strikethrough~~ text.
+This extension is currently in the early stages of development, and more features will be added in future updates. Features that are planned and not yet implemented are indicated with ~~strikethrough~~ text. Additionally there are many features that are broken or not yet implemented. Use at your own risk.
 
 ## Features
 - Syntax highlighting for Steel language constructs
