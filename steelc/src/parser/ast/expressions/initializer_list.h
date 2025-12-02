@@ -48,6 +48,14 @@ public:
 		// really, we are never going to check this as this can only be used
 		// on the right hand of an assignment
 	}
+	bool is_constant() const override {
+		for (const auto& val : values) {
+			if (!val->is_constant()) {
+				return false;
+			}
+		}
+		return true;
+	}
 
 	std::vector<std::shared_ptr<expression>> values;
 	type_ptr result_type;

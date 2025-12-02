@@ -8,23 +8,13 @@
 #include <llvm/IR/IRBuilder.h>
 #include <llvm/IR/Value.h>
 
+#include "codegen_env.h"
 #include "type_handling/llvm_type_converter.h"
 #include "builders/llvm_function_builder.h"
 #include "builders/llvm_expression_builder.h"
-#include "codegen_env.h"
+#include "../lexer/token_type.h"
 #include "../parser/ast/ast_visitor.h"
-#include "../parser/ast/declarations/function_declaration.h"
-#include "../parser/ast/declarations/variable_declaration.h"
-#include "../parser/ast/expressions/assignment_expression.h"
-#include "../parser/ast/expressions/binary_expression.h"
-#include "../parser/ast/expressions/function_call.h"
-#include "../parser/ast/expressions/unary_expression.h"
-#include "../parser/ast/expressions/identifier_expression.h"
-#include "../parser/ast/expressions/literal.h"
-#include "../parser/ast/statements/block_statement.h"
-#include "../parser/ast/statements/control_flow/if_statement.h"
-#include "../parser/ast/statements/control_flow/for_loop.h"
-#include "../parser/ast/statements/control_flow/return_statement.h"
+#include "../parser/ast/ast_fwd.h"
 
 class codegen_visitor : public ast_visitor {
 public:
@@ -49,10 +39,10 @@ public:
 	void visit(std::shared_ptr<binary_expression> expr);
 	void visit(std::shared_ptr<assignment_expression> expr);
 	//void visit(std::shared_ptr<member_expression> expr);
-	//void visit(std::shared_ptr<address_of_expression> expr);
-	//void visit(std::shared_ptr<deref_expression> expr);
+	void visit(std::shared_ptr<address_of_expression> expr);
+	void visit(std::shared_ptr<deref_expression> expr);
 	void visit(std::shared_ptr<unary_expression> expr);
-	//void visit(std::shared_ptr<index_expression> expr);
+	void visit(std::shared_ptr<index_expression> expr);
 	void visit(std::shared_ptr<identifier_expression> id) override;
 	//void visit(std::shared_ptr<this_expression> expr);
 	//void visit(std::shared_ptr<cast_expression> expr);
@@ -64,9 +54,9 @@ public:
 	void visit(std::shared_ptr<if_statement> if_stmt) override;
 	//void visit(std::shared_ptr<inline_if> inline_if);
 	void visit(std::shared_ptr<for_loop> for_loop);
-	//void visit(std::shared_ptr<while_loop> while_loop);
+	void visit(std::shared_ptr<while_loop> while_loop);
 	void visit(std::shared_ptr<return_statement> ret_stmt) override;
-	//void visit(std::shared_ptr<break_statement> brk_stmt);
+	void visit(std::shared_ptr<break_statement> brk_stmt);
 	
 	llvm::Module& get_module() {
 		return module;
@@ -90,6 +80,7 @@ private:
 
 	bool op_requires_lvalue(token_type op);
 
+public:
 	// helper function to accept a node and return the resulting Value*
 	// this is much safer as it resets 'result' to nullptr before visiting
 	// preventing the accidental use of stale values

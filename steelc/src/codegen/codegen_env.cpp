@@ -28,8 +28,19 @@ llvm::BasicBlock* codegen_env::make_block(const std::string& name, bool append_t
 }
 
 void codegen_env::enter_scope() {
-	scope_stack.push_back(scope{});
-	auto& scope = scope_stack.back();
+	auto& scope = push_scope();
+
+	// create cleanup block (default unreachable)
+	scope.cleanup_block = llvm::BasicBlock::Create(ctx, "scope.clean", &func);
+	llvm::IRBuilder<> temp_builder(scope.cleanup_block);
+	temp_builder.CreateUnreachable();
+}
+void codegen_env::enter_loop_scope(llvm::BasicBlock* continue_block, llvm::BasicBlock* break_block) {
+	auto& scope = push_scope();
+
+	scope.continue_block = continue_block;
+	scope.break_block = break_block;
+	scope.is_loop_scope = true;
 
 	// create cleanup block (default unreachable)
 	scope.cleanup_block = llvm::BasicBlock::Create(ctx, "scope.clean", &func);
@@ -40,8 +51,7 @@ void codegen_env::leave_scope_inl() {
 	if (scope_stack.empty()) {
 		return; // should emit an error in the future
 	}
-	scope s = scope_stack.back();
-	scope_stack.pop_back();
+	scope s = pop_scope();
 
 	// emit cleanup actions
 	for (auto it = s.cleanup_actions.rbegin(); it != s.cleanup_actions.rend(); ++it) {
@@ -123,6 +133,20 @@ void codegen_env::emit_return(llvm::Value* ret_value) {
 	// emit cleanup
 	build_cleanup_chain();
 }
+void codegen_env::emit_break() {
+	const scope* loop_scope = get_current_loop();
+	if (!loop_scope || !loop_scope->break_block) {
+		throw codegen_exception("Cannot emit break outside of a loop");
+	}
+	builder.CreateBr(loop_scope->break_block);
+}
+void codegen_env::emit_continue() {
+	const scope* loop_scope = get_current_loop();
+	if (!loop_scope || !loop_scope->continue_block) {
+		throw codegen_exception("Cannot emit continue outside of a loop");
+	}
+	builder.CreateBr(loop_scope->continue_block);
+}
 void codegen_env::build_cleanup_chain() {
 	// build clean up chain based on current scope
 	// does NOT regenerate clean up blocks that have
@@ -177,4 +201,14 @@ void codegen_env::emit_cleanup(const cleanup_action& action) {
 		break;
 	}
 	}
+}
+
+const scope* codegen_env::get_current_loop() const {
+	for (size_t i = scope_stack.size(); i-- > 0;) {
+		const scope& s = scope_stack[i];
+		if (s.is_loop_scope) {
+			return &s;
+		}
+	}
+	return nullptr;
 }

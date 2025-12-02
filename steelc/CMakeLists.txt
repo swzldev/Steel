@@ -4,8 +4,8 @@ set(SOURCES
     "src/main.cpp"
     "src/compiler.cpp"
     "src/compiler.h"
-    "src/config/console_args.cpp"
-    "src/config/console_args.h"
+    "src/input/console_args.cpp"
+    "src/input/console_args.h"
     "src/stproj/source_file.cpp"
     "src/stproj/source_file.h"
     "src/interpreter/interpreter.cpp"
@@ -104,7 +104,19 @@ set(SOURCES
     "src/output/output.cpp"
     "src/output/log_file.h"
     "src/output/log_file.cpp"
- "src/utils/string_utils.h" "src/utils/string_utils.cpp" "src/stproj/bad_stproj_exception.h" )
+    "src/utils/string_utils.h"
+    "src/utils/string_utils.cpp"
+    "src/stproj/bad_stproj_exception.h"
+    "src/codegen/computation/compile_time_computator.h"
+    "src/codegen/computation/compile_time_computator_visitor.h"
+    "src/input/commands/steelc_command_manager.h"
+    "src/input/commands/steelc_command.h"
+    "src/input/commands/steelc_command_manager.cpp"
+    "src/input/commands/steelc_commands_impl.h"
+    "src/input/commands/steelc_commands_impl.cpp"
+    "src/steelc_definitions.h"
+    "src/stproj/stproj_generator.h"
+ "src/stproj/stproj_generator.cpp")
 
 # Add source to this project's executable.
 add_executable ( steelc ${SOURCES} )

@@ -30,6 +30,9 @@ public:
 		return std::make_shared<data_type>(data_type(primitive));
 	}
 	virtual bool is_rvalue() const override {
+		return true; // literals are always rvalues
+	}
+	virtual bool is_constant() const override {
 		return true; // literals are always constants
 	}
 

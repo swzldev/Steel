@@ -5,6 +5,7 @@
 #include <vector>
 #include <string>
 #include <filesystem>
+#include <memory>
 
 #include <toml++/toml.hpp>
 
@@ -17,10 +18,8 @@ struct dependency {
 
 class stproj_file {
 public:
-	stproj_file() = default;
-
 	// note: throws bad_stproj_exception on failure
-	static stproj_file load(const std::string& path);
+	static std::unique_ptr<stproj_file> load(const std::string& path);
 	void save(const std::string& path);
 
 	std::filesystem::path filename() const;
@@ -34,6 +33,10 @@ public:
 	std::vector<dependency> dependencies;
 	
 private:
+	stproj_file() = default;
+	stproj_file(const stproj_file&) = delete;
+	stproj_file& operator=(const stproj_file&) = delete;
+
 	std::filesystem::path path;
 
 	static const std::string require_string(const std::string& key, const toml::table& table);

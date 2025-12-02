@@ -1,14 +1,16 @@
 #include "stproj_file.h"
 
 #include <filesystem>
+#include <string>
+#include <memory>
 #include <toml++/toml.hpp>
 
 #include "source_file.h"
 #include "bad_stproj_exception.h"
 
-stproj_file stproj_file::load(const std::string& path) {
-	stproj_file proj;
-	proj.path = std::filesystem::path(path);
+std::unique_ptr<stproj_file> stproj_file::load(const std::string& path) {
+	auto proj = std::unique_ptr<stproj_file>(new stproj_file());
+	proj->path = std::filesystem::path(path);
 	auto file = toml::parse_file(path);
 	if (file.failed()) {
 		throw bad_stproj_exception("Failed to parse .stproj file: " + std::string(file.error().description()));
@@ -17,16 +19,16 @@ stproj_file stproj_file::load(const std::string& path) {
 
 	auto root = std::filesystem::path(path).parent_path();
 
-	proj.project_name = require_string("name", table);
-	proj.project_version = require_string("version", table);
-	proj.project_type = require_string("type", table);
+	proj->project_name = require_string("name", table);
+	proj->project_version = require_string("version", table);
+	proj->project_type = require_string("type", table);
 
 	if (auto sources = file["sources"].as_array()) {
 		for (const auto& source : *sources) {
 			if (source.is_string()) {
 				std::string rel_path = source.as_string()->get();
 				std::string full_path = (root / rel_path).string();
-				proj.sources.push_back(source_file(full_path, rel_path));
+				proj->sources.push_back(source_file(full_path, rel_path));
 			}
 		}
 	}
@@ -37,7 +39,7 @@ stproj_file stproj_file::load(const std::string& path) {
 	if (auto deps = file["dependencies"].as_table()) {
 		for (const auto& [name, path] : *deps) {
 			if (path.is_string()) {
-				proj.dependencies.push_back({ std::string(name.str()), path.as_string()->get() });
+				proj->dependencies.push_back({ std::string(name.str()), path.as_string()->get() });
 			}
 		}
 	}

@@ -69,3 +69,12 @@ llvm::Value* llvm_expression_builder::build_unary_expr(llvm::Type* expr_type, ll
 		throw codegen_exception("Unsupported unary operation in LLVM expression builder");
 	}
 }
+llvm::Value* llvm_expression_builder::build_index_expr(llvm::Type* elem_type, llvm::Value* base_ptr, llvm::Value* index) {
+	if (elem_type->isArrayTy()) {
+		llvm::Value* zero = llvm::ConstantInt::get(llvm::Type::getInt32Ty(ctx), 0);
+		llvm::Value* indices[] = { zero, index };
+		return builder.CreateGEP(elem_type, base_ptr, indices, "array.index");
+	}
+
+	return builder.CreateGEP(elem_type, base_ptr, index, "ptr.index");
+}

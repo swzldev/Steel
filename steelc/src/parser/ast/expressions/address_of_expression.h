@@ -34,6 +34,9 @@ public:
 	bool is_rvalue() const override {
 		return true;
 	}
+	bool is_constant() const override {
+		return false;
+	}
 
 	std::shared_ptr<expression> value;
 };

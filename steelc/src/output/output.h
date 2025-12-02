@@ -20,6 +20,7 @@ public:
 
 	static bool log_to_file(const std::string& file_path);
 
+	static void init();
 	// should always be called before program termination
 	static void shutdown();
 

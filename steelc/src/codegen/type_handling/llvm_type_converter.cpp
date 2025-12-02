@@ -3,11 +3,23 @@
 #include <llvm/IR/Type.h>
 #include <llvm/IR/DerivedTypes.h>
 
+#include "../codegen_visitor.h"
 #include "../../parser/types/data_type.h"
+#include "../../parser/types/container_types.h"
 
 llvm::Type* llvm_type_converter::convert(type_ptr t) {
 	if (t->is_primitive()) {
 		return get_primitive_type(t);
+	}
+	else if (auto arr = t->as_array()) {
+		llvm::Type* element_type = convert(arr->base_type);
+
+		// TODO
+		//return llvm::ArrayType::get(element_type, arr->size);
+	}
+	else if (auto ptr = t->as_pointer()) {
+		auto base_type = convert(ptr->base_type);
+		return llvm::PointerType::getUnqual(base_type);
 	}
 
 	return nullptr;
@@ -37,4 +49,13 @@ llvm::Type* llvm_type_converter::get_primitive_type(type_ptr t) {
 		default:
 			return nullptr;
 	}
+}
+unsigned long long llvm_type_converter::get_array_size(type_ptr t) {
+	auto arr = t->as_array();
+	if (!arr) {
+		throw; // shouldnt be possible
+	}
+
+	// TODO
+	return 0;
 }

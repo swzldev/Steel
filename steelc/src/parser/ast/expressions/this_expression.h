@@ -29,6 +29,9 @@ public:
 	bool is_rvalue() const override {
 		return false;
 	}
+	bool is_constant() const override {
+		return false;
+	}
 
 	type_ptr parent_type;
 };

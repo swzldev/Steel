@@ -51,6 +51,9 @@ public:
 		return false; // usually indexed values are lvalues
 		// but i might be wrong
 	}
+	bool is_constant() const override {
+		return false;
+	}
 
 	std::shared_ptr<expression> base;
 	std::shared_ptr<expression> indexer;

@@ -3,7 +3,7 @@ func print(message: string) {
 }
 
 func main() -> int {
-    print("Hello, World!\n");
+    let arr = [10, 20, 30, 40];
 
-    return 5;
+    return arr[2];
 }

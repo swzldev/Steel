@@ -138,6 +138,7 @@ enum error_code {
     ERR_ENUM_OPTION_ALREADY_DEFINED,
     ERR_ENUM_OPTION_MEMBER_ACCESS,
     ERR_ARRAY_SIZE_MUST_BE_INTEGER,
+    ERR_ARRAY_SIZE_MUST_BE_CONSTANT,
 };
 
 enum warning_code {
@@ -288,6 +289,7 @@ struct error_catalog {
             {"S142", "The enum '%s' already contains an option named '%s'"},
             {"S143", "Member access not allowed on enum option '%s'"},
             {"S144", "Array size must be an integer"},
+            {"S144", "Array size must be a constant compile-time computable value"},
         };
         return errors[code - 1 /* -1 to avoid ERR_SUCCESS */];
     }

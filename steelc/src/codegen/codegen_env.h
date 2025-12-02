@@ -46,6 +46,7 @@ public:
 
 	// creates a new scope
 	void enter_scope();
+	void enter_loop_scope(llvm::BasicBlock* continue_block, llvm::BasicBlock* break_block);
 	// leaves the current scope, emitting cleanup code INLINE
 	void leave_scope_inl();
 	// register a cleanup action that will occur when leaving the current scope
@@ -64,10 +65,24 @@ public:
 	// emits a lifetime.start call
 	void emit_life_start(llvm::Value* ptr);
 	void emit_return(llvm::Value* ret_value = nullptr);
+	void emit_break();
+	void emit_continue();
 	void build_cleanup_chain();
 	void finalize_function();
 
 private:
 	llvm::AllocaInst* create_alloca(llvm::Type* type, const std::string& name = "");
 	void emit_cleanup(const cleanup_action& action);
+
+	const scope* get_current_loop() const;
+
+	inline scope& push_scope() {
+		scope_stack.push_back(scope{});
+		return scope_stack.back();
+	}
+	inline scope pop_scope() {
+		scope s = scope_stack.back();
+		scope_stack.pop_back();
+		return s;
+	}
 };

@@ -10,7 +10,7 @@ class deref_expression : public expression, public std::enable_shared_from_this<
 public:
 	ENABLE_ACCEPT(deref_expression)
 
-		deref_expression(std::shared_ptr<expression> value)
+	deref_expression(std::shared_ptr<expression> value)
 		: value(value) {
 	}
 
@@ -33,6 +33,9 @@ public:
 	}
 	bool is_rvalue() const override {
 		return true;
+	}
+	bool is_constant() const override {
+		return value->is_constant();
 	}
 
 	std::shared_ptr<expression> value;

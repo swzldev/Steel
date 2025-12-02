@@ -3,26 +3,30 @@
 #include <string>
 #include <chrono>
 #include <vector>
+#include <memory>
 
 #include "../stproj/stproj_file.h"
+#include "../output/code_outputter.h"
 
 class project_builder {
 public:
 	project_builder() = default;
 
-	bool build_project(const std::string& project_path);
+	bool load_project(const std::string& project_path);
+	bool build_project();
 	
 	int run_build_command(const std::string& command);
 
 	// returns filename of the project (WITHOUT .stproj)
 	inline std::string project_filename() {
-		return project_file.filename_no_extension().string();
+		return project_file->filename_no_extension().string();
 	}
 
 	std::vector<std::string> post_build_commands;
 
 private:
-	stproj_file project_file;
+	std::unique_ptr<stproj_file> project_file;
+	std::unique_ptr<code_outputter> outputter;
 
 	std::chrono::high_resolution_clock::time_point build_start;
 	std::chrono::high_resolution_clock::time_point compile_start;

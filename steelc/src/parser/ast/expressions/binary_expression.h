@@ -44,6 +44,9 @@ public:
 	bool is_rvalue() const override {
 		return true;
 	}
+	bool is_constant() const override {
+		return left->is_constant() && right->is_constant();
+	}
 
 	std::shared_ptr<expression> left;
 	std::shared_ptr<expression> right;

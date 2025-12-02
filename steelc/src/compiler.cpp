@@ -10,6 +10,9 @@
 #include "lexer/lexer.h"
 #include "lexer/token.h"
 #include "parser/parser.h"
+#include "codegen/codegen.h"
+#include "utils/console_colors.h"
+#include "config/compile_config.h"
 #include "parser/semantics/declaration_collector.h"
 #include "parser/semantics/import_resolver.h"
 #include "parser/semantics/type_resolver.h"
@@ -17,9 +20,7 @@
 #include "parser/semantics/type_checker.h"
 #include "parser/semantics/init_checker.h"
 #include "parser/semantics/flow_analyzer.h"
-#include "codegen/codegen.h"
-#include "utils/console_colors.h"
-#include "config/compile_config.h"
+#include "parser/ast/compilation_unit.h"
 
 bool compiler::compile(compile_config cfg) {
 	for (auto& file : sources) {

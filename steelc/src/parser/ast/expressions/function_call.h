@@ -71,6 +71,9 @@ public:
 	bool is_rvalue() const override {
 		return true; // function calls always return a temporary value
 	}
+	bool is_constant() const override {
+		return false;
+	}
 
 	inline bool is_method() const {
 		return caller_obj != nullptr;

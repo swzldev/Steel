@@ -1,0 +1,8 @@
+name = "Language Tests"
+version = "0.1.0"
+type = "executable"
+
+sources = [
+	"src/main.s",
+	"src/arithmetic_tests.s"
+]

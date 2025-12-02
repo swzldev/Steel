@@ -15,4 +15,5 @@ public:
 
 	virtual type_ptr type() const = 0;
 	virtual bool is_rvalue() const = 0;
+	virtual bool is_constant() const = 0;
 };

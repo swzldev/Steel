@@ -58,6 +58,10 @@ public:
 		// only modifiable if its a variable
 		return id_type != IDENTIFIER_VARIABLE;
 	}
+	bool is_constant() const override {
+		// TODO: we could allow for CONSTANT variables here
+		return false;
+	}
 
 	std::string identifier;
 	identifier_type id_type;

@@ -38,6 +38,9 @@ public:
 	bool is_rvalue() const override {
 		return false;
 	}
+	bool is_constant() const override {
+		return expr->is_constant();
+	}
 
 	type_ptr cast_type;
 	std::shared_ptr<expression> expr;

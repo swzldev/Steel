@@ -38,6 +38,9 @@ public:
 	bool is_rvalue() const override {
 		return false;
 	}
+	bool is_constant() const override {
+		return operand->is_constant();
+	}
 
 	token_type oparator;
 	std::shared_ptr<expression> operand;

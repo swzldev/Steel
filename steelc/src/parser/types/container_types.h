@@ -1,10 +1,10 @@
 #pragma once
 
 #include <memory>
+#include <string>
 
 #include "data_type.h"
 #include "../ast/expressions/expression.h"
-#include "../ast/generics/generic_parameter.h"
 
 class array_type : public data_type {
 public:
@@ -34,6 +34,7 @@ public:
 
 	type_ptr base_type;
 	std::shared_ptr<expression> size_expression;
+	size_t computed_size = 0;
 };
 
 class pointer_type : public data_type {

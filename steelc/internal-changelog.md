@@ -1,6 +1,15 @@
 # STEELC CHANGELOG
 
-## [0.2.0-alpha]
+## [0.3.0] - 02-12-2025
+- Added a tests folder for language tests.
+- Added loop support into the codegen_env class (for break, continue, etc).
+- Added an is_constant method to expression ast nodes that indicates whether the expression can be evaluated at compile time. e.g. 5 + 3 -> 8.
+- Added a compile_time_computator and visitor for evaluating constant expressions at compile time.
+- Array types now contain a `size_t size` member which will need to be calculated at compile-time, if its not a constant value, an error will be raised. Currently this is unused and arrays are still broken until the compile-time computator is fully implemented.
+- Implemented a new command system that includes a command manager, command class, and command implementation file for defining command behaviour.
+- Created a steelc_definitions file for defining steelc specific constants (such as version number).
+
+## [0.2.0-alpha] - 30-11-2025
 - Added a project_builder class to unify project building logic rather than handling it all in main.
 - Added a dedicated output class for handling all console output rather than using cout, cerr, etc directly.
 - Added a log_file class for logging output to a file.

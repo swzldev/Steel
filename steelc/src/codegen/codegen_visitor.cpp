@@ -4,7 +4,6 @@
 #include <memory>
 #include <vector>
 
-#include <llvm/IR/Instructions.h>
 #include <llvm/ADT/APFloat.h>
 #include <llvm/ADT/APInt.h>
 #include <llvm/IR/BasicBlock.h>
@@ -18,19 +17,25 @@
 #include "error/codegen_exception.h"
 #include "memory/variable.h"
 #include "codegen_env.h"
+#include "../parser/types/data_type.h"
 #include "../parser/ast/ast_node.h"
 #include "../parser/ast/declarations/function_declaration.h"
 #include "../parser/ast/declarations/variable_declaration.h"
 #include "../parser/ast/expressions/binary_expression.h"
+#include "../parser/ast/expressions/unary_expression.h"
 #include "../parser/ast/expressions/assignment_expression.h"
+#include "../parser/ast/expressions/address_of_expression.h"
+#include "../parser/ast/expressions/deref_expression.h"
+#include "../parser/ast/expressions/index_expression.h"
 #include "../parser/ast/expressions/function_call.h"
 #include "../parser/ast/expressions/identifier_expression.h"
 #include "../parser/ast/expressions/literal.h"
 #include "../parser/ast/statements/block_statement.h"
 #include "../parser/ast/statements/control_flow/if_statement.h"
 #include "../parser/ast/statements/control_flow/for_loop.h"
+#include "../parser/ast/statements/control_flow/while_loop.h"
 #include "../parser/ast/statements/control_flow/return_statement.h"
-#include "../parser/types/data_type.h"
+#include "../parser/ast/statements/control_flow/break_statement.h"
 
 void codegen_visitor::visit(std::shared_ptr<function_declaration> func) { 
 	llvm::Function* fn = function_builder.build(func);
@@ -106,6 +111,24 @@ void codegen_visitor::visit(std::shared_ptr<assignment_expression> expr) {
 	cg_assert(lval->valid(), "Left-hand side of assignment is not a valid lvalue");
 
 	lval->store(env->builder, rhs);
+}
+void codegen_visitor::visit(std::shared_ptr<address_of_expression> expr) {
+	auto lval = env->lvalue_from_expression(expr->value);
+	cg_assert(lval->valid(), "Operand of address-of expression is not a valid lvalue");
+	result = lval->address();
+}
+void codegen_visitor::visit(std::shared_ptr<deref_expression> expr) {
+	auto lval = env->lvalue_from_expression(expr->value);
+	cg_assert(lval->valid(), "Operand of deref expression is not a valid lvalue");
+	result = lval->load(env->builder);
+}
+void codegen_visitor::visit(std::shared_ptr<index_expression> expr) {
+	auto base = accept(expr->base);
+	cg_assert(base != nullptr, "Failed to generate base of index expression");
+	auto index = accept(expr->indexer);
+	cg_assert(index != nullptr, "Failed to generate index of index expression");
+
+	result = expression_builder.build_index_expr(base->getType(), base, index);
 }
 void codegen_visitor::visit(std::shared_ptr<unary_expression> expr) {
 	llvm::Value* operand = nullptr;
@@ -252,7 +275,7 @@ void codegen_visitor::visit(std::shared_ptr<for_loop> for_loop) {
 
 	// body
 	env->builder.SetInsertPoint(body_block);
-	env->enter_scope();
+	env->enter_loop_scope(cond_block, merge_block);
 	for_loop->body->accept(*this);
 	env->leave_scope_inl();
 	if (!env->builder.GetInsertBlock()->getTerminator()) {
@@ -269,6 +292,32 @@ void codegen_visitor::visit(std::shared_ptr<for_loop> for_loop) {
 	// merge
 	env->builder.SetInsertPoint(merge_block);
 }
+void codegen_visitor::visit(std::shared_ptr<while_loop> while_loop) {
+	auto cond_block = env->make_block("while.cond");
+	auto body_block = env->make_block("while.body");
+	auto merge_block = env->make_block("while.merge");
+
+	// jump to condition
+	env->builder.CreateBr(cond_block);
+
+	// condition
+	env->builder.SetInsertPoint(cond_block);
+	auto cond_value = accept(while_loop->condition);
+	cg_assert(cond_value != nullptr, "Failed to generate condition for while loop");
+	env->builder.CreateCondBr(cond_value, body_block, merge_block);
+
+	// body
+	env->builder.SetInsertPoint(body_block);
+	env->enter_loop_scope(cond_block, merge_block);
+	while_loop->body->accept(*this);
+	env->leave_scope_inl();
+	if (!env->builder.GetInsertBlock()->getTerminator()) {
+		env->builder.CreateBr(cond_block);
+	}
+
+	// merge
+	env->builder.SetInsertPoint(merge_block);
+}
 void codegen_visitor::visit(std::shared_ptr<return_statement> ret_stmt) {
 	llvm::Value* ret_value = nullptr;
 	if (ret_stmt->value) {
@@ -277,6 +326,9 @@ void codegen_visitor::visit(std::shared_ptr<return_statement> ret_stmt) {
 	}
 
 	env->emit_return(ret_value);
+}
+void codegen_visitor::visit(std::shared_ptr<break_statement> brk_stmt) {
+	env->emit_break();
 }
 
 llvm::Value* codegen_visitor::generate_literal(std::shared_ptr<literal> lit) {

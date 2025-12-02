@@ -11,10 +11,12 @@
 #include "../memory/variable.h"
 
 struct scope {
-	llvm::BasicBlock* cleanup_block;
+	llvm::BasicBlock* cleanup_block = nullptr;
+	llvm::BasicBlock* continue_block = nullptr;
+	llvm::BasicBlock* break_block = nullptr;
 	std::vector<cleanup_action> cleanup_actions;
+	std::unordered_map<std::string, std::shared_ptr<variable>> locals_map;
 
 	bool cleanup_emitted = false;
-
-	std::unordered_map<std::string, std::shared_ptr<variable>> locals_map;
+	bool is_loop_scope = false;
 };

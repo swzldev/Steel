@@ -5,8 +5,6 @@
 
 #include "expression.h"
 #include "../../types/data_type.h"
-#include "../../../lexer/token_type.h"
-#include "../../../lexer/token_utils.h"
 
 class assignment_expression : public expression, public std::enable_shared_from_this<assignment_expression> {
 public:
@@ -37,6 +35,9 @@ public:
 	}
 	bool is_rvalue() const override {
 		return true;
+	}
+	bool is_constant() const override {
+		return false;
 	}
 
 	std::shared_ptr<expression> left;

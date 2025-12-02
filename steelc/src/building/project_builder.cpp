@@ -17,9 +17,7 @@
 #include "../output/output_config.h"
 #include "../output/code_outputter.h"
 
-bool project_builder::build_project(const std::string& project_path) {
-	mark_build_start();
-
+bool project_builder::load_project(const std::string& project_path) {
 	// load stproj
 	try {
 		project_file = stproj_file::load(project_path);
@@ -29,9 +27,12 @@ bool project_builder::build_project(const std::string& project_path) {
 		output::err(err.message() + "\n");
 		return false;
 	}
+}
+bool project_builder::build_project() {
+	mark_build_start();
 
 	// compile sources
-	compiler compiler(project_file.sources);
+	compiler compiler(project_file->sources);
 	compile_config compile_cfg{}; // TODO: generate config based on project settings + cl args
 
 	mark_compile_start();
@@ -40,25 +41,28 @@ bool project_builder::build_project(const std::string& project_path) {
 		output::print("(Took {:.3f} seconds)\n", console_colors::DIM, get_compilation_time());
 	}
 	else {
-		output::err("Compilation failed with {} errors.", console_colors::BOLD + console_colors::RED, compiler.get_error_count());
+		output::err("Compilation failed with {} errors.\n", console_colors::BOLD + console_colors::RED, compiler.get_error_count());
 		error_printer::print_errors(compiler.get_errors());
 		return false;
 	}
 
 	// output code
 	output_config output_cfg{}; // will potentially modify the config later
-	code_outputter codeout(project_file.parent_path().string(), output_cfg);
+	outputter = std::make_unique<code_outputter>(project_file->parent_path().string(), output_cfg);
 
 	for (const auto& il_h : compiler.get_generated_ir()) {
 		std::string path = "./IL/" + il_h.owning_unit->source_file->relative_path + ".ll";
-		codeout.output_il(il_h.ir, path);
-		generated_ir_files.push_back((codeout.get_intermediate_dir() / path).string());
+		if (outputter->output_il(il_h.ir, path) != OUTPUT_SUCCESS) {
+			output::err("Failed to output IR file: {}\n", console_colors::BOLD + console_colors::RED, path);
+			return false;
+		}
+		generated_ir_files.push_back((outputter->get_intermediate_dir() / path).string());
 	}
 
 	// run post-build commands
 	for (const auto& cmd : post_build_commands) {
 		if (int ec = run_build_command(cmd); ec != 0) {
-			output::err("Post-build command \"{}\" failed with exit code: {}", console_colors::BOLD + console_colors::RED, cmd, ec);
+			output::err("Post-build command \"{}\" failed with exit code: {}\n", console_colors::BOLD + console_colors::RED, cmd, ec);
 			return false;
 		}
 	}
@@ -94,6 +98,9 @@ std::string project_builder::replace_vars(const std::string& str) {
 				if (i) out.push_back(' ');
 				out += "\"" + generated_ir_files[i] + "\"";
 			}
+		}
+		else if (key == "OUTPUT_DIR") {
+			out += "\"" + outputter->get_output_dir().string() + "\"";
 		}
 		
 		remaining = m.suffix().str();

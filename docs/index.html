@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Google+Sans+Code:ital,wght@0,300..800;1,300..800&family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&family=Roboto+Mono:ital,wght@0,100..700;1,100..700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style/global-stylesheet.css">
+    <title>Steel Documentation</title>
+</head>
+<body>
+    <div class="site">
+        <aside class="sidebar" id="sidebar">
+            <div class="brand">
+                <button class="menu-toggle" id="menuToggle" aria-label="Toggle navigation">☰</button>
+                <a href="#/index" class="logo">Steel</a>
+            </div>
+            <nav class="nav" id="nav"></nav>
+            <div class="sidebar-footer">
+                <a href="#/faq" class="sidebar-link subtle">FAQ</a>
+            </div>
+        </aside>
+        <main class="content">
+            <header class="topbar">
+                <nav class="breadcrumbs" id="breadcrumbs" aria-label="Breadcrumb"></nav>
+                <input id="quickSearch" class="search" type="search" placeholder="Quick filter…" aria-label="Quick filter" />
+            </header>
+            <article id="doc" class="doc">
+                <!-- content will be injected here -->
+            </article>
+            <footer class="footer">
+                <span>© <span id="year"></span> Steel</span>
+            </footer>
+        </main>
+    </div>
+
+    <!-- markdown parser -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <!-- code highlighting -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11.9.0/styles/github-dark.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11.9.0/highlight.min.js"></script>
+    <script>window.hljs && hljs.highlightAll && hljs.highlightAll();</script>
+    
+    <script src="script/app.js"></script>
+</body>
+</html>

@@ -5,6 +5,7 @@
 #include <iostream>
 
 #include "log_file.h"
+#include "../utils/console_colors.h"
 
 bool output::log_to_file(const std::string& file_path) {
     if (log != nullptr) return false;
@@ -13,6 +14,9 @@ bool output::log_to_file(const std::string& file_path) {
 	return log->open(file_path);
 }
 
+void output::init() {
+	console_colors::enable();
+}
 void output::shutdown() {
 	if (log != nullptr) {
 		delete log;

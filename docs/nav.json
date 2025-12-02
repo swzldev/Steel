@@ -1,0 +1,72 @@
+{
+    "home": "index",
+    "sections": [
+        {
+            "title": "Overview",
+            "items": [
+                {
+                    "title": "Welcome",
+                    "slug": "index",
+                    "path": "content/index.md"
+                }
+            ]
+        },
+        {
+            "title": "Getting Started",
+            "items": [
+                {
+                    "title": "Install",
+                    "slug": "install",
+                    "path": "content/getting-started/install.md"
+                },
+                {
+                    "title": "Hello World",
+                    "slug": "hello-world",
+                    "path": "content/getting-started/hello-world.md"
+                }
+            ]
+        },
+        {
+            "title": "Language",
+            "items": [
+                {
+                    "title": "Syntax",
+                    "slug": "syntax",
+                    "path": "content/syntax.md",
+                    "children": [
+                        {
+                            "title": "Basics",
+                            "slug": "syntax-basics",
+                            "path": "content/syntax-basics.md"
+                        },
+                        {
+                            "title": "Types",
+                            "slug": "syntax-types",
+                            "path": "content/syntax-types.md"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "title": "Tooling",
+            "items": [
+                {
+                    "title": "CLI",
+                    "slug": "cli",
+                    "path": "content/cli.md"
+                }
+            ]
+        },
+        {
+            "title": "More",
+            "items": [
+                {
+                    "title": "FAQ",
+                    "slug": "faq",
+                    "path": "content/faq.md"
+                }
+            ]
+        }
+    ]
+}

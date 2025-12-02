@@ -466,7 +466,7 @@ void type_checker::visit(std::shared_ptr<initializer_list> init) {
 			if (type == data_type::UNKNOWN) {
 				type = value->type();
 			}
-			else if (type != value->type()) {
+			else if (*type != value->type()) {
 				ERROR(ERR_ARRAY_INITIALIZER_TYPE_MISMATCH, init->position, type->name().c_str(), value->type()->name().c_str());
 				return;
 			}
@@ -846,8 +846,13 @@ void type_checker::check_type(type_ptr& type) {
 	}
 	if (auto arr = type->as_array()) {
 		check_type(arr->base_type);
-		if (arr->size_expression) {
-			arr->size_expression->accept(*this);
+		if (auto sz = arr->size_expression) {
+			sz->accept(*this);
+
+			if (!sz->is_constant()) {
+				ERROR(ERR_ARRAY_SIZE_MUST_BE_CONSTANT, arr->size_expression->position);
+				return;
+			}
 
 			auto size_expr_type = arr->size_expression->type();
 			if (size_expr_type->is_unknown() || !size_expr_type->is_integral()) {
