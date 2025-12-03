@@ -15,7 +15,11 @@ bool output::log_to_file(const std::string& file_path) {
 }
 
 void output::set_log_verbosity(log_verbosity verbosity) {
+#if defined(_DEBUG) || defined(DEBUG) || !defined(NDEBUG)
+	current_verbosity = verbosity < LOG_VERBOSITY_HIGH ? LOG_VERBOSITY_HIGH : verbosity;
+#else
 	current_verbosity = verbosity;
+#endif
 }
 
 void output::init() {

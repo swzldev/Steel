@@ -13,6 +13,7 @@
 #include "codegen/codegen.h"
 #include "utils/console_colors.h"
 #include "config/compile_config.h"
+#include "output/output.h"
 #include "parser/semantics/declaration_collector.h"
 #include "parser/semantics/import_resolver.h"
 #include "parser/semantics/type_resolver.h"
@@ -27,7 +28,8 @@ bool compiler::compile(compile_config cfg) {
 		auto unit = std::make_shared<compilation_unit>();
 		unit->source_file = std::make_shared<source_file>(file);
 
-		std::cout << "Compile: " << console_colors::BLUE << file.name() << console_colors::RESET << std::endl;
+		output::print("Compiling: ", console_colors::BLUE);
+		output::print("\'{}\'\n", "", file.relative_path);
 
 		lexer lexer(file.content, unit);
 		std::vector<token> tokens = lexer.tokenize();

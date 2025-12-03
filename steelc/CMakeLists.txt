@@ -117,7 +117,8 @@ set(SOURCES
     "src/steelc_definitions.h"
     "src/stproj/stproj_generator.h"
     "src/stproj/stproj_generator.cpp"
-)
+    "src/input/commands/steelc_command.cpp"
+ "src/input/commands/flags/flag_config.h"  "src/input/commands/flags/command_flags.h" "src/input/commands/steelc_command_id.h" "src/input/commands/flags/flag_config.cpp")
 
 # Add source to this project's executable.
 add_executable ( steelc ${SOURCES} )

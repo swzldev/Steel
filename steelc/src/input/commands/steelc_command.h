@@ -3,25 +3,29 @@
 #include <functional>
 #include <string>
 
+#include "flags/command_flags.h"
+#include "flags/flag_config.h"
 #include "../console_args.h"
 
 class steelc_command {
 public:
-	steelc_command(const std::string& name, const std::function<bool(const console_args& args)>& handler)
-		: name(name), handler(handler) {
+	using handler_type = std::function<bool(const command_flags&)>;
+
+public:
+	steelc_command(std::string name, const handler_type& handler, const flag_config* flag_cfg)
+		: name(name), handler(handler), flag_cfg(flag_cfg) {
 	}
 
 	inline const std::string& get_name() const {
 		return name;
 	}
-	inline bool execute(const console_args& args) const {
-		if (!handler) {
-			return false;
-		}
-		return handler(args);
-	}
+
+	bool execute(const console_args& args) const;
 
 private:
 	std::string name;
-	std::function<bool(const console_args& args)> handler;
+	handler_type handler;
+	const flag_config* flag_cfg;
+
+	bool parse_args(const console_args& args, command_flags& out_flags) const;
 };

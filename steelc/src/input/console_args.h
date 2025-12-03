@@ -55,6 +55,9 @@ public:
 
 	inline size_t count() const { return args.size(); }
 
+	console_args slice(size_t start, size_t end) const;
+	console_args slice(size_t start) const;
+
 	// iterators
 	inline arg_iterator begin() const { return arg_iterator(args.begin()); }
 	inline arg_iterator end()   const { return arg_iterator(args.end()); }

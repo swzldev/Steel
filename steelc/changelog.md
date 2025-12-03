@@ -6,8 +6,8 @@
     - `--verbose`: Sets the verbosity level of output to high, showing more detailed information during the build process.
 - Building no longer defaults to exe and is now platform dependent:
     - Windows: .exe
-    - Linux: .out
     - MacOS: .out
+    - Linux: .out
 - The build command now accepts a project folder as well as a project file, the project folder must contain a .stproj file.
 
 ## [0.3.0-alpha] - 02-12-2025

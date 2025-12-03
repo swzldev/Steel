@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 - Added a verbosity option to output as well as a verbose() method which only outputs if the verbosity level is >= VERBOSITY_HIGH. Debug builds default to VERBOSITY_HIGH.
+- Small rewrite of the command system to allow for easier addition of new commands and better flag error handling.
 
 ## [0.3.0] - 02-12-2025
 - Added a tests folder for language tests.

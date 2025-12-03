@@ -6,6 +6,7 @@
 #include <regex>
 #include <vector>
 #include <filesystem>
+#include <memory>
 
 #include "../compiler.h"
 #include "../config/compile_config.h"
@@ -30,6 +31,7 @@ bool project_builder::load_project(const std::string& project_path) {
 }
 bool project_builder::build_project() {
 	mark_build_start();
+	output::print("Build started...\n");
 
 	// compile sources
 	compiler compiler(project_file->sources);
