@@ -6,6 +6,12 @@
 #include <iostream>
 
 #include "log_file.h"
+#include "../utils/console_colors.h"
+
+enum log_verbosity {
+	LOG_VERBOSITY_NORMAL,
+	LOG_VERBOSITY_HIGH,
+};
 
 class output {
 public:
@@ -14,11 +20,19 @@ public:
 		write_va(std::cout, style + message, std::forward<Args>(args)...);
 	}
 	template<typename... Args>
-	static void err(const std::string& err, const std::string& style = "", Args&&... args) {
+	static void verbose(const std::string& message, const std::string& style = console_colors::DIM, Args&&... args) {
+		if (current_verbosity >= LOG_VERBOSITY_HIGH) {
+			write_va(std::cout, style + message, std::forward<Args>(args)...);
+		}
+	}
+	template<typename... Args>
+	static void err(const std::string& err, const std::string& style = console_colors::RED, Args&&... args) {
 		write_va(std::cerr, style + err, std::forward<Args>(args)...);
 	}
 
 	static bool log_to_file(const std::string& file_path);
+
+	static void set_log_verbosity(log_verbosity verbosity);
 
 	static void init();
 	// should always be called before program termination
@@ -31,6 +45,7 @@ private:
 	output& operator=(const output&) = delete;
 
 	static log_file* log;
+	static log_verbosity current_verbosity;
 
 	template<typename... Args>
 	static void write_va(std::ostream& stream, const std::string& message, Args&&... args) {

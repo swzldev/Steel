@@ -2,8 +2,9 @@
 
 #include <string>
 #include <filesystem>
+#include <memory>
 
-#include "output_config.h"
+#include "build_config.h"
 
 enum code_output_location {
 	OUTPUT_LOCATION_INTERMEDIATE,
@@ -18,8 +19,13 @@ enum code_output_error {
 
 class code_outputter {
 public:
-	code_outputter(std::string project_dir, output_config cfg)
-		: project_dir(project_dir), config(cfg) {
+	// returns nullptr if failed to init
+	static std::unique_ptr<code_outputter> create(const std::string& project_dir, build_config cfg) {
+		auto outputter = std::unique_ptr<code_outputter>(new code_outputter(project_dir, cfg));
+		if (!outputter->init()) {
+			return nullptr;
+		}
+		return outputter;
 	}
 
 	code_output_error output_il(const std::string& il, const std::string& filename);
@@ -33,12 +39,15 @@ public:
 	}
 
 private:
+	code_outputter(std::string project_dir, build_config cfg)
+		: project_dir(project_dir), build_cfg(cfg) {
+	}
+
 	std::filesystem::path project_dir;
 	std::filesystem::path output_dir;
 	std::filesystem::path intermediate_dir;
-	output_config config;
-	bool init = false;
+	build_config build_cfg;
 
-	void init_structure();
+	bool init();
 	code_output_error output_to(const std::string& data, const std::filesystem::path& path);
 };

@@ -19,10 +19,11 @@ int main(int argc, char** argv) {
 	steelc_command_manager cmd_manager;
 	auto cmd = cmd_manager.get_command(command);
 	if (!cmd) {
-		output::err("Unknown command: {}\n", console_colors::RED, command);
+		output::err("Error: unknown command: {}\n", console_colors::RED, command);
 		return 1;
 	}
-	bool command_result = cmd->execute(args);
+
+	bool command_result = cmd->execute(args.slice(2));
 
 	output::shutdown();
 

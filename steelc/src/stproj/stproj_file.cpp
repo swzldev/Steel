@@ -11,6 +11,11 @@
 std::unique_ptr<stproj_file> stproj_file::load(const std::string& path) {
 	auto proj = std::unique_ptr<stproj_file>(new stproj_file());
 	proj->path = std::filesystem::path(path);
+
+	if (!std::filesystem::exists(path)) {
+		throw bad_stproj_exception("Steel project file does not exist at path: " + path);
+	}
+
 	auto file = toml::parse_file(path);
 	if (file.failed()) {
 		throw bad_stproj_exception("Failed to parse .stproj file: " + std::string(file.error().description()));
