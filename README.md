@@ -13,8 +13,8 @@
     <a href="#credits">Credits</a>
 </p>
 
-<h3>Important note:</h3>
-<p>Steel is currently in alpha, this means many features are not fully functional and may contain plenty of bugs, this version is not meant to be released publicly.</p>
+> <h3>Important note:</h3>
+> <p>Steel is currently in alpha, this means many features are not fully functional and may contain plenty of bugs, this version is not meant to be released publicly.</p>
 
 <h2>Features</h2>
 <ul>
