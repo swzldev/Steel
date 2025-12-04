@@ -7,6 +7,7 @@
 #include "../../output/output.h"
 #include "../../steelc_definitions.h"
 #include "../../utils/console_colors.h"
+#include "../../utils/path_utils.h"
 #include "../../building/build_config.h"
 #include "../../building/project_builder.h"
 #include "../../stproj/stproj_generator.h"
@@ -26,40 +27,42 @@ bool steelc_commands_impl::version_command_handler(const command_flags& flags) {
 }
 bool steelc_commands_impl::build_command_handler(const command_flags& flags) {
 	std::string project_file_path = flags.get_first("<project-path>");
-	if (std::filesystem::is_directory(project_file_path)) {
+	std::filesystem::path project_file_path_n = path_utils::normalize_path(project_file_path);
+	if (std::filesystem::is_directory(project_file_path_n)) {
 		// attempt to find a .stproj file in the directory
 		bool found = false;
-		for (const auto& entry : std::filesystem::directory_iterator(project_file_path)) {
+		for (const auto& entry : std::filesystem::directory_iterator(project_file_path_n)) {
 			if (entry.path().extension() == ".stproj") {
-				project_file_path = entry.path().string();
+				project_file_path_n = path_utils::normalize_path(entry.path().string());
 				found = true;
 				break;
 			}
 		}
 		if (!found) {
-			output::err("No .stproj file found in directory: {}\n", console_colors::RED, project_file_path);
+			output::err("No .stproj file found in directory: {}\n", console_colors::RED, project_file_path_n.string());
 			return false;
 		}
 	}
 
-	build_config cfg{}; // default build config for now
+	build_config cfg{};
+
+	if (flags.has("--no-link")) {
+		cfg.no_link = true;
+	}
+	if (flags.has("--all")) {
+		cfg.build_all = true;
+	}
+	if (flags.has("--out")) {
+		cfg.output_dir = flags.get_first("--out");
+	}
+	if (flags.has("--int")) {
+		cfg.intermediate_dir = flags.get_first("--int");
+	}
+	
 	project_builder builder(cfg);
-	if (!builder.load_project(project_file_path)) {
+	if (!builder.load_project(project_file_path_n.string())) {
 		// dont print a message here (the builder does it)
 		return false;
-	}
-
-#if defined(_WIN32) || defined(_WIN64)
-	std::string app_ext = ".exe";
-#elif defined(__APPLE__) || defined(__linux__)
-	std::string app_ext = ".out";
-#else
-	std::string app_ext = "";
-#endif
-
-	if (!flags.has("--no-link")) {
-		std::string build_command = "clang ${IRS} -o \"${OUTPUT_DIR}" + builder.project_filename() + app_ext + "\"";
-		builder.post_build_commands.push_back(build_command);
 	}
 
 	return builder.build_project();

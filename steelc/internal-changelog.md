@@ -1,11 +1,13 @@
 # STEELC CHANGELOG
 
-## [Unreleased]
+## [0.4.0-alpha] - 04-12-2025
 - Added a verbosity option to output as well as a verbose() method which only outputs if the verbosity level is >= VERBOSITY_HIGH. Debug builds default to VERBOSITY_HIGH.
 - Small rewrite of the command system to allow for easier addition of new commands and better flag error handling.
 - The code output system is now apart of the build system rather than just general "output", this means it can now rely on the build config rather than a seperate output config that reuses a lot of the same data.
+- The code outputter now has a factory method rather than a direct constructor allowing it to return a nullptr if it failed to initialize (e.g. invalid output path).
+- Seperated compilation into a new compile_project function instead of handling it all in the projcet_build function, this also allows for earlying out if no compilation is needed.
 
-## [0.3.0] - 02-12-2025
+## [0.3.0-alpha] - 02-12-2025
 - Added a tests folder for language tests.
 - Added loop support into the codegen_env class (for break, continue, etc).
 - Added an is_constant method to expression ast nodes that indicates whether the expression can be evaluated at compile time. e.g. 5 + 3 -> 8.

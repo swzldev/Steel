@@ -8,6 +8,10 @@
 #include "file_metadata.h"
 
 bool build_cache_file::deserialize(const std::filesystem::path& path) {
+	if (!std::filesystem::exists(path)) {
+		return false;
+	}
+
 	std::ifstream file(path, std::ios::binary);
 	if (!file.is_open()) {
 		return false;

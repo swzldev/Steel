@@ -2,6 +2,7 @@
 
 #include <string>
 #include <filesystem>
+#include <memory>
 
 #include "build_config.h"
 
@@ -18,9 +19,13 @@ enum code_output_error {
 
 class code_outputter {
 public:
-	code_outputter(std::string project_dir, build_config cfg)
-		: project_dir(project_dir), build_cfg(cfg) {
-		init_structure();
+	// returns nullptr if failed to init
+	static std::unique_ptr<code_outputter> create(const std::string& project_dir, build_config cfg) {
+		auto outputter = std::unique_ptr<code_outputter>(new code_outputter(project_dir, cfg));
+		if (!outputter->init()) {
+			return nullptr;
+		}
+		return outputter;
 	}
 
 	code_output_error output_il(const std::string& il, const std::string& filename);
@@ -34,12 +39,15 @@ public:
 	}
 
 private:
+	code_outputter(std::string project_dir, build_config cfg)
+		: project_dir(project_dir), build_cfg(cfg) {
+	}
+
 	std::filesystem::path project_dir;
 	std::filesystem::path output_dir;
 	std::filesystem::path intermediate_dir;
 	build_config build_cfg;
-	bool init = false;
 
-	void init_structure();
+	bool init();
 	code_output_error output_to(const std::string& data, const std::filesystem::path& path);
 };

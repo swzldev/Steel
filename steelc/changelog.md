@@ -1,10 +1,13 @@
-# STEELC CHANGELOG#
+# STEELC CHANGELOG
 
-## [Unreleased]
+## [0.4.0-alpha] - 04-12-2025
 - Added some useful build command flags:
     - `--no-link`: Skips the linking step after building, leaving only the generated IR files.
+    - `--all`: Compiles all source files ignoring the build cache.
+    - `--out <output-dir>`: Overrides the default output (build) directory (usually `/build/`).
+    - `--int <intermediate-dir>`: Overrides the default intermediate directory (usually `/build/cache/`).
 - Added a global flag system for certain flags that can be used with any command:
-    - `--verbose`: Enables verbose output for all commands.
+    - `--verbose`: Enables verbose output.
 - Building no longer defaults to exe and is now platform dependent:
     - Windows: .exe
     - MacOS: .out
@@ -13,6 +16,9 @@
 - Updated the vs code extension to work with the new steelc commands.
 - Removed the 'run' command from the vs code extension, may reimplement it in the future for now its pretty redundant with build + manual execution.
 - Added a build cache system that stores build artifacts to speed up subsequent builds.
+- Compilation is now fully skipped if no changes are detected in the source files since the last build (and --all is not used).
+- Fixed a bug where the path of the project file wasnt being checked before parsing leading to a crash.
+- Clang build is now a part of the building process and no longer a post build command (which was janky).
 
 ## [0.3.0-alpha] - 02-12-2025
 - Added codegen support for while loops, break statements, address-of expressions, and deref expressions.

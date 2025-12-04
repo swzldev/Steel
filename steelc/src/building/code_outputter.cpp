@@ -8,13 +8,6 @@ code_output_error code_outputter::output_il(const std::string& il, const std::st
 	return output_code(il, filename, OUTPUT_LOCATION_INTERMEDIATE);
 }
 code_output_error code_outputter::output_code(const std::string& code, const std::string& filename, code_output_location location) {
-	if (!init) {
-		init_structure();
-		if (!init) {
-			return OUTPUT_FAIL_INIT;
-		}
-	}
-	
 	switch (location) {
 	case OUTPUT_LOCATION_OUTPUT:
 		return output_to(code, output_dir / filename);
@@ -25,9 +18,7 @@ code_output_error code_outputter::output_code(const std::string& code, const std
 	return OUTPUT_SUCCESS;
 }
 
-void code_outputter::init_structure() {
-	if (init) return;
-
+bool code_outputter::init() {
 	output_dir = project_dir / build_cfg.output_dir;
 	intermediate_dir = project_dir / build_cfg.intermediate_dir;
 
@@ -35,7 +26,12 @@ void code_outputter::init_structure() {
 	std::filesystem::create_directories(output_dir);
 	std::filesystem::create_directories(intermediate_dir);
 
-	init = true;
+	if (!std::filesystem::exists(output_dir) || !std::filesystem::exists(intermediate_dir)) {
+		// failed to create output or intermediate dir
+		return false;
+	}
+
+	return true;
 }
 code_output_error code_outputter::output_to(const std::string& data, const std::filesystem::path& path) {
 	// create directories (if nescessary)

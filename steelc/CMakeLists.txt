@@ -118,7 +118,7 @@ set(SOURCES
     "src/stproj/stproj_generator.h"
     "src/stproj/stproj_generator.cpp"
     "src/input/commands/steelc_command.cpp"
- "src/input/commands/flags/flag_config.h"  "src/input/commands/flags/command_flags.h" "src/input/commands/steelc_command_id.h" "src/input/commands/flags/flag_config.cpp" "src/building/cache/build_cache_file.h" "src/building/cache/build_cache_file.cpp" "src/building/cache/file_metadata.h" "src/building/cache/file_hasher.h" "src/building/cache/file_hasher.cpp" "src/building/build_config.h")
+ "src/input/commands/flags/flag_config.h"  "src/input/commands/flags/command_flags.h" "src/input/commands/steelc_command_id.h" "src/input/commands/flags/flag_config.cpp" "src/building/cache/build_cache_file.h" "src/building/cache/build_cache_file.cpp" "src/building/cache/file_metadata.h" "src/building/cache/file_hasher.h" "src/building/cache/file_hasher.cpp" "src/building/build_config.h" "src/utils/path_utils.h" "src/utils/path_utils.cpp")
 
 # Add source to this project's executable.
 add_executable ( steelc ${SOURCES} )

@@ -11,4 +11,8 @@ public:
 	std::string output_dir = "build/";
 	std::string intermediate_dir = "build/cache/";
 	std::string build_cache_file = "build/cache/build_cache.dat";
+
+	// build options
+	bool build_all = false;
+	bool no_link = false;
 };

@@ -22,6 +22,7 @@ int main(int argc, char** argv) {
 		output::err("Error: unknown command: {}\n", console_colors::RED, command);
 		return 1;
 	}
+
 	bool command_result = cmd->execute(args.slice(2));
 
 	output::shutdown();
