@@ -31,29 +31,17 @@
       {
         "command": "steel.build",
         "title": "Steel: Build Project"
-      },
-      {
-        "command": "steel.run",
-        "title": "Steel: Run Project"
       }
     ],
     "menus": {
       "commandPalette": [
         {
           "command": "steel.build"
-        },
-        {
-          "command": "steel.run"
         }
       ],
       "editor/context": [
         {
           "command": "steel.build",
-          "group": "steel",
-          "when": "resourceLangId == steel"
-        },
-        {
-          "command": "steel.run",
           "group": "steel",
           "when": "resourceLangId == steel"
         }

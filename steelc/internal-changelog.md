@@ -3,6 +3,7 @@
 ## [Unreleased]
 - Added a verbosity option to output as well as a verbose() method which only outputs if the verbosity level is >= VERBOSITY_HIGH. Debug builds default to VERBOSITY_HIGH.
 - Small rewrite of the command system to allow for easier addition of new commands and better flag error handling.
+- The code output system is now apart of the build system rather than just general "output", this means it can now rely on the build config rather than a seperate output config that reuses a lot of the same data.
 
 ## [0.3.0] - 02-12-2025
 - Added a tests folder for language tests.

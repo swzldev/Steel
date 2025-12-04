@@ -28,8 +28,8 @@ code_output_error code_outputter::output_code(const std::string& code, const std
 void code_outputter::init_structure() {
 	if (init) return;
 
-	output_dir = project_dir / config.output_dir;
-	intermediate_dir = project_dir / config.intermediate_dir;
+	output_dir = project_dir / build_cfg.output_dir;
+	intermediate_dir = project_dir / build_cfg.intermediate_dir;
 
 	// create dirs
 	std::filesystem::create_directories(output_dir);

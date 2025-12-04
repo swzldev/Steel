@@ -92,9 +92,9 @@ set(SOURCES
     "src/utils/iclonable.h"
     "src/error/error_printer.h"
     "src/error/error_printer.cpp"
-    "src/output/code_outputter.h"
-    "src/output/output_config.h"
-    "src/output/code_outputter.cpp"
+    "src/building/code_outputter.h"
+    
+    "src/building/code_outputter.cpp"
     "src/config/compile_config.cpp"
     "src/config/bad_arg_exception.h"
     "src/utils/maybe.h"
@@ -118,7 +118,7 @@ set(SOURCES
     "src/stproj/stproj_generator.h"
     "src/stproj/stproj_generator.cpp"
     "src/input/commands/steelc_command.cpp"
- "src/input/commands/flags/flag_config.h"  "src/input/commands/flags/command_flags.h" "src/input/commands/steelc_command_id.h" "src/input/commands/flags/flag_config.cpp")
+ "src/input/commands/flags/flag_config.h"  "src/input/commands/flags/command_flags.h" "src/input/commands/steelc_command_id.h" "src/input/commands/flags/flag_config.cpp" "src/building/cache/build_cache_file.h" "src/building/cache/build_cache_file.cpp" "src/building/cache/file_metadata.h" "src/building/cache/file_hasher.h" "src/building/cache/file_hasher.cpp" "src/building/build_config.h")
 
 # Add source to this project's executable.
 add_executable ( steelc ${SOURCES} )

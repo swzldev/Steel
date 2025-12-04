@@ -18,8 +18,7 @@ const flag_config* flag_config::from_command(steelc_command_id cmd_id) {
 		static const flag_config cfg{
 			{ "<project-path>" },
 			{
-				{ "--no-link", 0 },
-				{ "--verbose", 0 }
+				{ "--no-link", 0 }
 			}
 		};
 		return &cfg;

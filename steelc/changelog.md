@@ -1,14 +1,18 @@
 # STEELC CHANGELOG#
 
 ## [Unreleased]
-- Added some useful build command flags
+- Added some useful build command flags:
     - `--no-link`: Skips the linking step after building, leaving only the generated IR files.
-    - `--verbose`: Sets the verbosity level of output to high, showing more detailed information during the build process.
+- Added a global flag system for certain flags that can be used with any command:
+    - `--verbose`: Enables verbose output for all commands.
 - Building no longer defaults to exe and is now platform dependent:
     - Windows: .exe
     - MacOS: .out
     - Linux: .out
 - The build command now accepts a project folder as well as a project file, the project folder must contain a .stproj file.
+- Updated the vs code extension to work with the new steelc commands.
+- Removed the 'run' command from the vs code extension, may reimplement it in the future for now its pretty redundant with build + manual execution.
+- Added a build cache system that stores build artifacts to speed up subsequent builds.
 
 ## [0.3.0-alpha] - 02-12-2025
 - Added codegen support for while loops, break statements, address-of expressions, and deref expressions.

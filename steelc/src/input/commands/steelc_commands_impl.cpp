@@ -7,6 +7,7 @@
 #include "../../output/output.h"
 #include "../../steelc_definitions.h"
 #include "../../utils/console_colors.h"
+#include "../../building/build_config.h"
 #include "../../building/project_builder.h"
 #include "../../stproj/stproj_generator.h"
 
@@ -24,10 +25,6 @@ bool steelc_commands_impl::version_command_handler(const command_flags& flags) {
 	return true;
 }
 bool steelc_commands_impl::build_command_handler(const command_flags& flags) {
-	if (flags.has("--verbose")) {
-		output::set_log_verbosity(LOG_VERBOSITY_HIGH);
-	}
-
 	std::string project_file_path = flags.get_first("<project-path>");
 	if (std::filesystem::is_directory(project_file_path)) {
 		// attempt to find a .stproj file in the directory
@@ -45,7 +42,8 @@ bool steelc_commands_impl::build_command_handler(const command_flags& flags) {
 		}
 	}
 
-	project_builder builder;
+	build_config cfg{}; // default build config for now
+	project_builder builder(cfg);
 	if (!builder.load_project(project_file_path)) {
 		// dont print a message here (the builder does it)
 		return false;
