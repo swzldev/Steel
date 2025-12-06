@@ -38,7 +38,7 @@ code_output_error code_outputter::output_to(const std::string& data, const std::
 	std::filesystem::create_directories(path.parent_path());
 
 	std::ofstream file(path);
-	if (!file.is_open()) {
+	if (!file || !file.is_open()) {
 		return OUTPUT_FAIL_CREATE_FILE;
 	}
 

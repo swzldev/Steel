@@ -93,7 +93,6 @@ set(SOURCES
     "src/error/error_printer.h"
     "src/error/error_printer.cpp"
     "src/building/code_outputter.h"
-    
     "src/building/code_outputter.cpp"
     "src/config/compile_config.cpp"
     "src/config/bad_arg_exception.h"
@@ -108,7 +107,9 @@ set(SOURCES
     "src/utils/string_utils.cpp"
     "src/stproj/bad_stproj_exception.h"
     "src/codegen/computation/compile_time_computator.h"
-    "src/codegen/computation/compile_time_computator_visitor.h"
+    "src/codegen/computation/compile_time_computator.cpp"
+    "src/parser/semantics/compile_time_computator_visitor.h"
+    "src/parser/semantics/compile_time_computator_visitor.cpp"
     "src/input/commands/steelc_command_manager.h"
     "src/input/commands/steelc_command.h"
     "src/input/commands/steelc_command_manager.cpp"
@@ -118,7 +119,19 @@ set(SOURCES
     "src/stproj/stproj_generator.h"
     "src/stproj/stproj_generator.cpp"
     "src/input/commands/steelc_command.cpp"
- "src/input/commands/flags/flag_config.h"  "src/input/commands/flags/command_flags.h" "src/input/commands/steelc_command_id.h" "src/input/commands/flags/flag_config.cpp" "src/building/cache/build_cache_file.h" "src/building/cache/build_cache_file.cpp" "src/building/cache/file_metadata.h" "src/building/cache/file_hasher.h" "src/building/cache/file_hasher.cpp" "src/building/build_config.h" "src/utils/path_utils.h" "src/utils/path_utils.cpp")
+    "src/input/commands/flags/flag_config.h"
+    "src/input/commands/flags/command_flags.h"
+    "src/input/commands/steelc_command_id.h"
+    "src/input/commands/flags/flag_config.cpp"
+    "src/building/cache/build_cache_file.h"
+    "src/building/cache/build_cache_file.cpp"
+    "src/building/cache/file_metadata.h"
+    "src/building/cache/file_hasher.h"
+    "src/building/cache/file_hasher.cpp"
+    "src/building/build_config.h"
+    "src/utils/path_utils.h"
+    "src/utils/path_utils.cpp"
+ "src/parser/semantics/classes/computed_value.h" "src/parser/semantics/classes/computed_value.cpp")
 
 # Add source to this project's executable.
 add_executable ( steelc ${SOURCES} )

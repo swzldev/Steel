@@ -5,8 +5,9 @@
 #include <vector>
 #include <iostream>
 
-#include "codegen_visitor.h"
 #include "error/codegen_exception.h"
+#include "codegen_visitor.h"
+#include "../output/output.h"
 
 std::vector<ir_holder> codegen::generate_ir() {
 	std::vector<ir_holder> ir_modules;
@@ -20,7 +21,7 @@ std::vector<ir_holder> codegen::generate_ir() {
 			}
 		}
 		catch (const codegen_exception& e) {
-			std::cerr << "Codegen error in module " << module_name << ": " << e.what() << std::endl;
+			output::err("Codegen error in module {}: {}\n", console_colors::RED, module_name, e.message());
 			continue;
 		}
 

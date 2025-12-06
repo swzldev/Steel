@@ -2,7 +2,6 @@
 
 #include <string>
 #include <memory>
-#include <filesystem>
 
 #include "../symbolics/symbol_table.h"
 

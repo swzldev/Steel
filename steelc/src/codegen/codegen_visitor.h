@@ -49,7 +49,7 @@ public:
 	//void visit(std::shared_ptr<initializer_list> init);
 	void visit(std::shared_ptr<function_call> func_call);
 	void visit(std::shared_ptr<literal> literal) override;
-	//virtual void visit(std::shared_ptr<import_statement> import_stmt);
+	//void visit(std::shared_ptr<import_statement> import_stmt);
 	void visit(std::shared_ptr<code_block> block) override;
 	void visit(std::shared_ptr<if_statement> if_stmt) override;
 	//void visit(std::shared_ptr<inline_if> inline_if);

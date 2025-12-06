@@ -119,6 +119,10 @@ bool compiler::compile(compile_config cfg) {
 	codegen codegen(module_manager, compilation_units);
 	generated_ir = codegen.generate_ir();
 
+	if (generated_ir.size() != compilation_units.size()) {
+		return false;
+	}
+
 	return true;
 }
 

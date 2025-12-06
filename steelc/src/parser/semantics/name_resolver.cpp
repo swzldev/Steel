@@ -118,6 +118,14 @@ void name_resolver::visit(std::shared_ptr<identifier_expression> expr) {
 		return;
 	}
 
+	// module identifier
+	auto mod_decl = module_manager.get_module(expr->identifier);
+	if (mod_decl != nullptr) {
+		expr->id_type = IDENTIFIER_MODULE;
+		expr->module_info = mod_decl;
+		return;
+	}
+
 	// function identifier
 	/*auto func_decl = resolver.get_function(expr->identifier);
 	if (var_decl.error == LOOKUP_OK) {
@@ -153,6 +161,32 @@ void name_resolver::visit(std::shared_ptr<this_expression> expr) {
 	expr->parent_type = current_type->type();
 }
 void name_resolver::visit(std::shared_ptr<function_call> func_call) {
+	if (func_call->is_scoped_function()) {
+		// try to resolve the scope first
+		func_call->scope->accept(*this);
+		if (auto ident = std::dynamic_pointer_cast<identifier_expression>(func_call->scope)) {
+			if (ident->id_type == IDENTIFIER_MODULE) {
+				// scoped function call on a module
+				auto mod_info = ident->module_info;
+				auto func_candidates = mod_info->symbols.get_function_candidates(func_call->identifier, func_call->args.size(), func_call->generic_args.size());
+				func_call->declaration_candidates = func_candidates;
+
+				// resolve args as normal
+				for (auto& arg : func_call->args) {
+					arg->accept(*this);
+				}
+				return;
+			}
+			else {
+				ERROR(ERR_SCOPED_FUNCTION_NOT_MODULE, func_call->position);
+				return;
+			}
+		}
+		else {
+			ERROR(ERR_SCOPED_FUNCTION_NOT_MODULE, func_call->position);
+			return;
+		}
+	}
 	if (func_call->is_method()) {
 		// only try to resolve the caller_obj, not the method
 		func_call->caller_obj->accept(*this);

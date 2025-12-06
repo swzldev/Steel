@@ -121,7 +121,6 @@ html, body, .site { height: 100%; }
     border-radius: 2px;
 }
 
-/* Nested lists */
 .nav-list .nav-list {
     margin-left: 10px;
     padding-left: 10px;
@@ -190,8 +189,10 @@ html, body, .site { height: 100%; }
     align-items: center;
     gap: 8px;
     color: var(--muted);
-    font-size: 12px;
+    font-size: 11px;
     min-width: 0;
+    letter-spacing: 1px;
+    text-transform: uppercase;
 }
 .breadcrumbs .crumb a {
     color: var(--muted);
@@ -256,7 +257,6 @@ html, body, .site { height: 100%; }
     background: var(--bg-elev);
 }
 
-/* Responsive */
 @media (max-width: 920px) {
     .site {
         grid-template-columns: 1fr;

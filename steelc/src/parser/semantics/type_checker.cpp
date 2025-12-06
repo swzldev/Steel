@@ -399,8 +399,17 @@ void type_checker::visit(std::shared_ptr<cast_expression> expr) {
 void type_checker::visit(std::shared_ptr<member_expression> expr) {
 	expr->object->accept(*this);
 
-	auto type = expr->object->type();
+	// check if its a module, since modules do not have a type representation
+	if (auto ident = std::dynamic_pointer_cast<identifier_expression>(expr->object)) {
+		if (ident->id_type == IDENTIFIER_MODULE) {
+			const auto& info = ident->module_info;
+			// for now we can just throw an error since i havnt implemented module fields
+			ERROR(ERR_NO_MEMBER_WITH_NAME, expr->position, info->name.c_str(), expr->member.c_str());
+			return;
+		}
+	}
 
+	auto type = expr->object->type();
 	if (type == data_type::UNKNOWN) {
 		// some other error occured
 		return;
@@ -513,6 +522,7 @@ void type_checker::visit(std::shared_ptr<function_call> func_call) {
 		auto ctor_candidates = get_ctor_candidates(ctor_type, func_call->args.size());
 		func_call->declaration_candidates = ctor_candidates;
 	}
+
 	// we need to resolve candidates here if the function call
 	// is a method, as it cant be done in the name resolver pass
 	if (func_call->is_method()) {

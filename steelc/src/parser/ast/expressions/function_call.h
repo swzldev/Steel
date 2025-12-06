@@ -49,7 +49,6 @@ public:
 		for (const auto& arg : args) {
 			cloned->args.push_back(std::dynamic_pointer_cast<expression>(arg->clone()));
 		}
-		cloned->override_return_type = override_return_type;
 		cloned->declaration = declaration;
 		cloned->generic_args = generic_args;
 		cloned->ctor_type = ctor_type;
@@ -57,9 +56,6 @@ public:
 	}
 
 	type_ptr type() const override {
-		if (override_return_type) {
-			return override_return_type;
-		}
 		if (!declaration) {
 			if (ctor_type) {
 				return ctor_type->type();
@@ -75,6 +71,11 @@ public:
 		return false;
 	}
 
+	inline bool is_scoped_function() const {
+		return scope != nullptr;
+		// e.g. module::function()
+		// sort of half way between a function and method
+	}
 	inline bool is_method() const {
 		return caller_obj != nullptr;
 	}
@@ -83,9 +84,9 @@ public:
 	}
 
 	std::string identifier;
+	std::shared_ptr<expression> scope;
 	std::shared_ptr<expression> caller_obj;
 	std::vector<std::shared_ptr<expression>> args;
-	type_ptr override_return_type = nullptr; // TEMPORARY
 	std::vector<std::shared_ptr<function_declaration>> declaration_candidates;
 	std::shared_ptr<function_declaration> declaration;
 	std::vector<type_ptr> generic_args;

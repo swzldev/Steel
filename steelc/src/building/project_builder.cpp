@@ -18,6 +18,7 @@
 #include "../compiler.h"
 #include "../config/compile_config.h"
 #include "../utils/console_colors.h"
+#include "../utils/path_utils.h"
 #include "../stproj/source_file.h"
 #include "../stproj/stproj_file.h"
 #include "../stproj/bad_stproj_exception.h"
@@ -41,8 +42,41 @@ bool project_builder::build_project() {
 	mark_build_start();
 	output::print("Build started...\n");
 
-	// compile project
-	std::vector<ir_holder> generated_ir = compile_project();
+	// load build cache
+	build_cache_file cache = load_cache();
+	std::vector<source_file> to_compile;
+	std::vector<ir_holder> generated_ir;
+
+	if (build_cfg.build_all) {
+		to_compile = project_file->sources;
+	}
+	else {
+		to_compile = get_files_to_compile(cache);
+	}
+
+	// early out if nothing to compile
+	if (to_compile.empty()) {
+		output::print("No changes detected, skipping compilation.\n", console_colors::BLUE);
+	}
+	else {
+		// compile sources
+		compiler cmp = compiler(to_compile);
+		compile_config compile_cfg{}; // TODO: generate config based on project settings + cl args
+
+		mark_compile_start();
+		output::print("Compiling {} source file(s)...\n", console_colors::BOLD, to_compile.size());
+		if (cmp.compile(compile_cfg)) {
+			output::print("Compilation succeeded. ", console_colors::BOLD + console_colors::GREEN);
+			output::print("(Took {:.3f} seconds)\n", console_colors::DIM, get_compilation_time());
+		}
+		else {
+			output::err("Compilation failed with {} errors.\n", console_colors::BOLD + console_colors::RED, cmp.get_error_count());
+			error_printer::print_errors(cmp.get_errors());
+			return false;
+		}
+
+		generated_ir = cmp.get_generated_ir();
+	}
 
 	// output code (if any)
 	if (generated_ir.size() > 0) {
@@ -87,46 +121,10 @@ bool project_builder::build_project() {
 		}
 	}
 
+	// save build cache
+	save_cache(cache);
+
 	return true;
-}
-std::vector<ir_holder> project_builder::compile_project() {
-	// load build cache
-	build_cache_file cache = load_cache();
-	std::vector<source_file> to_compile;
-
-	if (build_cfg.build_all) {
-		to_compile = project_file->sources;
-	}
-	else {
-		to_compile = get_files_to_compile(cache);
-	}
-
-	// early out if nothing to compile
-	if (to_compile.empty()) {
-		output::print("No changes detected, skipping compilation.\n", console_colors::BLUE);
-		return {};
-	}
-
-	// compile sources
-	compiler cmp = compiler(to_compile);
-	compile_config compile_cfg{}; // TODO: generate config based on project settings + cl args
-
-	mark_compile_start();
-	output::print("Compiling {} source file(s)...\n", console_colors::BOLD, to_compile.size());
-	if (cmp.compile(compile_cfg)) {
-		output::print("Compilation succeeded. ", console_colors::BOLD + console_colors::GREEN);
-		output::print("(Took {:.3f} seconds)\n", console_colors::DIM, get_compilation_time());
-
-		// save build cache
-		save_cache(cache);
-	}
-	else {
-		output::err("Compilation failed with {} errors.\n", console_colors::BOLD + console_colors::RED, cmp.get_error_count());
-		error_printer::print_errors(cmp.get_errors());
-		return {};
-	}
-
-	return cmp.get_generated_ir();
 }
 
 int project_builder::run_build_command(const std::string& command) {
@@ -144,7 +142,7 @@ double project_builder::get_compilation_time() const {
 std::string project_builder::get_ir_path(const source_file& src, bool relative) const {
 	std::string rel_path = "./IL/" + src.relative_path + ".ll";
 	if (!relative) {
-		return (get_intermediate_dir() / rel_path).string();
+		return path_utils::normalize_path(get_intermediate_dir() / rel_path).string();
 	}
 	return rel_path;
 }

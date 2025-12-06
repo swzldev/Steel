@@ -87,6 +87,7 @@ enum token_type {
 	TT_GREATER,
 	TT_GREATER_EQ,
 	TT_ACCESS,
+	TT_SCOPE,
 	TT_ARROW,
 	// Keywords (casting)
 	TT_AS,

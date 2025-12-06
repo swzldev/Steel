@@ -17,6 +17,9 @@ public:
 	virtual const char* what() const noexcept override {
 		return msg.c_str();
 	}
+	std::string message() const {
+		return msg;
+	}
 
 private:
     std::string msg;

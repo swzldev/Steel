@@ -32,17 +32,17 @@
                 {
                     "title": "Syntax",
                     "slug": "syntax",
-                    "path": "content/syntax.md",
+                    "path": "content/syntax/syntax.md",
                     "children": [
-                        {
-                            "title": "Basics",
-                            "slug": "syntax-basics",
-                            "path": "content/syntax-basics.md"
-                        },
                         {
                             "title": "Types",
                             "slug": "syntax-types",
-                            "path": "content/syntax-types.md"
+                            "path": "content/syntax/types.md"
+                        },
+                        {
+                            "title": "Functions",
+                            "slug": "syntax-functions",
+                            "path": "content/syntax/functions.md"
                         }
                     ]
                 }

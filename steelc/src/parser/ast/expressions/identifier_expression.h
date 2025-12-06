@@ -12,6 +12,7 @@
 enum identifier_type {
 	IDENTIFIER_UNKNOWN,
 	IDENTIFIER_VARIABLE,
+	IDENTIFIER_MODULE,
 	IDENTIFIER_FUNCTION,
 	IDENTIFIER_TYPE,
 	IDENTIFIER_ENUM,
@@ -33,6 +34,7 @@ public:
 		auto cloned = std::make_shared<identifier_expression>(identifier);
 		cloned->id_type = id_type;
 		cloned->variable_declaration = variable_declaration;
+		cloned->module_info = module_info;
 		cloned->function_declaration = function_declaration;
 		cloned->type_declaration = type_declaration;
 		cloned->enum_declaration = enum_declaration;
@@ -42,6 +44,10 @@ public:
 	type_ptr type() const override {
 		if (variable_declaration && id_type == IDENTIFIER_VARIABLE) {
 			return variable_declaration->type;
+		}
+		else if (module_info && id_type == IDENTIFIER_MODULE) {
+			// modules dont have a type
+			return data_type::UNKNOWN;
 		}
 		else if (function_declaration && id_type == IDENTIFIER_FUNCTION) {
 			return data_type::UNKNOWN; // TODO
@@ -66,6 +72,7 @@ public:
 	std::string identifier;
 	identifier_type id_type;
 	std::shared_ptr<variable_declaration> variable_declaration;
+	std::shared_ptr<struct module_info> module_info;
 	std::shared_ptr<function_declaration> function_declaration;
 	std::shared_ptr<type_declaration> type_declaration;
 	std::shared_ptr<enum_declaration> enum_declaration;

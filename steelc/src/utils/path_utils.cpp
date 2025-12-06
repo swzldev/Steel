@@ -14,3 +14,6 @@ std::filesystem::path path_utils::normalize_path(const std::string& path) {
 
 	return p;
 }
+std::filesystem::path path_utils::normalize_path(const std::filesystem::path& path) {
+	return normalize_path(path.string());
+}

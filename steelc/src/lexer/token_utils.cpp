@@ -99,14 +99,13 @@ const std::map<std::string, token_type>& get_keywords() {
 }
 const std::vector<std::pair<std::string, token_type>>& get_operators() {
 	static const std::vector<std::pair<std::string, token_type>> operators = {
-		//{"and", TT_AND}, these are now keyword operators
-		//{"or", TT_OR},
 		{"++", TT_INCREMENT},
 		{"--", TT_DECREMENT},
 		{"==", TT_EQUAL},
 		{"!=", TT_NOT_EQUAL},
 		{"<=", TT_LESS_EQ},
 		{">=", TT_GREATER_EQ},
+		{"::", TT_SCOPE},
 		{"->", TT_ARROW},
 		{"<", TT_LESS},
 		{">", TT_GREATER},
@@ -118,6 +117,11 @@ const std::vector<std::pair<std::string, token_type>>& get_operators() {
 		{"=", TT_ASSIGN},
 		{"!", TT_NOT},
 		{".", TT_ACCESS},
+
+		// IMPORTANT NOTE
+		// this is NOT an operator, however its easier to handle
+		// here as to not conflict with the :: operator
+		{":", TT_COLON},
 	};
 	return operators;
 }
@@ -144,7 +148,6 @@ int op_len(token_type tk) {
 const std::map<char, token_type>& get_grammars() {
 	static const std::map<char, token_type> grammars = {
 		{';', TT_SEMICOLON},
-		{':', TT_COLON},
 		{',', TT_COMMA},
 		{'(', TT_LPAREN},
 		{')', TT_RPAREN},

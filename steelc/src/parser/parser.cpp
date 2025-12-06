@@ -709,15 +709,15 @@ std::shared_ptr<expression> parser::parse_primary_expression() {
 	// handle postfix operators
 	while (true) {
 		token& tok = peek();
-		// member expressions
-		if (tok.type == TT_ACCESS) {
-			advance(); // consume '.'
+		// resolution expressions
+		if (tok.type == TT_ACCESS || tok.type == TT_SCOPE) {
+			advance(); // consume '.'/'::'
 			if (!match(TT_IDENTIFIER)) {
 				ERROR_TOKEN(ERR_MEMBER_NAME_EXPECTED, peek());
 				return nullptr;
 			}
 			token& member_token = previous();
-			expr = make_ast<member_expression>(tok, std::dynamic_pointer_cast<expression>(expr), member_token.value);
+			expr = make_ast<member_expression>(tok, std::dynamic_pointer_cast<expression>(expr), member_token.value, tok.type);
 		}
 		// method call
 		else if (tok.type == TT_LPAREN) {
@@ -728,6 +728,18 @@ std::shared_ptr<expression> parser::parse_primary_expression() {
 				ERROR_TOKEN(ERR_RPAREN_EXPECTED, peek());
 				return nullptr;
 			}
+
+			// scoped function call
+			if (auto mem = std::dynamic_pointer_cast<member_expression>(expr)) {
+				if (mem->access_operator == TT_SCOPE) {
+					auto func = make_ast<function_call>(tok, mem->member, args);
+					func->scope = mem->object;
+					expr = func;
+					continue;
+				}
+			}
+
+			// regular method call
 			if (prev_tok.type == TT_IDENTIFIER) {
 				expr = make_ast<function_call>(prev_tok, std::dynamic_pointer_cast<expression>(expr), prev_tok.value, args);
 			}

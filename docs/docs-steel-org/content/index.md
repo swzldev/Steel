@@ -13,12 +13,11 @@ Welcome to the Steel documentation. This site gives you a focused overview of th
 
 ## Quick links
 
-- Getting Started → [Install](#/getting-started)
-- Language → [Syntax](#/syntax)
-- Tooling → [CLI](#/cli)
+- Getting Started &rarr; [Install](#/install)
+- Language &rarr; [Syntax](#/syntax)
+- Tooling &rarr; [CLI](#/cli)
 
 ## Design goals
 
-- Simplicity: composable primitives over magic.
-- Clarity: readable, explicit code.
-- Safety: strong defaults, powerful tooling.
+- Fast: Steel is designed to be 0 comprimise, you shouldn't need to sacrifise speed for safety!
+- Safe: Preventing 99% of bugs at compile time, so you can focus on your projects without worry.

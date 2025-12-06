@@ -68,8 +68,11 @@ public:
 	inline bool is_void() const {
 		return primitive == DT_VOID;
 	}
-	inline bool is_integral() const {
+	inline bool is_integer() const {
 		return primitive == DT_I16 || primitive == DT_I32 || primitive == DT_I64;
+	}
+	inline bool is_integral() const {
+		return is_integer() || is_enum();
 	}
 	inline bool is_floating_point() const {
 		return primitive == DT_FLOAT || primitive == DT_DOUBLE;

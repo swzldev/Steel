@@ -13,7 +13,7 @@ Verify your install:
 steelc --version
 ```
 
-You should see a semantic version like `steel 0.1.0`.
+You should see a version like `steelc version 0.4.0`.
 
 ## Creating the project
 

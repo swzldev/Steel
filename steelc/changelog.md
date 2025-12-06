@@ -1,5 +1,11 @@
 # STEELC CHANGELOG
 
+## [Unreleased]
+- Added support for the '::' operator for static scope resolution.
+- Added support for module member resolution without having to import.
+- The build cache now only saves after full successful builds which prevents it from caching if output or post build steps fail.
+- Added a check if codegen fails instead of just only returning the successfully generated ir.
+
 ## [0.4.0-alpha] - 04-12-2025
 - Added some useful build command flags:
     - `--no-link`: Skips the linking step after building, leaving only the generated IR files.
