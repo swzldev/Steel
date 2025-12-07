@@ -131,7 +131,7 @@ set(SOURCES
     "src/building/build_config.h"
     "src/utils/path_utils.h"
     "src/utils/path_utils.cpp"
- "src/parser/semantics/classes/computed_value.h" "src/parser/semantics/classes/computed_value.cpp")
+)
 
 # Add source to this project's executable.
 add_executable ( steelc ${SOURCES} )
