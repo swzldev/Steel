@@ -8,6 +8,14 @@
 #include "../declarations/function_declaration.h"
 #include "../declarations/type_declaration.h"
 #include "../declarations/enum_declaration.h"
+#include "../../types/data_type.h"
+#include "../../entities/entities_fwd.h"
+#include "../../entities/variable_entity.h"
+#include "../../entities/function_entity.h"
+#include "../../entities/type_entity.h"
+#include "../../entities/module_entity.h"
+
+struct module_info;
 
 enum identifier_type {
 	IDENTIFIER_UNKNOWN,
@@ -45,13 +53,6 @@ public:
 		if (variable_declaration && id_type == IDENTIFIER_VARIABLE) {
 			return variable_declaration->type;
 		}
-		else if (module_info && id_type == IDENTIFIER_MODULE) {
-			// modules dont have a type
-			return data_type::UNKNOWN;
-		}
-		else if (function_declaration && id_type == IDENTIFIER_FUNCTION) {
-			return data_type::UNKNOWN; // TODO
-		}
 		else if (type_declaration && id_type == IDENTIFIER_TYPE) {
 			return type_declaration->type();
 		}
@@ -69,10 +70,25 @@ public:
 		return false;
 	}
 
+	entity_ptr entity() const override {
+		switch (id_type) {
+		case IDENTIFIER_VARIABLE:
+			return variable_entity::make(variable_declaration);
+		case IDENTIFIER_FUNCTION:
+			return function_entity::make(function_declaration);
+		case IDENTIFIER_TYPE:
+			return type_entity::make(type());
+		case IDENTIFIER_MODULE:
+			return module_entity::make(module_info);
+		default:
+			return nullptr;
+		}
+	}
+
 	std::string identifier;
 	identifier_type id_type;
 	std::shared_ptr<variable_declaration> variable_declaration;
-	std::shared_ptr<struct module_info> module_info;
+	std::shared_ptr<module_info> module_info;
 	std::shared_ptr<function_declaration> function_declaration;
 	std::shared_ptr<type_declaration> type_declaration;
 	std::shared_ptr<enum_declaration> enum_declaration;

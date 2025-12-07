@@ -60,10 +60,10 @@ ast_ptr parser::parse_declaration() {
 				return nullptr;
 			}
 
-			if (!first) module_name += ".";
+			if (!first) module_name += "::";
 			module_name += previous().value;
 			first = false;
-		} while (match(TT_ACCESS));
+		} while (match(TT_SCOPE));
 
 		if (!match(TT_SEMICOLON)) {
 			ERROR_TOKEN(ERR_SEMICOLON_EXPECTED, peek());

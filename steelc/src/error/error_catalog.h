@@ -140,6 +140,10 @@ enum error_code {
     ERR_ARRAY_SIZE_MUST_BE_INTEGER,
     ERR_ARRAY_SIZE_MUST_BE_CONSTANT,
     ERR_SCOPED_FUNCTION_NOT_MODULE,
+	ERR_NO_MODULE_MEMBER_WITH_NAME,
+    ERR_STATIC_ACCESS_ON_FUNCTION,
+    ERR_STATIC_ACCESS_ON_NONSTATIC_MEMBER,
+    ERR_NO_MEMBER_WITH_NAME_MODULE,
 };
 
 enum warning_code {
@@ -242,7 +246,7 @@ struct error_catalog {
             {"S094", "An internal compiler error occurred, phase: '%s', message: '%s'"},
             {"S095", "Module '%s' not found"},
             {"S096", "Import statements can only appear at top-level (outside all scopes)"},
-            {"S097", "Name collision, '%s' is defined in multiple places"},
+            {"S097", "Ambiguous reference to '%s', could be '%s'"},
             {"S098", "Unterminated mutli-line comment"},
             {"S099", "Type name expected"},
             {"S100", "Duplicate type modifier"},
@@ -292,6 +296,10 @@ struct error_catalog {
             {"S144", "Array size must be an integer"},
             {"S145", "Array size must be a constant compile-time computable value"},
             {"S146", "Scoped function calls (e.g. scope::func()) can only be used on modules"},
+            {"S147", "The module '%s' has no member named '%s'"},
+            {"S148", "Static access not allowed on function '%s'"},
+            {"S149", "Static access not allowed on non-static member '%s'"},
+            {"S150", "The module '%s' has no member named '%s'"},
         };
         return errors[code - 1 /* -1 to avoid ERR_SUCCESS */];
     }

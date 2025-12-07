@@ -25,6 +25,7 @@ public:
 	void visit(std::shared_ptr<module_declaration> decl) override;
 	void visit(std::shared_ptr<binary_expression> expr) override;
 	void visit(std::shared_ptr<identifier_expression> expr) override;
+	void visit(std::shared_ptr<member_expression> expr) override;
 	void visit(std::shared_ptr<this_expression> expr) override;
 	void visit(std::shared_ptr<function_call> func_call) override;
 	void visit(std::shared_ptr<code_block> block) override;

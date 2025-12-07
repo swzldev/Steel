@@ -1,12 +1,11 @@
 ; ModuleID = 'io.st'
 source_filename = "io.st"
 
-define void @print(ptr %message) {
+@0 = private unnamed_addr constant [20 x i8] c"Hi from io module!\0A\00", align 1
+
+define void @_ZN2io6say_hiE() {
 entry:
-  %message1 = alloca ptr, align 8
-  store ptr %message, ptr %message1, align 8
-  %0 = load ptr, ptr %message1, align 8
-  %1 = call i32 (ptr, ...) @printf(ptr %0)
+  call void @_ZN2io5printEPc(ptr @0)
   br label %scope.clean
 
 return:                                           ; preds = %scope.clean
@@ -16,4 +15,4 @@ scope.clean:                                      ; preds = %entry
   br label %return
 }
 
-declare i32 @printf(ptr, ...)
+declare void @_ZN2io5printEPc(ptr)

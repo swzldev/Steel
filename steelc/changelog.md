@@ -5,6 +5,9 @@
 - Added support for module member resolution without having to import.
 - The build cache now only saves after full successful builds which prevents it from caching if output or post build steps fail.
 - Added a check if codegen fails instead of just only returning the successfully generated ir.
+- Added much better error support for ambiguous name resolution.
+- Updated build cache to version 2, which now tracks the version of steelc used to build the cached files, preventing issues when updating.
+- Fixed a bug where the message of codegen exceptions was always empty.
 
 ## [0.4.0-alpha] - 04-12-2025
 - Added some useful build command flags:

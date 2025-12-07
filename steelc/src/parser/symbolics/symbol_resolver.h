@@ -2,6 +2,7 @@
 
 #include <vector>
 
+#include "lookup_result.h"
 #include "import_table.h"
 #include "../modules/module_info.h"
 

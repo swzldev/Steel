@@ -1,5 +1,5 @@
 module io {
-	func print(message: string) {
-		printf(message);
+	func say_hi() {
+		print("Hi from io module!\n");
 	}
 }

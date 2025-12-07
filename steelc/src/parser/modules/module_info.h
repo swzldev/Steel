@@ -2,6 +2,7 @@
 
 #include <string>
 #include <memory>
+#include <unordered_map>
 
 #include "../symbolics/symbol_table.h"
 
@@ -15,5 +16,11 @@ struct module_info {
 
 	inline bool is_global() const {
 		return parent_module == nullptr;
+	}
+	inline std::string full_name() const {
+		if (is_global()) {
+			return name;
+		}
+		return parent_module->full_name() + "::" + name;
 	}
 };

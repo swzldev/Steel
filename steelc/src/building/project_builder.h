@@ -67,7 +67,7 @@ private:
 
 	// build cache
 	build_cache_file load_cache();
-	void save_cache(const build_cache_file& cache) const;
+	void save_cache(build_cache_file& cache) const;
 	std::vector<source_file> get_files_to_compile(build_cache_file& cache);
 	file_metadata generate_metadata(const source_file& src);
 

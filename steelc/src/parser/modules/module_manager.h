@@ -11,10 +11,10 @@ class module_manager {
 public:
 	module_manager();
 
-	std::shared_ptr<module_info> add_module(std::string& name, std::shared_ptr<module_info> parent);
+	std::shared_ptr<module_info> add_module(const std::string& name, std::shared_ptr<module_info> parent);
 
-	inline bool has_module(std::string& name) const;
-	std::shared_ptr<module_info> get_module(std::string& name);
+	inline bool has_module(const std::string& name) const;
+	std::shared_ptr<module_info> get_module(const std::string& name);
 	std::shared_ptr<module_info> get_global_module();
 	std::shared_ptr<module_info> get_parent(std::shared_ptr<module_info> module);
 

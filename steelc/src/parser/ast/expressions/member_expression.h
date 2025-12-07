@@ -5,6 +5,9 @@
 
 #include "../ast_node.h"
 #include "expression.h"
+#include "../../types/types_fwd.h"
+#include "../../types/data_type.h"
+#include "../../entities/entities_fwd.h"
 #include "../../../lexer/token_type.h"
 
 class member_expression : public expression, public std::enable_shared_from_this<member_expression> {
@@ -37,6 +40,7 @@ public:
 			access_operator
 		);
 		cloned->resolved_type = resolved_type;
+		cloned->resolved_entity = resolved_entity;
 		return cloned;
 	}
 
@@ -50,9 +54,25 @@ public:
 		return false;
 	}
 
+	entity_ptr entity() const override {
+		return resolved_entity;
+	}
+
+	inline bool is_resolved() const {
+		return resolved_type != nullptr && resolved_entity != nullptr;
+	}
+
+	inline bool is_static_access() const {
+		return access_operator == TT_SCOPE;
+	}
+	inline bool is_instance_access() const {
+		return access_operator == TT_ACCESS || access_operator == TT_ARROW;
+	}
+
 	std::shared_ptr<expression> object;
 	std::string member;
 	token_type access_operator;
 	type_ptr resolved_type;
+	entity_ptr resolved_entity;
 	bool is_lvalue = true;
 };

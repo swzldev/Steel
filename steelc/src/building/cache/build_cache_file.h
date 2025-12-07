@@ -6,18 +6,24 @@
 #include <string>
 
 #include "file_metadata.h"
+#include "../../steelc_definitions.h"
 
 class build_cache_file {
 public:
 	static constexpr auto EXTENSION = ".dat";
 	static constexpr auto MAGIC = "SCBC";
-	static constexpr int VERSION_LATEST = 1;
+	static constexpr int VERSION_LATEST = 2;
 
 public:
 	build_cache_file() = default;
 
 	bool deserialize(const std::filesystem::path& path);
 	bool serialize(const std::filesystem::path& path) const;
+
+	inline bool outdated() const {
+		return version != VERSION_LATEST || steelc_version != STEELC_VERSION_PACKED;
+	}
+	void upgrade();
 
 	inline std::unordered_map<std::string, file_metadata>& get_metadata() {
 		return metadata;
@@ -32,4 +38,5 @@ public:
 private:
 	std::unordered_map<std::string, file_metadata> metadata;
 	int version = VERSION_LATEST;
+	uint32_t steelc_version = STEELC_VERSION_PACKED;
 };

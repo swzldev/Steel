@@ -110,6 +110,8 @@ set(SOURCES
     "src/codegen/computation/compile_time_computator.cpp"
     "src/parser/semantics/compile_time_computator_visitor.h"
     "src/parser/semantics/compile_time_computator_visitor.cpp"
+    "src/parser/semantics/classes/computed_value.cpp"
+    "src/parser/semantics/classes/computed_value.h"
     "src/input/commands/steelc_command_manager.h"
     "src/input/commands/steelc_command.h"
     "src/input/commands/steelc_command_manager.cpp"
@@ -131,7 +133,17 @@ set(SOURCES
     "src/building/build_config.h"
     "src/utils/path_utils.h"
     "src/utils/path_utils.cpp"
-)
+    "src/parser/entities/entity.h"
+    "src/parser/entities/variable_entity.h"
+    "src/parser/entities/type_entity.h"
+    "src/parser/entities/module_entity.h"
+    "src/parser/entities/entities_fwd.h"
+    "src/parser/types/types_fwd.h"
+    "src/parser/entities/function_entity.h"
+    "src/parser/entities/variable_entity.cpp"
+    "src/parser/entities/function_entity.cpp"
+    "src/parser/entities/type_entity.cpp"
+    "src/parser/entities/module_entity.cpp" "src/parser/symbolics/lookup_result.h" "src/parser/symbolics/lookup_result.cpp")
 
 # Add source to this project's executable.
 add_executable ( steelc ${SOURCES} )

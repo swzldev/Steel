@@ -7,16 +7,29 @@ module_manager::module_manager() {
 	global_module->parent_module = nullptr;
 }
 
-std::shared_ptr<module_info> module_manager::add_module(std::string& name, std::shared_ptr<module_info> parent) {
+std::shared_ptr<module_info> module_manager::add_module(const std::string& name, std::shared_ptr<module_info> parent) {
+	// identify full name
+	std::string full_name;
+	if (parent) {
+		full_name = parent->full_name() + "::" + name;
+	}
+	else {
+		full_name = name;
+	}
+
+	// create module
 	auto module = std::make_shared<module_info>();
 	module->id = get_next_id();
 	module->name = name;
 	module->parent_module = parent;
-	modules[name] = module;
+
+	// register module
+	modules[full_name] = module;
+
 	return module;
 }
 
-inline bool module_manager::has_module(std::string& name) const {
+inline bool module_manager::has_module(const std::string& name) const {
 	for (const auto& mod : modules) {
 		if (mod.second->name == name) {
 			return true;
@@ -24,7 +37,7 @@ inline bool module_manager::has_module(std::string& name) const {
 	}
 	return false;
 }
-std::shared_ptr<module_info> module_manager::get_module(std::string& name) {
+std::shared_ptr<module_info> module_manager::get_module(const std::string& name) {
 	for (const auto& mod : modules) {
 		if (mod.second->name == name) {
 			return mod.second;

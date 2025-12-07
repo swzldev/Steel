@@ -1,7 +1,14 @@
 #include "llvm_function_builder.h"
 
 #include <memory>
+#include <string>
+#include <vector>
 
+#include <llvm/IR/DerivedTypes.h>
+#include <llvm/IR/Function.h>
+#include <llvm/IR/Type.h>
+
+#include "../naming/name_mangler.h"
 #include "../constants/codegen_constants.h"
 #include "../error/codegen_exception.h"
 #include "../../parser/ast/declarations/function_declaration.h"
@@ -14,6 +21,31 @@ llvm::Function* llvm_function_builder::build(std::shared_ptr<function_declaratio
 	}
 
 	auto linkage = llvm::Function::ExternalLinkage;
+	auto fn_type = get_llvm_fn_type(func_ast);
+
+	std::string name = mangler.mangle_function(func_ast);
+	llvm::Function* fn = llvm::Function::Create(
+		/* Function Type */ fn_type,
+		/* Linkage */ linkage,
+		/* Name */ name,
+		/* Module */ module
+	);
+
+	// name the function arguments
+	auto arg_iter = fn->arg_begin();
+	if (func_ast->is_method) {
+		// name this pointer (if applicable)
+		arg_iter->setName(codegen_constants::THIS_PARAM_NAME);
+		++arg_iter;
+	}
+	for (const auto& param : func_ast->parameters) {
+		arg_iter->setName(param->identifier);
+		++arg_iter;
+	}
+
+	return fn;
+}
+llvm::FunctionType* llvm_function_builder::get_llvm_fn_type(std::shared_ptr<function_declaration> func_ast) {
 	auto return_type = type_converter.convert(func_ast->return_type);
 
 	llvm::FunctionType* fn_type = nullptr;
@@ -40,24 +72,7 @@ llvm::Function* llvm_function_builder::build(std::shared_ptr<function_declaratio
 		// in the future, we can add support for variadic functions here
 	}
 
-	llvm::Function* fn = llvm::Function::Create(
-		/* Function Type */ fn_type,
-		/* Linkage */ linkage,
-		/* Name */ func_ast->identifier,
-		/* Module */ module
-	);
-
-	// name the function arguments
-	auto arg_iter = fn->arg_begin();
-	if (func_ast->is_method) {
-		// name this pointer (if applicable)
-		arg_iter->setName(codegen_constants::THIS_PARAM_NAME);
-		++arg_iter;
-	}
-	for (const auto& param : func_ast->parameters) {
-		arg_iter->setName(param->identifier);
-		++arg_iter;
-	}
-
-	return fn;
+	return fn_type;
 }
+
+name_mangler llvm_function_builder::mangler;

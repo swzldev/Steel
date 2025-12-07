@@ -6,76 +6,39 @@
 #include <vector>
 #include <memory>
 #include <utility>
-#include <variant>
 
-#include "../ast/ast.h"
+#include "lookup_result.h"
 #include "../ast/declarations/variable_declaration.h"
 #include "../ast/declarations/function_declaration.h"
 #include "../ast/declarations/type_declaration.h"
-#include "../types/data_type.h"
 #include "../../error/error_catalog.h"
 
-enum lookup_error {
-	LOOKUP_OK,
-	LOOKUP_NO_MATCH,
-	LOOKUP_COLLISION,
-};
-
-class lookup_result {
-public:
-	lookup_result() = default;
-	lookup_result(lookup_error err)
-		: error(err) {
-	}
-	lookup_result(std::shared_ptr<variable_declaration> var)
-		: error(LOOKUP_OK), value(std::move(var)) {
-	}
-	lookup_result(std::shared_ptr<generic_parameter> param)
-		: error(LOOKUP_OK), value(std::move(param)) {
-	}
-	lookup_result(std::shared_ptr<function_declaration> func)
-		: error(LOOKUP_OK), value(std::move(func)) {
-	}
-	lookup_result(std::shared_ptr<type_declaration> type)
-		: error(LOOKUP_OK), value(std::move(type)) {
-	}
-	lookup_result(std::shared_ptr<enum_declaration> enm)
-		: error(LOOKUP_OK), value(std::move(enm)) {
-	}
-
-	lookup_error error = LOOKUP_OK;
-	std::variant<
-		std::shared_ptr<variable_declaration>,
-		std::shared_ptr<generic_parameter>,
-		std::shared_ptr<function_declaration>,
-		std::shared_ptr<type_declaration>,
-		std::shared_ptr<enum_declaration>
-	> value;
-};
+struct module_info;
 
 class symbol_table {
 public:
 	symbol_table();
 
 	inline bool in_global_scope() const {
-		return scopes.size() == 1;
+		return variables.size() == 1;
 	}
 	void push_scope();
 	void pop_scope();
 
 	error_code add_variable(std::shared_ptr<variable_declaration> var);
-	error_code add_generic(std::shared_ptr<generic_parameter> param);
 	error_code add_field(std::shared_ptr<type_declaration> type, std::shared_ptr<variable_declaration> var);
 	error_code add_function(std::shared_ptr<function_declaration> func);
 	error_code add_method(std::shared_ptr<type_declaration> type, std::shared_ptr<function_declaration> func);
 	error_code add_type(std::shared_ptr<type_declaration> type);
 	error_code add_enum(std::shared_ptr<enum_declaration> enm);
+	error_code add_generic(std::shared_ptr<generic_parameter> param);
+	bool add_module(std::shared_ptr<module_info> module);
 
 	inline bool has_variable(const std::string& name) const {
-		return get_variable(nullptr, name).error == LOOKUP_OK;
+		return get_variable(nullptr, name).found();
 	}
-	inline bool has_generic(const std::string& name) const {
-		return get_generic(name).error == LOOKUP_OK;
+	inline bool has_function(const std::string& name) const {
+		return get_function(name).found();
 	}
 	inline bool has_type(const std::string& name) const {
 		return types.find(name) != types.end();
@@ -83,18 +46,29 @@ public:
 	inline bool has_enum(const std::string& name) const {
 		return enums.find(name) != enums.end();
 	}
+	inline bool has_generic(const std::string& name) const {
+		return get_generic(name) != nullptr;
+	}
+	inline bool has_module(const std::string& name) const {
+		return modules.find(name) != modules.end();
+	}
+
+	lookup_result lookup(const std::string& name) const;
 
 	lookup_result get_variable(std::shared_ptr<const type_declaration> type, const std::string& name) const;
-	lookup_result get_generic(const std::string& name) const;
+	lookup_result get_function(const std::string& name) const;
 	lookup_result get_function(const std::string& name, type_ptr return_type, std::vector<type_ptr> param_types) const;
 	lookup_result get_type(const std::string& name) const;
 	lookup_result get_enum(const std::string& name) const;
+	lookup_result get_module(const std::string& name) const;
+	std::shared_ptr<generic_parameter> get_generic(const std::string& name) const;
 	std::vector<std::shared_ptr<function_declaration>> get_function_candidates(const std::string& name, size_t arity, size_t generics) const;
 
 private:
-	std::vector<std::map<std::string, std::shared_ptr<variable_declaration>>> scopes;
-	std::vector<std::map<std::string, std::shared_ptr<generic_parameter>>> generic_scopes;
+	std::vector<std::map<std::string, std::shared_ptr<variable_declaration>>> variables;
 	std::vector<std::pair<std::string, std::shared_ptr<function_declaration>>> functions;
 	std::unordered_map<std::string, std::shared_ptr<type_declaration>> types;
 	std::unordered_map<std::string, std::shared_ptr<enum_declaration>> enums;
+	std::vector<std::map<std::string, std::shared_ptr<generic_parameter>>> generic_scopes;
+	std::unordered_map<std::string, std::shared_ptr<module_info>> modules;
 };

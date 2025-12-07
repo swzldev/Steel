@@ -34,6 +34,14 @@ bool build_cache_file::deserialize(const std::filesystem::path& path) {
 	// use the version variable to handle different versions here
 	// build cache files should be fully backwards compatible
 
+	if (version == 1) {
+		// version 1 did not store steelc version
+		steelc_version = STEELC_VERSION_PACKED;
+	}
+	else {
+		file.read(reinterpret_cast<char*>(&steelc_version), sizeof(steelc_version));
+	}
+
 	uint32_t num_entries = 0;
 	file.read(reinterpret_cast<char*>(&num_entries), sizeof(num_entries));
 	for (uint32_t i = 0; i < num_entries; ++i) {
@@ -54,6 +62,11 @@ bool build_cache_file::deserialize(const std::filesystem::path& path) {
 	return true;
 }
 bool build_cache_file::serialize(const std::filesystem::path& path) const {
+	// cannot serialize outdated cache
+	if (outdated()) {
+		return false;
+	}
+
 	std::ofstream file(path, std::ios::binary);
 	if (!file.is_open()) {
 		return false;
@@ -61,7 +74,8 @@ bool build_cache_file::serialize(const std::filesystem::path& path) const {
 
 	// write header
 	file.write(MAGIC, 4);
-	file.write(reinterpret_cast<const char*>(&VERSION_LATEST), sizeof(VERSION_LATEST));
+	file.write(reinterpret_cast<const char*>(&version), sizeof(version));
+	file.write(reinterpret_cast<const char*>(&steelc_version), sizeof(steelc_version));
 
 	// number of entries
 	uint32_t num_entries = static_cast<uint32_t>(metadata.size());
@@ -78,4 +92,11 @@ bool build_cache_file::serialize(const std::filesystem::path& path) const {
 
 	file.close();
 	return true;
+}
+
+void build_cache_file::upgrade() {
+	if (outdated()) {
+		version = VERSION_LATEST;
+		steelc_version = STEELC_VERSION_PACKED;
+	}
 }

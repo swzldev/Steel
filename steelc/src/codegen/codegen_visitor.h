@@ -12,6 +12,7 @@
 #include "type_handling/llvm_type_converter.h"
 #include "builders/llvm_function_builder.h"
 #include "builders/llvm_expression_builder.h"
+#include "naming/name_mangler.h"
 #include "../lexer/token_type.h"
 #include "../parser/ast/ast_visitor.h"
 #include "../parser/ast/ast_fwd.h"
@@ -73,6 +74,8 @@ private:
 	llvm_type_converter type_converter;
 	llvm_function_builder function_builder;
 	llvm_expression_builder expression_builder;
+
+	name_mangler mangler;
 
 	std::unique_ptr<codegen_env> env;
 

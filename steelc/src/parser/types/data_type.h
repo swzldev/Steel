@@ -4,6 +4,7 @@
 #include <memory>
 #include <vector>
 
+#include "types_fwd.h"
 #include "../../lexer/token.h"
 #include "../../utils/iclonable.h"
 
@@ -36,17 +37,6 @@ enum primitive_type {
 enum data_type_modifier {
 	DTM_NONE = 0,
 };
-
-// type forward declarations
-class data_type;
-class custom_type;
-class array_type;
-class pointer_type;
-class enum_type;
-class enum_option_type;
-class generic_type;
-
-using type_ptr = std::shared_ptr<data_type>;
 
 class data_type : public iclonable<data_type>, public std::enable_shared_from_this<data_type> {
 public:
@@ -108,6 +98,14 @@ public:
 		// to check if a type is a generic type instantiation you should
 		// check that generic_args.size() > 0
 		return primitive == DT_GENERIC;
+	}
+
+	inline bool is_valid_object_type() const {
+		return is_primitive()
+			|| is_custom()
+			|| is_array()
+			|| is_pointer()
+			|| is_enum();
 	}
 
 	std::shared_ptr<custom_type> as_custom();

@@ -11,7 +11,7 @@
 class codegen_exception : public std::exception {
 public:
 	codegen_exception(const std::string& err)
-		: msg(msg) {
+		: msg(err) {
 	}
 
 	virtual const char* what() const noexcept override {

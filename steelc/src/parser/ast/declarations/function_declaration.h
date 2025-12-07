@@ -48,6 +48,7 @@ public:
 	inline bool is_abstract() const {
 		return body == nullptr;
 	}
+
 	inline bool matches(const std::shared_ptr<function_declaration>& other, bool match_return_type = true) {
 		if (!other) {
 			return false;

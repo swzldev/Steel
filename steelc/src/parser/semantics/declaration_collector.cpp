@@ -71,6 +71,9 @@ void declaration_collector::visit(std::shared_ptr<function_declaration> func) {
 		}
 	}
 
+	// set parent module
+	func->parent_module = current_module;
+
 	if (func->body) {
 		current_function = func;
 		func->body->accept(*this);
@@ -101,6 +104,9 @@ void declaration_collector::visit(std::shared_ptr<variable_declaration> var) {
 		}
 		// shouldnt have any generic problems in the global scope
 	}
+
+	// set parent module
+	var->parent_module = current_module;
 }
 void declaration_collector::visit(std::shared_ptr<type_declaration> decl) {
 	// check if type is already defined
@@ -146,7 +152,8 @@ void declaration_collector::visit(std::shared_ptr<type_declaration> decl) {
 		return;
 	}
 
-	// check if were exporting this function
+	// set parent module
+	decl->parent_module = current_module;
 
 	current_type = decl;
 	for (const auto& member : decl->fields) {
@@ -169,8 +176,12 @@ void declaration_collector::visit(std::shared_ptr<module_declaration> mod) {
 
 	// identify full module name
 	if (!current_module->is_global()) {
-		module_name = current_module->name + "." + module_name;
+		module_name = current_module->name + "::" + module_name;
 	}
+
+	// set the parent module (of the declaration, this doesnt effect the module_info representation)
+	// not sure if this will ever come in handy, but its good to have it for all declarations
+	mod->parent_module = current_module;
 
 	// lookup module
 	auto module = module_manager.get_module(module_name);
@@ -179,7 +190,13 @@ void declaration_collector::visit(std::shared_ptr<module_declaration> mod) {
 	}
 	else {
 		// doesnt exist - create a new module
-		current_module = module_manager.add_module(module_name, current_module);
+		// note: dont pass full name, its automatically handled based on the parent module passed
+		auto& parent = current_module;
+		current_module = module_manager.add_module(mod->name, current_module);
+		if (parent) {
+			// add as submodule
+			parent->symbols.add_module(current_module);
+		}
 	}
 	sym_table = &current_module->symbols;
 	mod->module_info = current_module;
@@ -224,6 +241,9 @@ void declaration_collector::visit(std::shared_ptr<enum_declaration> enm) {
 		}
 		option_names.insert(option->identifier);
 	}
+
+	// set parent module
+	enm->parent_module = current_module;
 }
 
 void declaration_collector::visit(std::shared_ptr<import_statement> import_stmt) {

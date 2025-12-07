@@ -168,7 +168,7 @@ void codegen_visitor::visit(std::shared_ptr<function_call> func_call) {
 	else if (func_call->is_method()) {
 
 	}
-	else if (func_call->is_constructor()) {
+	else if (func_call->is_constructor) {
 
 	}
 	else {
@@ -185,9 +185,23 @@ void codegen_visitor::visit(std::shared_ptr<function_call> func_call) {
 		}
 
 		else {
-			llvm::Function* callee_fn = module.getFunction(func_call->identifier);
-			cg_assert(callee_fn != nullptr, "Undefined function: " + func_call->identifier);
-			result = env->builder.CreateCall(callee_fn, arg_values);
+			if (func_call->declaration) {
+				// get the full name
+				std::string mangled_name = mangler.mangle_function(func_call->declaration);
+
+				// lookup in current module
+				llvm::Function* callee_fn = module.getFunction(func_call->identifier);
+				if (callee_fn == nullptr) {
+					// assume external
+					auto callee_type = function_builder.get_llvm_fn_type(func_call->declaration);
+					callee_fn = llvm::cast<llvm::Function>(module.getOrInsertFunction(mangled_name, callee_type).getCallee());
+					callee_fn->setLinkage(llvm::Function::ExternalLinkage);
+				}
+				result = env->builder.CreateCall(callee_fn, arg_values);
+			}
+			else {
+				throw codegen_exception("Function call to undefined function: " + func_call->identifier);
+			}
 		}
 	}
 }

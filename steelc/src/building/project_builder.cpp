@@ -164,7 +164,10 @@ build_cache_file project_builder::load_cache() {
 	// create a new blank cache
 	return build_cache_file{};
 }
-void project_builder::save_cache(const build_cache_file& cache) const {
+void project_builder::save_cache(build_cache_file& cache) const {
+	if (cache.outdated()) {
+		cache.upgrade();
+	}
 	cache.serialize(cache_path);
 }
 std::vector<source_file> project_builder::get_files_to_compile(build_cache_file& cache) {
@@ -197,7 +200,11 @@ std::vector<source_file> project_builder::get_files_to_compile(build_cache_file&
 		// check cache
 		if (auto meta = metadata.find(src.full_path); meta != metadata.end()) {
 			// found in cache - check if needs recompilation
-			if (should_compile(src, meta->second)) {
+			if (cache.outdated()) {
+				// if the cache is outdated, recompile all files
+				out_files.push_back(src);
+			}
+			else if (should_compile(src, meta->second)) {
 				out_files.push_back(src);
 			}
 			continue;

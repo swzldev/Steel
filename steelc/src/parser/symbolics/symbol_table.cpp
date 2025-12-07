@@ -1,19 +1,34 @@
 #include "symbol_table.h"
 
+#include <memory>
+#include <string>
+#include <vector>
+
+#include "../ast/declarations/enum_declaration.h"
+#include "../ast/declarations/function_declaration.h"
+#include "../ast/declarations/type_declaration.h"
+#include "../ast/declarations/variable_declaration.h"
+#include "../ast/generics/generic_parameter.h"
+#include "../entities/function_entity.h"
+#include "../entities/variable_entity.h"
+#include "../entities/type_entity.h"
+#include "../entities/module_entity.h"
+#include "../types/types_fwd.h"
+#include "../modules/module_info.h"
 #include "../../error/error_catalog.h"
 
 symbol_table::symbol_table() {
-	scopes = {};
-	scopes.emplace_back(); // global scope
+	variables = {};
+	variables.emplace_back(); // global scope
 }
 
 void symbol_table::push_scope() {
-	scopes.emplace_back();
+	variables.emplace_back();
 	generic_scopes.emplace_back();
 }
 void symbol_table::pop_scope() {
-	if (!scopes.empty()) {
-		scopes.pop_back();
+	if (!variables.empty()) {
+		variables.pop_back();
 	}
 	if (!generic_scopes.empty()) {
 		generic_scopes.pop_back();
@@ -21,7 +36,7 @@ void symbol_table::pop_scope() {
 }
 
 error_code symbol_table::add_variable(std::shared_ptr<variable_declaration> var) {
-	auto& current_scope = scopes.back();
+	auto& current_scope = variables.back();
 	// variables cannot shadow generics
 	for (const auto& gen_scope : generic_scopes) {
 		if (gen_scope.find(var->identifier) != gen_scope.end()) {
@@ -37,7 +52,7 @@ error_code symbol_table::add_variable(std::shared_ptr<variable_declaration> var)
 error_code symbol_table::add_generic(std::shared_ptr<generic_parameter> param) {
 	auto& current_scope = generic_scopes.back();
 	// generics cannot shadow variables
-	for (const auto& var_scope : scopes) {
+	for (const auto& var_scope : variables) {
 		if (var_scope.find(param->identifier) != var_scope.end()) {
 			return ERR_GENERIC_SHADOWS_VARIABLE;
 		}
@@ -47,6 +62,14 @@ error_code symbol_table::add_generic(std::shared_ptr<generic_parameter> param) {
 	}
 	current_scope[param->identifier] = param;
 	return ERR_SUCCESS;
+}
+bool symbol_table::add_module(std::shared_ptr<module_info> module) {
+	if (modules.find(module->name) != modules.end()) {
+		return false;
+	}
+
+	modules[module->name] = module;
+	return true;
 }
 error_code symbol_table::add_field(std::shared_ptr<type_declaration> type, std::shared_ptr<variable_declaration> var) {
 	for (auto& field : type->fields) {
@@ -130,62 +153,103 @@ error_code symbol_table::add_enum(std::shared_ptr<enum_declaration> enm) {
 	return ERR_SUCCESS;
 }
 
+lookup_result symbol_table::lookup(const std::string& name) const {
+	std::vector<lookup_result> results;
+
+	results.push_back(get_variable(nullptr, name));
+	results.push_back(get_function(name));
+	results.push_back(get_type(name));
+	results.push_back(get_enum(name));
+
+	lookup_result final_result;
+	for (const auto& res : results) {
+		if (!res.results.empty()) {
+			for (const auto& ent : res.results) {
+				final_result.results.push_back(ent);
+			}
+		}
+	}
+	return final_result;
+}
+
 lookup_result symbol_table::get_variable(std::shared_ptr<const type_declaration> type, const std::string& name) const {
 	// search up fields hierachy
 	while (type != nullptr) {
 		for (auto& field : type->fields) {
 			if (field->identifier == name) {
-				return { field };
+				return { variable_entity::make(field) };
 			}
 		}
 		type = type->base_class;
 	}
 	// search globally
-	for (auto it = scopes.rbegin(); it != scopes.rend(); ++it) {
+	for (auto it = variables.rbegin(); it != variables.rend(); ++it) {
 		auto found = it->find(name);
 		if (found != it->end()) {
-			return { found->second };
+			return { variable_entity::make(found->second) };
 		}
 	}
-	return { LOOKUP_NO_MATCH };
+	return {};
 }
-lookup_result symbol_table::get_generic(const std::string& name) const {
-	// local lookup
-	for (auto it = generic_scopes.rbegin(); it != generic_scopes.rend(); ++it) {
-		auto found = it->find(name);
-		if (found != it->end()) {
-			return { found->second };
+lookup_result symbol_table::get_function(const std::string& name) const {
+	lookup_result result;
+	// local lookup (ignore parameters, etc)
+	for (const auto& func : functions) {
+		if (func.first == name) {
+			auto fn_ent = function_entity::make(func.second);
+			result.results.push_back(fn_ent);
 		}
 	}
+	return result;
 }
 lookup_result symbol_table::get_function(const std::string& name, type_ptr return_type, std::vector<type_ptr> param_types) const {
+	lookup_result result;
 	// local lookup
 	for (const auto& func : functions) {
 		if (func.first == name && *func.second->return_type == return_type) {
 			for (size_t i = 0; i < func.second->parameters.size(); ++i) {
 				if (i < param_types.size() && *func.second->parameters[i]->type == param_types[i]) {
-					return { func.second };
+					auto fn_ent = function_entity::make(func.second);
+					result.results.push_back(fn_ent);
 				}
 			}
 		}
 	}
-	return { LOOKUP_NO_MATCH };
+	return result;
 }
 lookup_result symbol_table::get_type(const std::string& name) const {
 	// local lookup
 	auto it = types.find(name);
 	if (it != types.end()) {
-		return { it->second };
+		return { type_entity::make(it->second->type()) };
 	}
-	return { LOOKUP_NO_MATCH };
+	return {};
 }
 lookup_result symbol_table::get_enum(const std::string& name) const {
 	// local lookup
 	auto it = enums.find(name);
 	if (it != enums.end()) {
-		return { it->second };
+		return { type_entity::make(it->second->type()) };
 	}
-	return { LOOKUP_NO_MATCH };
+	return {};
+}
+lookup_result symbol_table::get_module(const std::string& name) const {
+	// local lookup
+	auto it = modules.find(name);
+	if (it != modules.end()) {
+		return { module_entity::make(it->second) };
+	}
+	return {};
+}
+std::shared_ptr<generic_parameter> symbol_table::get_generic(const std::string& name) const {
+	// local lookup
+	for (auto it = generic_scopes.rbegin(); it != generic_scopes.rend(); ++it) {
+		auto found = it->find(name);
+		if (found != it->end()) {
+			return found->second;
+		}
+	}
+	return nullptr;
 }
 std::vector<std::shared_ptr<function_declaration>> symbol_table::get_function_candidates(const std::string& name, size_t arity, size_t generics) const {
 	std::vector<std::shared_ptr<function_declaration>> candidates;

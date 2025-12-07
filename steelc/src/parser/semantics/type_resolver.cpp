@@ -1,10 +1,10 @@
 #include "type_resolver.h"
 
 #include "../ast/ast.h"
-#include "../parser_utils.h"
 #include "../types/data_type.h"
 #include "../types/custom_type.h"
 #include "../types/container_types.h"
+#include "../../utils/string_utils.h"
 
 void type_resolver::visit(std::shared_ptr<function_declaration> func) {
 	sym_table->push_scope();
@@ -149,33 +149,36 @@ void type_resolver::resolve_custom(type_ptr& custom) {
 
 	// generic type
 	auto generic = sym_table->get_generic(type_name);
-	if (generic.error == LOOKUP_OK) {
+	if (generic) {
 		auto gn = std::make_shared<generic_type>(type_name);
-		auto& param = std::get<std::shared_ptr<generic_parameter>>(generic.value);
-		gn->generic_param_index = param->param_index;
+		gn->generic_param_index = generic->param_index;
 		custom = gn;
 		return;
 	}
 
 	// custom type
 	auto decl = resolver.get_type(type_name);
-	if (decl.error == LOOKUP_OK) {
-		custom->as_custom()->declaration = std::get<std::shared_ptr<type_declaration>>(decl.value);
+	if (decl.ambiguous()) {
+		auto names = decl.results_names(true);
+		std::string names_string = string_utils::vec_to_string(names);
+		ERROR(ERR_NAME_COLLISION, custom->position, type_name.c_str(), names_string.c_str());
 		return;
 	}
-	else if (decl.error == LOOKUP_COLLISION) {
-		ERROR(ERR_NAME_COLLISION, custom->position, type_name.c_str());
+	else if (decl.found()) {
+		custom = decl.first()->as_type()->type;
 		return;
 	}
 
 	// enum type
 	auto enm = resolver.get_enum(type_name);
-	if (enm.error == LOOKUP_OK) {
-		custom = std::get<std::shared_ptr<enum_declaration>>(enm.value)->type();
+	if (enm.ambiguous()) {
+		auto names = enm.results_names(true);
+		std::string names_string = string_utils::vec_to_string(names);
+		ERROR(ERR_NAME_COLLISION, custom->position, type_name.c_str(), names_string.c_str());
 		return;
 	}
-	else if (enm.error == LOOKUP_COLLISION) {
-		ERROR(ERR_NAME_COLLISION, custom->position, type_name.c_str());
+	else if (decl.found()) {
+		custom = enm.first()->as_type()->type;
 		return;
 	}
 

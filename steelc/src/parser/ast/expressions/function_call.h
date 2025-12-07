@@ -79,9 +79,6 @@ public:
 	inline bool is_method() const {
 		return caller_obj != nullptr;
 	}
-	inline bool is_constructor() const {
-		return ctor_type != nullptr;
-	}
 
 	std::string identifier;
 	std::shared_ptr<expression> scope;
@@ -91,4 +88,5 @@ public:
 	std::shared_ptr<function_declaration> declaration;
 	std::vector<type_ptr> generic_args;
 	std::shared_ptr<type_declaration> ctor_type = nullptr;
+	bool is_constructor = false;
 };

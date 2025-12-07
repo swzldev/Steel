@@ -4,15 +4,44 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <algorithm>
+#include <vector>
+#include <string>
 
 #include "generic_substitutor.h"
-#include "../ast/ast.h"
+#include "../types/types_fwd.h"
 #include "../types/data_type.h"
 #include "../types/custom_type.h"
 #include "../types/container_types.h"
+#include "../types/enum_type.h"
 #include "../types/core.h"
 #include "../types/type_utils.h"
+#include "../entities/entity.h"
+#include "../ast/declarations/function_declaration.h"
+#include "../ast/declarations/type_declaration.h"
+#include "../ast/declarations/variable_declaration.h"
+#include "../ast/enums/enum_option.h"
+#include "../ast/expressions/address_of_expression.h"
+#include "../ast/expressions/assignment_expression.h"
+#include "../ast/expressions/binary_expression.h"
+#include "../ast/expressions/cast_expression.h"
+#include "../ast/expressions/deref_expression.h"
+#include "../ast/expressions/function_call.h"
+#include "../ast/expressions/identifier_expression.h"
+#include "../ast/expressions/index_expression.h"
+#include "../ast/expressions/initializer_list.h"
+#include "../ast/expressions/member_expression.h"
+#include "../ast/expressions/unary_expression.h"
+#include "../ast/statements/control_flow/for_loop.h"
+#include "../ast/statements/control_flow/if_statement.h"
+#include "../ast/statements/control_flow/return_statement.h"
+#include "../ast/statements/control_flow/while_loop.h"
+#include "../ast/statements/inline_if.h"
+#include "../compilation_pass.h"
+#include "../parser_utils.h"
 #include "../../utils/language_constants.h"
+#include "../../error/error_catalog.h"
+#include "../../lexer/token.h"
+#include "../../lexer/token_type.h"
 
 void type_checker::visit(std::shared_ptr<function_declaration> func) {
 	if (func->is_generic && !func->is_generic_instance) {
@@ -399,14 +428,11 @@ void type_checker::visit(std::shared_ptr<cast_expression> expr) {
 void type_checker::visit(std::shared_ptr<member_expression> expr) {
 	expr->object->accept(*this);
 
-	// check if its a module, since modules do not have a type representation
-	if (auto ident = std::dynamic_pointer_cast<identifier_expression>(expr->object)) {
-		if (ident->id_type == IDENTIFIER_MODULE) {
-			const auto& info = ident->module_info;
-			// for now we can just throw an error since i havnt implemented module fields
-			ERROR(ERR_NO_MEMBER_WITH_NAME, expr->position, info->name.c_str(), expr->member.c_str());
-			return;
-		}
+	if (expr->is_resolved()) {
+		// already resolved, likely a static member access
+		// all static member accesses are resolved in the name resolver
+		// we ONLY need to resolve here if it involves types
+		return;
 	}
 
 	auto type = expr->object->type();
@@ -502,7 +528,7 @@ void type_checker::visit(std::shared_ptr<function_call> func_call) {
 	}
 
 	// we need to resolve constructor candidates here in case its a generic type
-	if (func_call->is_constructor()) {
+	if (func_call->is_constructor) {
 		auto& ctor_type = func_call->ctor_type;
 		if (!ctor_type) {
 			ERROR(ERR_INTERNAL_ERROR, func_call->position, "Type Checker", "Constructor type not set");
@@ -579,7 +605,7 @@ void type_checker::visit(std::shared_ptr<function_call> func_call) {
 		}
 	}
 	if (matches.empty()) {
-		if (func_call->is_constructor()) {
+		if (func_call->is_constructor) {
 			ERROR(ERR_NO_MATCHING_CONSTRUCTOR, func_call->position, func_call->identifier.c_str());
 			return;
 		}
@@ -598,7 +624,7 @@ void type_checker::visit(std::shared_ptr<function_call> func_call) {
 		});
 		// if top 2 scores are the same, we have an ambiguity error
 		if (matches.size() > 1 && matches[0].score == matches[1].score) {
-			if (func_call->is_constructor()) {
+			if (func_call->is_constructor) {
 				ERROR(ERR_AMBIGUOUS_CONSTRUCTOR_CALL, func_call->position, func_call->identifier.c_str());
 			}
 			else if (func_call->is_method()) {
