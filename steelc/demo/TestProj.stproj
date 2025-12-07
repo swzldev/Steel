@@ -1,5 +1,0 @@
-name = "Test Project"
-version = "1.0.0"
-type = "executable"
-
-sources = ["Main.st", "io.st", "io2.st"]
