@@ -21,7 +21,7 @@ public:
 	conversion_declaration(type_ptr from, type_ptr to, bool implicit)
 		: from(from), to(to), body(nullptr), implicit(implicit) {
 	}
-	conversion_declaration(primitive_type from, primitive_type to, bool implicit = false)
+	conversion_declaration(data_type_kind from, data_type_kind to, bool implicit = false)
 		: from(to_data_type(from)), to(to_data_type(to)), body(nullptr), implicit(implicit) {
 	}
 

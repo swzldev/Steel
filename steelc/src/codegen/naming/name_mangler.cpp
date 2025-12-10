@@ -10,7 +10,7 @@
 #include "../../parser/types/custom_type.h"
 #include "../../parser/types/container_types.h"
 #include "../../parser/ast/declarations/function_declaration.h"
-#include "../../parser/modules/module_info.h"
+#include "../../parser/entities/module_entity.h"
 
 std::string name_mangler::mangle_function(std::shared_ptr<function_declaration> func_ast) {
 	// no mangle for bare-bone functions
@@ -38,10 +38,9 @@ std::string name_mangler::mangle_function(std::shared_ptr<function_declaration> 
 	else {
 		// collect module scopes
 		if (func_ast->parent_module && !func_ast->parent_module->is_global()) {
-			std::shared_ptr<module_info> parent_mod = func_ast->parent_module;
-			while (parent_mod && !parent_mod->is_global()) {
-				scopes.insert(scopes.begin(), parent_mod->name);
-				parent_mod = parent_mod->parent_module;
+			std::shared_ptr<module_entity> mod_it = func_ast->parent_module;
+			for (; mod_it && !mod_it->is_global(); mod_it = mod_it->parent_module) {
+				scopes.insert(scopes.begin(), mod_it->name());
 			}
 		}
 		// TODO: handle more than just module scopes (e.g. classes)

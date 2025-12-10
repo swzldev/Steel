@@ -18,6 +18,8 @@
 #include "memory/variable.h"
 #include "codegen_env.h"
 #include "../parser/types/data_type.h"
+#include "../parser/entities/entities_fwd.h"
+#include "../parser/entities/entity.h"
 #include "../parser/ast/ast_node.h"
 #include "../parser/ast/declarations/function_declaration.h"
 #include "../parser/ast/declarations/variable_declaration.h"
@@ -147,7 +149,7 @@ void codegen_visitor::visit(std::shared_ptr<unary_expression> expr) {
 	result = expression_builder.build_unary_expr(expr_type, operand, expr->oparator);
 }
 void codegen_visitor::visit(std::shared_ptr<identifier_expression> id) {
-	if (id->id_type == IDENTIFIER_VARIABLE) {
+	if (id->entity()->kind() == ENTITY_VARIABLE) {
 		auto var = env->lookup_local(id->identifier);
 		cg_assert(var != nullptr, "Undefined variable: " + id->identifier);
 

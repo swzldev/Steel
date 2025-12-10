@@ -1,7 +1,20 @@
 #include "init_checker.h"
 
-#include "../ast/ast.h"
 #include <unordered_set>
+
+#include "../ast/declarations/operator_declaration.h"
+#include "../ast/declarations/type_declaration.h"
+#include "../ast/expressions/assignment_expression.h"
+#include "../ast/expressions/identifier_expression.h"
+#include "../ast/statements/block_statement.h"
+#include "../ast/statements/control_flow/for_loop.h"
+#include "../ast/statements/control_flow/if_statement.h"
+#include "../ast/statements/control_flow/while_loop.h"
+#include "../entities/entities_fwd.h"
+#include "../entities/entity.h"
+#include "../entities/variable_entity.h"
+#include "../types/types_fwd.h"
+#include "../types/container_types.h"
 
 void init_checker::visit(std::shared_ptr<type_declaration> decl) {
 	// mark all fields as initialized
@@ -45,21 +58,24 @@ void init_checker::visit(std::shared_ptr<variable_declaration> var) {
 	var->initialized = true;
 }
 void init_checker::visit(std::shared_ptr<assignment_expression> expr) {
+	// dont accept left - it might be uninitialized, however
+	// since were not using it we dont want to throw an error
 	expr->right->accept(*this);
 
-	auto id = std::dynamic_pointer_cast<identifier_expression>(expr->left);
-	if (id && id->id_type == IDENTIFIER_VARIABLE) {
-		initialized.insert(id->variable_declaration);
-		id->variable_declaration->initialized = true;
+	auto entity = expr->left->entity();
+	if (entity && entity->kind() == ENTITY_VARIABLE) {
+		auto decl = entity->as_variable()->declaration;
+		initialized.insert(decl);
+		decl->initialized = true;
 	}
 }
 void init_checker::visit(std::shared_ptr<identifier_expression> expr) {
 	// if its not a variable we can safely ignore this
-	if (expr->id_type != IDENTIFIER_VARIABLE) {
+	if (expr->entity()->kind() != ENTITY_VARIABLE) {
 		return;
 	}
 
-	if (initialized.find(expr->variable_declaration) == initialized.end()) {
+	if (initialized.find(expr->entity()->as_variable()->declaration) == initialized.end()) {
 		ERROR(ERR_UNINITIALIZED_VARIABLE, expr->position, expr->identifier.c_str());
 		return;
 	}

@@ -16,11 +16,11 @@ public:
 	function_call(std::string function_name, std::vector<std::shared_ptr<expression>> args)
 		: identifier(function_name), args(args), declaration(nullptr) {
 	}
-	function_call(std::shared_ptr<expression> caller_obj, std::string name, std::vector<std::shared_ptr<expression>> args)
-		: identifier(name), caller_obj(caller_obj), args(args), declaration(nullptr) {
+	function_call(std::shared_ptr<expression> callee, std::string name, std::vector<std::shared_ptr<expression>> args)
+		: identifier(name), callee(callee), args(args), declaration(nullptr) {
 	}
-	function_call(std::shared_ptr<expression> caller_obj, std::vector<std::shared_ptr<expression>> args)
-		: identifier(""), caller_obj(caller_obj), args(args), declaration(nullptr) {
+	function_call(std::shared_ptr<expression> callee, std::vector<std::shared_ptr<expression>> args)
+		: identifier(""), callee(callee), args(args), declaration(nullptr) {
 	}
 
 	std::string string(int indent) const override {
@@ -43,8 +43,8 @@ public:
 			identifier,
 			std::vector<std::shared_ptr<expression>>{}
 		);
-		if (caller_obj) {
-			cloned->caller_obj = std::dynamic_pointer_cast<expression>(caller_obj->clone());
+		if (callee) {
+			cloned->callee = std::dynamic_pointer_cast<expression>(callee->clone());
 		}
 		for (const auto& arg : args) {
 			cloned->args.push_back(std::dynamic_pointer_cast<expression>(arg->clone()));
@@ -77,12 +77,12 @@ public:
 		// sort of half way between a function and method
 	}
 	inline bool is_method() const {
-		return caller_obj != nullptr;
+		return callee != nullptr;
 	}
 
 	std::string identifier;
 	std::shared_ptr<expression> scope;
-	std::shared_ptr<expression> caller_obj;
+	std::shared_ptr<expression> callee;
 	std::vector<std::shared_ptr<expression>> args;
 	std::vector<std::shared_ptr<function_declaration>> declaration_candidates;
 	std::shared_ptr<function_declaration> declaration;

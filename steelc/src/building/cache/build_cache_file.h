@@ -6,7 +6,7 @@
 #include <string>
 
 #include "file_metadata.h"
-#include "../../steelc_definitions.h"
+#include "../../steelc/steelc_definitions.h"
 
 class build_cache_file {
 public:
@@ -21,7 +21,7 @@ public:
 	bool serialize(const std::filesystem::path& path) const;
 
 	inline bool outdated() const {
-		return version != VERSION_LATEST || steelc_version != STEELC_VERSION_PACKED;
+		return version != VERSION_LATEST || steelc_version != STEELC_VERSION_PACKED_U32;
 	}
 	void upgrade();
 
@@ -38,5 +38,5 @@ public:
 private:
 	std::unordered_map<std::string, file_metadata> metadata;
 	int version = VERSION_LATEST;
-	uint32_t steelc_version = STEELC_VERSION_PACKED;
+	uint32_t steelc_version = STEELC_VERSION_PACKED_U32;
 };

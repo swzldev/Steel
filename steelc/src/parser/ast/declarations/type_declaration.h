@@ -9,6 +9,7 @@
 #include "function_declaration.h"
 #include "operator_declaration.h"
 #include "../../types/custom_type.h"
+#include "../../entities/type_entity.h"
 
 class type_declaration : public declaration, public std::enable_shared_from_this<type_declaration> {
 public:
@@ -99,6 +100,14 @@ public:
 		cloned->is_generic = is_generic;
 		cloned->is_generic_instance = is_generic_instance;
 		return cloned;
+	}
+
+	std::shared_ptr<type_entity> entity() {
+		static std::shared_ptr<type_entity> cached_entity = nullptr;
+		if (!cached_entity) {
+			cached_entity = type_entity::make(type());
+		}
+		return cached_entity;
 	}
 
 	custom_type_type type_kind;

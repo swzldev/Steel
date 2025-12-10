@@ -1,9 +1,19 @@
 #include "type_resolver.h"
 
-#include "../ast/ast.h"
+#include "../ast/declarations/module_declaration.h"
+#include "../ast/declarations/operator_declaration.h"
+#include "../ast/declarations/type_declaration.h"
+#include "../ast/expressions/function_call.h"
+#include "../entities/entity.h"
+#include "../types/types_fwd.h"
 #include "../types/data_type.h"
 #include "../types/custom_type.h"
 #include "../types/container_types.h"
+#include "../symbolics/lookup_result.h"
+#include "../entities/generic_param_entity.h"
+#include "../entities/type_entity.h"
+#include "../entities/module_entity.h"
+#include "../symbolics/symbol_error.h"
 #include "../../utils/string_utils.h"
 
 void type_resolver::visit(std::shared_ptr<function_declaration> func) {
@@ -11,11 +21,9 @@ void type_resolver::visit(std::shared_ptr<function_declaration> func) {
 	// add generics to the current scope
 	for (const auto& generic : func->generics) {
 		generic->param_index = cur_generic_index++;
-		auto err = sym_table->add_generic(generic);
-		if (err == ERR_DUPLICATE_GENERIC) {
-			ERROR(ERR_DUPLICATE_GENERIC, func->position, generic->identifier.c_str());
-			continue;
-		}
+		sym_table->add_symbol(generic);
+
+		// naming errors should occur in earlier passes
 	}
 
 	// resolve return type
@@ -43,11 +51,7 @@ void type_resolver::visit(std::shared_ptr<type_declaration> decl) {
 	// add generics to the current scope
 	for (const auto& generic : decl->generics) {
 		generic->param_index = cur_generic_index++;
-		auto err = sym_table->add_generic(generic);
-		if (err == ERR_DUPLICATE_GENERIC) {
-			ERROR(ERR_DUPLICATE_GENERIC, decl->position, generic->identifier.c_str());
-			continue;
-		}
+		sym_table->add_symbol(generic);
 	}
 
 	// resolve member types
@@ -74,11 +78,11 @@ void type_resolver::visit(std::shared_ptr<type_declaration> decl) {
 	sym_table->pop_scope();
 }
 void type_resolver::visit(std::shared_ptr<module_declaration> decl) {
-	resolver.current_module = decl->module_info;
+	resolver.current_module = decl->entity;
 	for (auto& decl : decl->declarations) {
 		decl->accept(*this);
 	}
-	resolver.current_module = decl->module_info->parent_module;
+	resolver.current_module = decl->entity->parent_module;
 }
 void type_resolver::visit(std::shared_ptr<function_call> func_call) {
 	for (auto& gen_arg : func_call->generic_args) {
@@ -147,42 +151,39 @@ void type_resolver::resolve_type(type_ptr& type) {
 void type_resolver::resolve_custom(type_ptr& custom) {
 	const std::string& type_name = custom->name();
 
-	// generic type
-	auto generic = sym_table->get_generic(type_name);
-	if (generic) {
+	// lookup type
+	auto t = sym_table->lookup(type_name);
+	if (t.ambiguous()) {
+		auto names = t.results_names(true);
+		std::string names_string = string_utils::vec_to_string(names);
+		ERROR(ERR_NAME_COLLISION, custom->position, type_name.c_str(), names_string.c_str());
+		return;
+	}
+	else if (t.no_match()) {
+		// unknown
+		ERROR(ERR_UNKNOWN_TYPE, custom->position, type_name.c_str());
+		return;
+	}
+
+	switch (t.first()->kind()) {
+	// generic parameter
+	case ENTITY_GENERIC_PARAM: {
+		auto ent = t.first()->as_generic_param();
 		auto gn = std::make_shared<generic_type>(type_name);
-		gn->generic_param_index = generic->param_index;
+		gn->generic_param_index = ent->declaration->param_index;
 		custom = gn;
 		return;
 	}
-
-	// custom type
-	auto decl = resolver.get_type(type_name);
-	if (decl.ambiguous()) {
-		auto names = decl.results_names(true);
-		std::string names_string = string_utils::vec_to_string(names);
-		ERROR(ERR_NAME_COLLISION, custom->position, type_name.c_str(), names_string.c_str());
+	// custom type or enum
+	case ENTITY_TYPE: {
+		auto ent = t.first()->as_type();
+		custom = ent->type;
 		return;
 	}
-	else if (decl.found()) {
-		custom = decl.first()->as_type()->type;
+	// non-type (e.g. module/function)
+	default: {
+		ERROR(ERR_NOT_A_TYPE, custom->position, type_name.c_str());
 		return;
 	}
-
-	// enum type
-	auto enm = resolver.get_enum(type_name);
-	if (enm.ambiguous()) {
-		auto names = enm.results_names(true);
-		std::string names_string = string_utils::vec_to_string(names);
-		ERROR(ERR_NAME_COLLISION, custom->position, type_name.c_str(), names_string.c_str());
-		return;
 	}
-	else if (decl.found()) {
-		custom = enm.first()->as_type()->type;
-		return;
-	}
-
-	// unknown
-	ERROR(ERR_UNKNOWN_TYPE, custom->position, type_name.c_str());
-	return;
 }

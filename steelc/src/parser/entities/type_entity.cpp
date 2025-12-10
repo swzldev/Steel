@@ -1,5 +1,9 @@
 #include "type_entity.h"
 
+#include <string>
+#include <memory>
+
+#include "../types/types_fwd.h"
 #include "../types/data_type.h"
 
 std::shared_ptr<type_entity> type_entity::make(type_ptr type) {
@@ -16,5 +20,5 @@ std::string type_entity::full_name() const {
 }
 
 std::shared_ptr<type_entity> type_entity::as_type() {
-	return std::static_pointer_cast<type_entity>(shared_from_this());
+	return shared_from_this();
 }

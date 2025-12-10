@@ -51,7 +51,11 @@ bool project_builder::build_project() {
 		to_compile = project_file->sources;
 	}
 	else {
-		to_compile = get_files_to_compile(cache);
+		// due to only compiling specific files, the symbol table does not
+		// receive all symbols (if theyre in files that arent being compiled)
+		// until i fix this, ill temporarily force full builds
+		to_compile = project_file->sources;
+		//to_compile = get_files_to_compile(cache);
 	}
 
 	// early out if nothing to compile

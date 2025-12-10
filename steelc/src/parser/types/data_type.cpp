@@ -1,8 +1,12 @@
 #include "data_type.h"
 
+#include <memory>
+#include <string>
+
 #include "custom_type.h"
 #include "container_types.h"
 #include "enum_type.h"
+#include "function_type.h"
 #include "type_utils.h"
 
 std::shared_ptr<data_type> data_type::UNKNOWN = std::make_shared<data_type>(DT_UNKNOWN);
@@ -51,6 +55,12 @@ std::shared_ptr<enum_type> data_type::as_enum() {
 std::shared_ptr<generic_type> data_type::as_generic() {
 	if (is_generic()) {
 		return std::dynamic_pointer_cast<generic_type>(shared_from_this());
+	}
+	return nullptr;
+}
+std::shared_ptr<function_type> data_type::as_function() {
+	if (is_function()) {
+		return std::dynamic_pointer_cast<function_type>(shared_from_this());
 	}
 	return nullptr;
 }

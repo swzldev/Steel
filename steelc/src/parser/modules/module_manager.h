@@ -1,28 +1,30 @@
 #pragma once
 
 #include <string>
-#include <vector>
 #include <memory>
 #include <unordered_map>
 
-#include "module_info.h"
+#include "../ast/ast_fwd.h"
+#include "../entities/entities_fwd.h"
+
+class module_info;
 
 class module_manager {
 public:
 	module_manager();
 
-	std::shared_ptr<module_info> add_module(const std::string& name, std::shared_ptr<module_info> parent);
+	std::shared_ptr<module_entity> add_module(const std::string& name, std::shared_ptr<module_entity> parent);
 
 	inline bool has_module(const std::string& name) const;
-	std::shared_ptr<module_info> get_module(const std::string& name);
-	std::shared_ptr<module_info> get_global_module();
-	std::shared_ptr<module_info> get_parent(std::shared_ptr<module_info> module);
+	std::shared_ptr<module_entity> get_module(const std::string& name);
+	std::shared_ptr<module_entity> get_global_module();
+	std::shared_ptr<module_entity> get_parent(std::shared_ptr<module_entity> module);
 
-	std::shared_ptr<class function_declaration> entry_point;
+	std::shared_ptr<function_declaration> entry_point;
 
 private:
-	std::shared_ptr<module_info> global_module;
-	std::unordered_map<std::string, std::shared_ptr<module_info>> modules;
+	std::shared_ptr<module_entity> global_module;
+	std::unordered_map<std::string, std::shared_ptr<module_entity>> modules;
 
-	inline module_id get_next_id() const;
+	std::shared_ptr<module_info> create_info(const std::string& name);
 };

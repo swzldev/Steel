@@ -28,7 +28,7 @@ std::vector<std::shared_ptr<function_declaration>> get_ctor_candidates(std::shar
 	return candidates;
 }
 
-int size_of_primitive(primitive_type primitive) {
+int size_of_primitive(data_type_kind primitive) {
 	switch (primitive) {
 	case DT_I16: return 2;
 	case DT_I32: return 4;
@@ -77,7 +77,7 @@ bool derives_from(type_ptr type, type_ptr base) {
 	return false;
 }
 
-std::string to_string(primitive_type primitive) {
+std::string to_string(data_type_kind primitive) {
 	switch (primitive) {
 	case DT_I16: return "small";
 	case DT_I32: return "int";

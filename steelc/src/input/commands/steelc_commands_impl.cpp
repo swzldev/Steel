@@ -4,8 +4,8 @@
 #include <filesystem>
 
 #include "flags/command_flags.h"
+#include "../../steelc/steelc_definitions.h"
 #include "../../output/output.h"
-#include "../../steelc_definitions.h"
 #include "../../utils/console_colors.h"
 #include "../../utils/path_utils.h"
 #include "../../building/build_config.h"

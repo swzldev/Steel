@@ -16,7 +16,7 @@ public:
 	operator_declaration(type_ptr result, type_ptr left, token_type oparator, type_ptr right, ast_ptr body)
 		: result_type(result), left(left), right(right), oparator(oparator), body(body) {
 	}
-	operator_declaration(primitive_type result, primitive_type left, token_type oparator, primitive_type right)
+	operator_declaration(data_type_kind result, data_type_kind left, token_type oparator, data_type_kind right)
 		: result_type(to_data_type(result)), left(to_data_type(left)), right(to_data_type(right)), oparator(oparator), body(nullptr) {
 		// used for built in functions that arnt defined in source
 	}

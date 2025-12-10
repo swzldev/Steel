@@ -1,5 +1,8 @@
 #include "variable_entity.h"
 
+#include <memory>
+#include <string>
+
 #include "../ast/declarations/variable_declaration.h"
 
 std::shared_ptr<variable_entity> variable_entity::make(std::shared_ptr<variable_declaration> declaration) {
@@ -16,5 +19,12 @@ std::string variable_entity::full_name() const {
 }
 
 std::shared_ptr<variable_entity> variable_entity::as_variable() {
-	return std::static_pointer_cast<variable_entity>(shared_from_this());
+	return shared_from_this();
+}
+
+bool variable_entity::is_const() const {
+	return declaration->is_const;
+}
+type_ptr variable_entity::var_type() const {
+	return declaration->type;
 }

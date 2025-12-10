@@ -13,8 +13,8 @@ data_type_modifier to_type_modifier(token_type tt) {
 	return mod;
 }
 
-primitive_type to_primitive(token_type tt) {
-    primitive_type dt;
+data_type_kind to_primitive(token_type tt) {
+    data_type_kind dt;
     switch (tt) {
 	case TT_I16:
 		dt = DT_I16;
@@ -57,14 +57,14 @@ const type_ptr to_data_type(token& tk) {
 	return type;
 }
 const type_ptr to_data_type(token_type tt) {
-	primitive_type prim = to_primitive(tt);
+	data_type_kind prim = to_primitive(tt);
 	if (prim != DT_UNKNOWN) {
 		return std::make_shared<data_type>(prim);
 	}
 	// custom type
 	return nullptr;
 }
-const type_ptr to_data_type(primitive_type pt) {
+const type_ptr to_data_type(data_type_kind pt) {
 	if (pt != DT_UNKNOWN) {
 		return std::make_shared<data_type>(pt);
 	}
@@ -74,7 +74,7 @@ const type_ptr to_data_type(const std::string& type_name) {
 	return custom_type::get(type_name);
 }
 
-bool is_numeric(primitive_type primitive) {
+bool is_numeric(data_type_kind primitive) {
 	switch (primitive) {
 	case DT_I16:
 	case DT_I32:

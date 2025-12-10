@@ -17,7 +17,14 @@ void declaration_collector::visit(std::shared_ptr<function_declaration> func) {
 	// overrides cant be generic
 	if (func->is_generic && func->is_override) {
 		ERROR(ERR_OVERRIDE_CANT_BE_GENERIC, func->position);
-		return;
+	}
+
+	// void parameters are not allowed in functions & constructors
+	for (const auto& param : func->parameters) {
+		if (param->type->is_primitive() && param->type->primitive == DT_VOID) {
+			ERROR(ERR_PARAM_VOID_TYPE, func->position);
+			break;
+		}
 	}
 
 	// constructor-specific logic
@@ -45,33 +52,37 @@ void declaration_collector::visit(std::shared_ptr<function_declaration> func) {
 		return;
 	}
 
-	// function-specific logic
 	// check modifiers
-	if (true) {}
+	//if (true) {}
 
-	// if were in a type it must be a method
-	if (current_type) {
-		func->is_method = true;
-	}
-	else {
-		// check if function is already defined (global)
-		error_code err = sym_table->add_function(func);
-		if (err != ERR_SUCCESS) {
-			// we know all the errors reported here only use the functions identifier
-			// but this may need to change
-			ERROR(err, func->position, func->identifier.c_str());
-		}
-	}
+	// add to symbol table
+	symbol_error err = sym_table->add_symbol(func, current_type ? current_type->entity() : nullptr);
+	if (err != SYMBOL_OK) {
+		switch (err) {
+		case SYMBOL_CONFLICTS_WITH_FUNCTION: // in this case it means exact same signature
+			ERROR(ERR_FUNCTION_ALREADY_DEFINED, func->position, func->identifier.c_str());
+			break;
+		case SYMBOL_CANNOT_OVERLOAD_BY_RETURN_TYPE:
+			ERROR(ERR_CANNOT_OVERLOAD_BY_RETURN_TYPE, func->position, func->identifier.c_str());
+			break;
 
-	// void parameters are not allowed in functions & constructors
-	for (const auto& param : func->parameters) {
-		if (param->type->is_primitive() && param->type->primitive == DT_VOID) {
-			ERROR(ERR_PARAM_VOID_TYPE, func->position);
+		case SYMBOL_CONFLICTS_WITH_VARIABLE:
+			ERROR(ERR_NAME_CONFLICT, func->position, "function", func->identifier, "variable");
+			break;
+		case SYMBOL_CONFLICTS_WITH_TYPE:
+			ERROR(ERR_NAME_CONFLICT, func->position, "function", func->identifier, "type");
+			break;
+		case SYMBOL_CONFLICTS_WITH_MODULE:
+			ERROR(ERR_NAME_CONFLICT, func->position, "function", func->identifier, "module");
+			break;
+
+		default:
+			ERROR(ERR_INTERNAL_ERROR, func->position, "Declaration Collector", "Unknown error while adding function symbol");
 			break;
 		}
 	}
 
-	// set parent module
+	// set parent module (even for methods, for now anyway)
 	func->parent_module = current_module;
 
 	if (func->body) {
@@ -97,12 +108,32 @@ void declaration_collector::visit(std::shared_ptr<variable_declaration> var) {
 	}
 
 	if (!current_function && !current_constructor && !current_type) {
-		auto err = sym_table->add_variable(var);
-		if (err == ERR_VARIABLE_ALREADY_DECLARED_SCOPE) {
-			ERROR(ERR_VARIABLE_ALREADY_DECLARED_SCOPE, var->position, var->identifier.c_str());
-			return;
+		symbol_error err = sym_table->add_symbol(var);
+		// only check for module level errors
+		// as this is a module-level variable
+		if (err != SYMBOL_OK) {
+			switch (err) {
+				case SYMBOL_CONFLICTS_WITH_VARIABLE:
+					ERROR(ERR_VARIABLE_ALREADY_DECLARED_SCOPE, var->position, var->identifier.c_str());
+					break;
+				case SYMBOL_CONFLICTS_WITH_FUNCTION:
+					ERROR(ERR_NAME_CONFLICT, var->position, "variable", var->identifier, "function");
+					break;
+				case SYMBOL_CONFLICTS_WITH_TYPE:
+					ERROR(ERR_NAME_CONFLICT, var->position, "variable", var->identifier, "type");
+					break;
+				case SYMBOL_CONFLICTS_WITH_ENUM:
+					ERROR(ERR_NAME_CONFLICT, var->position, "variable", var->identifier, "enum");
+					break;
+				case SYMBOL_CONFLICTS_WITH_MODULE:
+					ERROR(ERR_NAME_CONFLICT, var->position, "variable", var->identifier, "module");
+					break;
+
+				default:
+					ERROR(ERR_INTERNAL_ERROR, var->position, "Declaration Collector", "Unknown error while adding variable symbol");
+					break;
+			}
 		}
-		// shouldnt have any generic problems in the global scope
 	}
 
 	// set parent module
@@ -110,14 +141,30 @@ void declaration_collector::visit(std::shared_ptr<variable_declaration> var) {
 }
 void declaration_collector::visit(std::shared_ptr<type_declaration> decl) {
 	// check if type is already defined
-	auto err = sym_table->add_type(decl);
-	if (err == ERR_TYPE_ALREADY_DEFINED) {
-		ERROR(ERR_TYPE_ALREADY_DEFINED, decl->position, decl->name().c_str());
-		return;
-	}
-	else if (err == ERR_ENUM_ALREADY_DEFINED) {
-		ERROR(ERR_ENUM_ALREADY_DEFINED, decl->position, decl->name().c_str());
-		return;
+	symbol_error err = sym_table->add_symbol(decl);
+	if (err != SYMBOL_OK) {
+		switch (err) {
+			case SYMBOL_CONFLICTS_WITH_TYPE:
+				ERROR(ERR_TYPE_ALREADY_DEFINED, decl->position, decl->name().c_str());
+				break;
+
+			case SYMBOL_CONFLICTS_WITH_VARIABLE:
+				ERROR(ERR_NAME_CONFLICT, decl->position, "type", decl->name(), "variable");
+				break;
+			case SYMBOL_CONFLICTS_WITH_FUNCTION:
+				ERROR(ERR_NAME_CONFLICT, decl->position, "type", decl->name(), "function");
+				break;
+			case SYMBOL_CONFLICTS_WITH_ENUM:
+				ERROR(ERR_NAME_CONFLICT, decl->position, "type", decl->name(), "enum");
+				break;
+			case SYMBOL_CONFLICTS_WITH_MODULE:
+				ERROR(ERR_NAME_CONFLICT, decl->position, "type", decl->name(), "module");
+				break;
+
+			default:
+				ERROR(ERR_INTERNAL_ERROR, decl->position, "Declaration Collector", "Unknown error while adding type symbol");
+				break;
+		}
 	}
 
 	// types cannot be nested (yet)
@@ -152,7 +199,7 @@ void declaration_collector::visit(std::shared_ptr<type_declaration> decl) {
 		return;
 	}
 
-	// set parent module
+	// set parent module (may be null)
 	decl->parent_module = current_module;
 
 	current_type = decl;
@@ -160,11 +207,13 @@ void declaration_collector::visit(std::shared_ptr<type_declaration> decl) {
 		member->accept(*this);
 	}
 	for (const auto& constructor : decl->constructors) {
+		//constructor->is_constructor = true;
 		constructor->accept(*this);
 	}
 	for (const auto& method : decl->methods) {
-		method->accept(*this);
+		method->is_method = true;
 		method->parent_type = decl;
+		method->accept(*this);
 	}
 	for (const auto& op : decl->operators) {
 		op->accept(*this);
@@ -176,7 +225,7 @@ void declaration_collector::visit(std::shared_ptr<module_declaration> mod) {
 
 	// identify full module name
 	if (!current_module->is_global()) {
-		module_name = current_module->name + "::" + module_name;
+		module_name = current_module->full_name() + "::" + module_name;
 	}
 
 	// set the parent module (of the declaration, this doesnt effect the module_info representation)
@@ -191,23 +240,22 @@ void declaration_collector::visit(std::shared_ptr<module_declaration> mod) {
 	else {
 		// doesnt exist - create a new module
 		// note: dont pass full name, its automatically handled based on the parent module passed
-		auto& parent = current_module;
+		std::shared_ptr<module_entity> parent = current_module;
 		current_module = module_manager.add_module(mod->name, current_module);
 		if (parent) {
 			// add as submodule
-			parent->symbols.add_module(current_module);
+			parent->symbols().add_symbol(current_module);
 		}
 	}
-	sym_table = &current_module->symbols;
-	mod->module_info = current_module;
+	sym_table = &current_module->symbols();
+	mod->entity = current_module;
 
 	for (const auto& decl : mod->declarations) {
 		decl->accept(*this);
 	}
 
-	// returns the parent of the current module (or the global module)
 	current_module = current_module->parent_module;
-	sym_table = &current_module->symbols;
+	sym_table = &current_module->symbols();
 }
 void declaration_collector::visit(std::shared_ptr<enum_declaration> enm) {
 	// ensure all options reference the owner
@@ -215,15 +263,31 @@ void declaration_collector::visit(std::shared_ptr<enum_declaration> enm) {
 		option->declaration = enm;
 	}
 
-	// check if type is already defined
-	auto err = sym_table->add_enum(enm);
-	if (err == ERR_ENUM_ALREADY_DEFINED) {
-		ERROR(ERR_ENUM_ALREADY_DEFINED, enm->position, enm->name().c_str());
-		return;
-	}
-	else if (err == ERR_TYPE_ALREADY_DEFINED) {
-		ERROR(ERR_TYPE_ALREADY_DEFINED, enm->position, enm->name().c_str());
-		return;
+	// add to symbol table
+	symbol_error err = sym_table->add_symbol(enm);
+	if (err != SYMBOL_OK) {
+		switch (err) {
+		case SYMBOL_CONFLICTS_WITH_ENUM:
+			ERROR(ERR_ENUM_ALREADY_DEFINED, enm->position, enm->identifier);
+			break;
+
+		case SYMBOL_CONFLICTS_WITH_VARIABLE:
+			ERROR(ERR_NAME_CONFLICT, enm->position, "enum", enm->identifier, "variable");
+			break;
+		case SYMBOL_CONFLICTS_WITH_FUNCTION:
+			ERROR(ERR_NAME_CONFLICT, enm->position, "enum", enm->identifier, "function");
+			break;
+		case SYMBOL_CONFLICTS_WITH_TYPE:
+			ERROR(ERR_NAME_CONFLICT, enm->position, "enum", enm->identifier, "type");
+			break;
+		case SYMBOL_CONFLICTS_WITH_MODULE:
+			ERROR(ERR_NAME_CONFLICT, enm->position, "enum", enm->identifier, "module");
+			break;
+
+		default:
+			ERROR(ERR_INTERNAL_ERROR, enm->position, "Declaration Collector", "Unknown error while adding enum symbol");
+			break;
+		}
 	}
 
 	// enums cannot be nested

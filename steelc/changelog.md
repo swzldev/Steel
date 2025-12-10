@@ -1,6 +1,6 @@
 # STEELC CHANGELOG
 
-## [Unreleased]
+## [0.5.0-alpha] - 10-12-2025
 - Added support for the '::' operator for static scope resolution.
 - Added support for module member resolution without having to import.
 - The build cache now only saves after full successful builds which prevents it from caching if output or post build steps fail.
@@ -8,6 +8,8 @@
 - Added much better error support for ambiguous name resolution.
 - Updated build cache to version 2, which now tracks the version of steelc used to build the cached files, preventing issues when updating.
 - Fixed a bug where the message of codegen exceptions was always empty.
+- Fixed a bug where you could lookup any submodule without having to reference the parent module first, e.g. `foo::bar::baz` and `bar::baz` would both work.
+- Huge behind the scenes symbol and name resolution changes.
 
 ## [0.4.0-alpha] - 04-12-2025
 - Added some useful build command flags:

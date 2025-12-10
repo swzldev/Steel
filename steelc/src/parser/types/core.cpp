@@ -1,6 +1,6 @@
 #include "core.h"
 
-std::vector<conversion_declaration> get_core_conversions(primitive_type from) {
+std::vector<conversion_declaration> get_core_conversions(data_type_kind from) {
     static std::vector<conversion_declaration> builtin_conversions = {
         {DT_I32, DT_FLOAT, true},
         {DT_FLOAT, DT_I32, true},

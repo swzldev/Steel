@@ -6,6 +6,7 @@
 #include "../ast/ast_visitor.h"
 #include "../ast/compilation_unit.h"
 #include "../compilation_pass.h"
+#include "../entities/module_entity.h"
 #include "../symbolics/symbol_resolver.h"
 #include "../symbolics/symbol_table.h"
 #include "../modules/module_manager.h"
@@ -16,7 +17,7 @@ public:
 		: module_manager(module_manager), compilation_pass(unit) {
 		resolver.import_tbl = std::make_shared<import_table>(unit->import_tbl);
 		resolver.current_module = module_manager.get_global_module();
-		sym_table = &module_manager.get_global_module()->symbols;
+		sym_table = &module_manager.get_global_module()->symbols();
 	}
 
 	void visit(std::shared_ptr<function_declaration> func) override;

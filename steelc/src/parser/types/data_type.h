@@ -8,7 +8,7 @@
 #include "../../lexer/token.h"
 #include "../../utils/iclonable.h"
 
-enum primitive_type {
+enum data_type_kind {
 	DT_UNKNOWN,
 	DT_CUSTOM,
 	DT_ENUM,
@@ -30,6 +30,9 @@ enum primitive_type {
 	DT_POINTER,
 	DT_REFERENCE,
 
+	// special type for functions
+	DT_FUNCTION,
+
 	// special type for generic type params
 	DT_GENERIC,
 };
@@ -43,7 +46,7 @@ public:
 	data_type()
 		: primitive(DT_UNKNOWN), modifiers(DTM_NONE), position(0, 0) {
 	}
-	data_type(primitive_type primitive)
+	data_type(data_type_kind primitive)
 		: primitive(primitive), modifiers(DTM_NONE), position(0, 0) {
 	}
 
@@ -99,6 +102,9 @@ public:
 		// check that generic_args.size() > 0
 		return primitive == DT_GENERIC;
 	}
+	inline bool is_function() const {
+		return primitive == DT_FUNCTION;
+	}
 
 	inline bool is_valid_object_type() const {
 		return is_primitive()
@@ -114,6 +120,7 @@ public:
 	std::shared_ptr<data_type> as_reference();
 	std::shared_ptr<enum_type> as_enum();
 	std::shared_ptr<generic_type> as_generic();
+	std::shared_ptr<function_type> as_function();
 
 	virtual bool is_primitive() const;
 	virtual bool is_indexable() const;
@@ -124,7 +131,7 @@ public:
 
 	virtual std::shared_ptr<data_type> clone() const override;
 
-	primitive_type primitive; 
+	data_type_kind primitive; 
 	std::vector<data_type_modifier> modifiers;
 	std::vector<type_ptr> generic_args;
 	position position;

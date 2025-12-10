@@ -36,7 +36,7 @@ bool build_cache_file::deserialize(const std::filesystem::path& path) {
 
 	if (version == 1) {
 		// version 1 did not store steelc version
-		steelc_version = STEELC_VERSION_PACKED;
+		steelc_version = STEELC_VERSION_PACKED_U32;
 	}
 	else {
 		file.read(reinterpret_cast<char*>(&steelc_version), sizeof(steelc_version));
@@ -97,6 +97,6 @@ bool build_cache_file::serialize(const std::filesystem::path& path) const {
 void build_cache_file::upgrade() {
 	if (outdated()) {
 		version = VERSION_LATEST;
-		steelc_version = STEELC_VERSION_PACKED;
+		steelc_version = STEELC_VERSION_PACKED_U32;
 	}
 }

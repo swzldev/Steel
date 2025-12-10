@@ -25,7 +25,7 @@ enum error_code {
     ERR_MEMBER_DECLARATION_EXPECTED,
     ERR_NESTED_FUNCTION_NOT_ALLOWED,
     ERR_PARAM_VOID_TYPE,
-    ERR_FUNC_ALREADY_DEFINED,
+    ERR_FUNCTION_ALREADY_DEFINED,
     ERR_NESTED_CONSTRUCTOR_NOT_ALLOWED,
     ERR_CONSTRUCTOR_OUTSIDE_TYPE,
     ERR_CONSTRUCTOR_OVERLOAD_EXISTS,
@@ -84,7 +84,7 @@ enum error_code {
     ERR_PARAMETER_EXPECTED,
     ERR_NO_CONVERSION_EXISTS,
     ERR_CONVERSION_EXPLICIT_CAST_REQUIRED,
-    ERR_RETURN_TYPE_CANT_OVERLOAD,
+    ERR_CANNOT_OVERLOAD_BY_RETURN_TYPE,
     ERR_ENTRY_OVERLOADED,
     ERR_NO_MATCHING_METHOD,
     ERR_INTERNAL_ERROR,
@@ -111,10 +111,10 @@ enum error_code {
     ERR_MULTIPLE_BASE_CLASSES,
     ERR_BASE_CLASS_NOT_FIRST,
     ERR_OVERRIDE_NOT_FOUND,
-    ERR_INTERFACE_METHOD_NOT_IMPLEMENTED,
+    ERR_NOT_ALL_INTERFACE_METHODS_IMPLEMENTED,
     ERR_COLON_EXPECTED,
     ERR_CIRCULAR_INHERITANCE,
-    ERR_DEREFERENCE_OF_RVALUE,
+    ERR_DEREFERENCE_OF_NON_POINTER,
     ERR_INVALID_ARRAY_INITIALIZER_USAGE,
     ERR_ARRAY_INITIALIZER_TYPE_MISMATCH,
     ERR_CANNOT_INFER_TYPE_UNKNOWN_INIT,
@@ -141,9 +141,12 @@ enum error_code {
     ERR_ARRAY_SIZE_MUST_BE_CONSTANT,
     ERR_SCOPED_FUNCTION_NOT_MODULE,
 	ERR_NO_MODULE_MEMBER_WITH_NAME,
-    ERR_STATIC_ACCESS_ON_FUNCTION,
-    ERR_STATIC_ACCESS_ON_NONSTATIC_MEMBER,
+    ERR_STATIC_ACCESS_INVALID,
+    ERR_STATIC_ACCESS_NONSTATIC_MEMBER,
     ERR_NO_MEMBER_WITH_NAME_MODULE,
+    ERR_NOT_A_TYPE,
+    ERR_NAME_CONFLICT,
+    ERR_CALL_ON_NON_FUNCTION,
 };
 
 enum warning_code {
@@ -158,6 +161,7 @@ enum warning_code {
 
 enum advice_code {
     ADV_CONDITIONAL_NOT_GUARANTEED_TO_RETURN,
+    ADV_IMPLEMENT_INTERFACE_METHOD,
 };
 
 struct error_catalog {
@@ -181,13 +185,13 @@ struct error_catalog {
             {"S016", "Member declaration expected"},
             {"S017", "Nested function is not allowed"},
             {"S018", "Parameters cannot be of type void"},
-            {"S019", "Function '%s' is already defined"},
+            {"S019", "Redefinition of function '%s' with identical signature"},
             {"S020", "Nested constructor is not allowed"},
             {"S021", "Constructor must be defined within a type"},
             {"S022", "Constructor with the same parameters already exists"},
             {"S023", "Variables cannot be of type void"},
             {"S024", "Variable '%s' already declared in the same scope"},
-            {"S025", "Type '%s' is already defined"},
+            {"S025", "Type '%s' already declared in the same scope"},
             {"S026", "Nested type declaration is not allowed"},
             {"S027", "Structs cannot contain methods"},
             {"S028", "Interfaces cannot contain constructors"},
@@ -267,10 +271,10 @@ struct error_catalog {
             {"S115", "Classes can only derive from one base class"},
             {"S116", "The base class '%s' must be first in the implementation list"},
             {"S117", "No overridden method '%s' found in any base class or interface"},
-            {"S118", "Class '%s' does not implement interface method '%s'"},
+            {"S118", "Class '%s' does not implement all required interface methods (implemented: %ull, total: %ull)"},
             {"S119", "':' expected"},
             {"S120", "Circular inheritance detected. Class '%s' eventually inherits from itself: %s"},
-            {"S121", "Only pointers can be dereferenced"},
+            {"S121", "Cannot dereference object with non-pointer type"},
             {"S122", "Array initializer can only be used to initialize arrays"},
             {"S123", "Type mismatch in array initializer. Expected '%s' but got '%s'"},
             {"S124", "Cannot infer type from initializer"},
@@ -287,7 +291,7 @@ struct error_catalog {
             {"S135", "Generic arguments cannot be used on non-generic type '%s'"},
             {"S136", "Missing required generic arguments for generic type '%s', types are: %s"},
             {"S137", "Expected an identifier for enum option"},
-            {"S138", "Enum '%s' is already defined"},
+            {"S138", "Enum '%s' already declared in the same scope"},
             {"S139", "Enum inside enum is not allowed"},
             {"S140", "Method access not allowed on non-composite type '%s'"},
             {"S141", "The enum '%s' does not contain an option named '%s'"},
@@ -297,9 +301,12 @@ struct error_catalog {
             {"S145", "Array size must be a constant compile-time computable value"},
             {"S146", "Scoped function calls (e.g. scope::func()) can only be used on modules"},
             {"S147", "The module '%s' has no member named '%s'"},
-            {"S148", "Static access not allowed on function '%s'"},
-            {"S149", "Static access not allowed on non-static member '%s'"},
+            {"S148", "Static access not allowed on %s '%s'"},
+            {"S149", "An object instance is required to access non-static member '%s'"},
             {"S150", "The module '%s' has no member named '%s'"},
+            {"S151", "'%s' is not a type"},
+            {"S152", "Cannot declare %s '%s' because a %s with the same name already exists in this scope"},
+            {"S153", "Cannot call non-function"},
         };
         return errors[code - 1 /* -1 to avoid ERR_SUCCESS */];
     }
@@ -319,7 +326,8 @@ struct error_catalog {
 
     static const advice_info& get_advice_info(advice_code code) {
         static const advice_info advices[] = {
-			{"SA01", "Conditional returns are not guaranteed to return, ensure an unconditional return is present incase all conditional returns are not executed"}
+            {"SA01", "Conditional returns are not guaranteed to return, ensure an unconditional return is present incase all conditional returns are not executed"},
+            {"SA02", "Implement required interface method: '%s'"},
         };
         return advices[code];
 	}

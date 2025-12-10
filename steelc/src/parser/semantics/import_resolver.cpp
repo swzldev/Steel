@@ -1,6 +1,11 @@
 #include "import_resolver.h"
 
-#include "../ast/ast.h"
+#include <memory>
+
+#include "../ast/ast_node.h"
+#include "../ast/compilation_unit.h"
+#include "../ast/statements/import_statement.h"
+#include "../symbolics/import_table.h"
 
 void import_resolver::visit(std::shared_ptr<class import_statement> import_stmt) {
 	// find the module

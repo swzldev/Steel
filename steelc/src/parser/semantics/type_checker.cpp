@@ -15,7 +15,9 @@
 #include "../types/enum_type.h"
 #include "../types/core.h"
 #include "../types/type_utils.h"
+#include "../entities/entities_fwd.h"
 #include "../entities/entity.h"
+#include "../entities/variable_entity.h"
 #include "../ast/declarations/function_declaration.h"
 #include "../ast/declarations/type_declaration.h"
 #include "../ast/declarations/variable_declaration.h"
@@ -169,6 +171,7 @@ void type_checker::visit(std::shared_ptr<type_declaration> decl) {
 	}
 
 	std::unordered_map<std::shared_ptr<function_declaration>, bool> interface_funcs;
+	size_t implemented_interface_count = 0;
 	if (decl->type_kind == CT_CLASS) {
 		bool first = true;
 		bool derives_class = false;
@@ -224,16 +227,24 @@ void type_checker::visit(std::shared_ptr<type_declaration> decl) {
 			bool found = false;
 			// check if it matches an interface function
 			for (auto& [iface_method, implemented] : interface_funcs) {
-				if (method->matches(iface_method, false)) {
+				method->return_type = iface_method->return_type;
+				if (method->identifier == iface_method->identifier) {
+					for (int i = 0; i < method->parameters.size(); i++) {
+						if (i >= iface_method->parameters.size() ||
+							*method->parameters[i]->type != iface_method->parameters[i]->type) {
+							continue;
+						}
+					}
+
 					implemented = true;
 					method->overridden_function = iface_method;
-					// ensure return type of method is set to match the interface
-					method->return_type = iface_method->return_type;
 					found = true;
 					break;
 				}
 			}
+			// TODO: add support for overriding base class virtual methods
 			if (!found) {
+				method->return_type = nullptr;
 				ERROR(ERR_OVERRIDE_NOT_FOUND, method->position, method->identifier.c_str());
 				return;
 			}
@@ -254,10 +265,12 @@ void type_checker::visit(std::shared_ptr<type_declaration> decl) {
 
 	// ensure all interface methods are implemented
 	if (decl->type_kind == CT_CLASS) {
+		if (implemented_interface_count < interface_funcs.size()) {
+			ERROR(ERR_NOT_ALL_INTERFACE_METHODS_IMPLEMENTED, decl->position, decl->identifier.c_str(), implemented_interface_count, interface_funcs.size());
+		}
 		for (const auto& iface_method : interface_funcs) {
 			if (!iface_method.second) {
-				ERROR(ERR_INTERFACE_METHOD_NOT_IMPLEMENTED, decl->position, decl->identifier.c_str(), iface_method.first->identifier.c_str());
-				return;
+				ADVISE(ADV_IMPLEMENT_INTERFACE_METHOD, decl->position, iface_method.first->identifier);
 			}
 		}
 	}
@@ -329,10 +342,10 @@ void type_checker::visit(std::shared_ptr<assignment_expression> expr) {
 	auto right_type = expr->right->type();
 
 	// cannot assign to a const variable
-	auto left_var = std::dynamic_pointer_cast<identifier_expression>(expr->left);
-	if (left_var && left_var->id_type == IDENTIFIER_VARIABLE) {
-		if (left_var->variable_declaration->is_const) {
-			ERROR(ERR_CONST_ASSIGNMENT, expr->position, left_var->variable_declaration->identifier.c_str());
+	auto entity = expr->left->entity();
+	if (entity->kind() == ENTITY_VARIABLE) {
+		if (entity->as_variable()->is_const()) {
+			ERROR(ERR_CONST_ASSIGNMENT, expr->position, entity->name().c_str());
 			return;
 		}
 	}
@@ -357,7 +370,7 @@ void type_checker::visit(std::shared_ptr<assignment_expression> expr) {
 }
 void type_checker::visit(std::shared_ptr<address_of_expression> expr) {
 	expr->value->accept(*this);
-	if (!std::dynamic_pointer_cast<identifier_expression>(expr->value)) {
+	if (expr->is_rvalue()) {
 		ERROR(ERR_ADDRESS_OF_RVALUE, expr->position);
 		return;
 	}
@@ -365,7 +378,7 @@ void type_checker::visit(std::shared_ptr<address_of_expression> expr) {
 void type_checker::visit(std::shared_ptr<deref_expression> expr) {
 	expr->value->accept(*this);
 	if (!expr->value->type()->is_pointer()) {
-		ERROR(ERR_DEREFERENCE_OF_RVALUE, expr->position);
+		ERROR(ERR_DEREFERENCE_OF_NON_POINTER, expr->position);
 		return;
 	}
 }
@@ -546,105 +559,110 @@ void type_checker::visit(std::shared_ptr<function_call> func_call) {
 
 		// get constructor candidates
 		auto ctor_candidates = get_ctor_candidates(ctor_type, func_call->args.size());
+		if (ctor_candidates.empty()) {
+			ERROR(ERR_NO_MATCHING_CONSTRUCTOR, func_call->position, func_call->identifier.c_str());
+			return;
+		}
 		func_call->declaration_candidates = ctor_candidates;
 	}
 
 	// we need to resolve candidates here if the function call
 	// is a method, as it cant be done in the name resolver pass
 	if (func_call->is_method()) {
-		if (auto member = std::dynamic_pointer_cast<member_expression>(func_call->caller_obj)) {
-			// resolve the object
-			member->object->accept(*this);
+		// resolve the object
+		func_call->callee->accept(*this);
 
-			auto type = member->object->type();
-			if (!method_access_allowed(type)) {
-				// should change this error really as it could be composite with no members like a Foo** etc.
-				ERROR(ERR_METHOD_ACCESS_ON_NONCOMPOSITE, func_call->position, type->name().c_str());
-				return;
-			}
-
-			if (!type->is_custom()) {
-				// if this is ever thrown, it means there must be a problem with method_access_allowed
-				ERROR(ERR_INTERNAL_ERROR, func_call->position, "Type Checker", "Method call on non-custom type");
-			}
-
-			// find method - dont check for return type as its unknown in a call
-			auto method_candidates = get_method_candidates(type->as_custom()->declaration, func_call->identifier, func_call->args.size());
-			func_call->declaration_candidates = method_candidates;
+		auto type = func_call->callee->type();
+		if (!method_access_allowed(type)) {
+			// should change this error really as it could be composite with no members like a Foo** etc.
+			ERROR(ERR_METHOD_ACCESS_ON_NONCOMPOSITE, func_call->position, type->name().c_str());
+			return;
 		}
-		else {
-			// maybe we throw an error? cant remember if this is a possible case
+
+		if (!type->is_custom()) {
+			// if this is ever thrown, it means there must be a problem with method_access_allowed
+			ERROR(ERR_INTERNAL_ERROR, func_call->position, "Type Checker", "Method call on non-custom type");
 		}
+
+		// find method - dont check for return type as its unknown in a call
+		auto method_candidates = get_method_candidates(type->as_custom()->declaration, func_call->identifier, func_call->args.size());
+		if (method_candidates.empty()) {
+			ERROR(ERR_NO_MATCHING_METHOD, func_call->position, func_call->identifier.c_str());
+			return;
+		}
+		func_call->declaration_candidates = method_candidates;
 	}
 
 	// TEMPORARY
 	if (func_call->identifier == "printf") return;
 
-	// check any candidates match arguments provided
-	std::vector<candidate_score> matches;
-	for (const auto& candidate : func_call->declaration_candidates) {
-		auto expected_types = candidate->get_expected_types();
-		if (expected_types.size() != arg_types.size()) {
-			ERROR(ERR_INTERNAL_ERROR, func_call->position, "Type Checker", "Argument count for candidate doesnt match");
-			continue; // argument count doesn't match
-		}
+	if (!func_call->declaration_candidates.empty()) {
+		// check any candidates match arguments provided
+		std::vector<candidate_score> matches;
+		for (const auto& candidate : func_call->declaration_candidates) {
+			auto expected_types = candidate->get_param_types();
+			if (expected_types.size() != arg_types.size()) {
+				ERROR(ERR_INTERNAL_ERROR, func_call->position, "Type Checker", "Argument count for candidate doesnt match");
+				continue; // argument count doesn't match
+			}
 
-		// set explicit generics if they exist for scoring
-		for (auto& gen_arg : func_call->generic_args) {
-			generic_substitutions.push_back(gen_arg);
-		}
+			// set explicit generics if they exist for scoring
+			for (auto& gen_arg : func_call->generic_args) {
+				generic_substitutions.push_back(gen_arg);
+			}
 
-		int score = score_candidate(candidate, arg_types);
-		if (score > 0) {
-			matches.push_back({ candidate, score });
-		}
+			int score = score_candidate(candidate, arg_types);
+			if (score > 0) {
+				matches.push_back({ candidate, score });
+			}
 
-		// reset generics
-		for (size_t i = 0; i < func_call->generic_args.size(); i++) {
-			generic_substitutions.pop_back();
+			// reset generics
+			for (size_t i = 0; i < func_call->generic_args.size(); i++) {
+				generic_substitutions.pop_back();
+			}
 		}
-	}
-	if (matches.empty()) {
-		if (func_call->is_constructor) {
-			ERROR(ERR_NO_MATCHING_CONSTRUCTOR, func_call->position, func_call->identifier.c_str());
-			return;
-		}
-		else if (func_call->is_method()) {
-			ERROR(ERR_NO_MATCHING_METHOD, func_call->position, func_call->identifier.c_str());
-		}
-		else {
-			ERROR(ERR_NO_MATCHING_FUNCTION, func_call->position, func_call->identifier.c_str());
-		}
-		return;
-	}
-	else {
-		// sort matches by score
-		std::sort(matches.begin(), matches.end(), [](const candidate_score& a, const candidate_score& b) {
-			return a.score > b.score;
-		});
-		// if top 2 scores are the same, we have an ambiguity error
-		if (matches.size() > 1 && matches[0].score == matches[1].score) {
+		if (matches.empty()) {
 			if (func_call->is_constructor) {
-				ERROR(ERR_AMBIGUOUS_CONSTRUCTOR_CALL, func_call->position, func_call->identifier.c_str());
+				ERROR(ERR_NO_MATCHING_CONSTRUCTOR, func_call->position, func_call->identifier.c_str());
 			}
 			else if (func_call->is_method()) {
-				ERROR(ERR_AMBIGUOUS_METHOD_CALL, func_call->position, func_call->identifier.c_str());
+				ERROR(ERR_NO_MATCHING_METHOD, func_call->position, func_call->identifier.c_str());
 			}
 			else {
-				ERROR(ERR_AMBIGUOUS_FUNCTION_CALL, func_call->position, func_call->identifier.c_str());
+				ERROR(ERR_NO_MATCHING_FUNCTION, func_call->position, func_call->identifier.c_str());
 			}
 			return;
 		}
-		std::shared_ptr<function_declaration> best_match = matches[0].candidate;
-		if (best_match->is_generic) {
-			best_match = unbox_generic_func(best_match, generic_types);
-			if (!best_match) {
-				ERROR(ERR_INTERNAL_ERROR, func_call->position, "Type Checker", "Failed to unbox generic function");
+		else {
+			// sort matches by score
+			std::sort(matches.begin(), matches.end(), [](const candidate_score& a, const candidate_score& b) {
+				return a.score > b.score;
+			});
+			// if top 2 scores are the same, we have an ambiguity error
+			if (matches.size() > 1 && matches[0].score == matches[1].score) {
+				if (func_call->is_constructor) {
+					ERROR(ERR_AMBIGUOUS_CONSTRUCTOR_CALL, func_call->position, func_call->identifier.c_str());
+				}
+				else if (func_call->is_method()) {
+					ERROR(ERR_AMBIGUOUS_METHOD_CALL, func_call->position, func_call->identifier.c_str());
+				}
+				else {
+					ERROR(ERR_AMBIGUOUS_FUNCTION_CALL, func_call->position, func_call->identifier.c_str());
+				}
 				return;
 			}
+			std::shared_ptr<function_declaration> best_match = matches[0].candidate;
+			if (best_match->is_generic) {
+				best_match = unbox_generic_func(best_match, generic_types);
+				if (!best_match) {
+					ERROR(ERR_INTERNAL_ERROR, func_call->position, "Type Checker", "Failed to unbox generic function");
+					return;
+				}
+			}
+			func_call->declaration = best_match;
 		}
-		func_call->declaration = best_match;
 	}
+	// no candidates, name resolver will already emit an error
 }
 void type_checker::visit(std::shared_ptr<if_statement> if_stmt) {
 	if_stmt->condition->accept(*this);
@@ -846,7 +864,7 @@ bool type_checker::is_valid_entry_point(std::shared_ptr<function_declaration> fu
 }
 
 int type_checker::score_candidate(std::shared_ptr<function_declaration> candidate, const std::vector<type_ptr>& arg_types) {
-	auto expected = candidate->get_expected_types();
+	auto expected = candidate->get_param_types();
 
 	if (expected.empty() && arg_types.empty()) {
 		return 2; // perfect match for no-arg functions
@@ -882,7 +900,7 @@ void type_checker::check_type(type_ptr& type) {
 	}
 	if (auto arr = type->as_array()) {
 		check_type(arr->base_type);
-		if (auto sz = arr->size_expression) {
+		if (auto& sz = arr->size_expression) {
 			sz->accept(*this);
 
 			if (!sz->is_constant()) {
@@ -891,7 +909,7 @@ void type_checker::check_type(type_ptr& type) {
 			}
 
 			auto size_expr_type = arr->size_expression->type();
-			if (size_expr_type->is_unknown() || !size_expr_type->is_integral()) {
+			if (!size_expr_type->is_integral()) {
 				ERROR(ERR_ARRAY_SIZE_MUST_BE_INTEGER, arr->size_expression->position);
 				return;
 			}

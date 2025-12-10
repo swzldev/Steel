@@ -8,11 +8,13 @@
 #include "../ast/ast_visitor.h"
 #include "../compilation_pass.h"
 #include "../modules/module_manager.h"
+#include "../entities/module_entity.h"
+#include "../symbolics/symbol_table.h"
 
 class declaration_collector : public ast_visitor, public compilation_pass {
 public:
 	declaration_collector(std::shared_ptr<compilation_unit> unit, module_manager& module_manager)
-		: module_manager(module_manager), sym_table(&module_manager.get_global_module()->symbols), compilation_pass(unit) {
+		: module_manager(module_manager), sym_table(&module_manager.get_global_module()->symbols()), compilation_pass(unit) {
 		current_module = module_manager.get_global_module();
 	}
 
@@ -33,5 +35,5 @@ private:
 	std::shared_ptr<function_declaration> current_function;
 	std::shared_ptr<function_declaration> current_constructor;
 	std::shared_ptr<type_declaration> current_type;
-	std::shared_ptr<module_info> current_module;
+	std::shared_ptr<module_entity> current_module; // should never be null - at least the global module
 };

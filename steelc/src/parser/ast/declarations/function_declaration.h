@@ -2,12 +2,12 @@
 
 #include <string>
 #include <vector>
-#include <unordered_set>
 
 #include "declaration.h"
 #include "variable_declaration.h"
 #include "../generics/generic_parameter.h"
-#include "../../types/data_type.h"
+#include "../../types/types_fwd.h"
+#include "../../types/function_type.h"
 
 class function_declaration : public declaration, public std::enable_shared_from_this<function_declaration> {
 public:
@@ -45,31 +45,15 @@ public:
 		return result;
 	}
 
+	type_ptr type() const {
+		return function_type::make(return_type, get_param_types());
+	}
+
 	inline bool is_abstract() const {
 		return body == nullptr;
 	}
 
-	inline bool matches(const std::shared_ptr<function_declaration>& other, bool match_return_type = true) {
-		if (!other) {
-			return false;
-		}
-		if (identifier != other->identifier) {
-			return false;
-		}
-		if (parameters.size() != other->parameters.size()) {
-			return false;
-		}
-		for (size_t i = 0; i < parameters.size(); i++) {
-			if (*parameters[i]->type != other->parameters[i]->type) {
-				return false;
-			}
-		}
-		if (match_return_type && *return_type != other->return_type) {
-			return false;
-		}
-		return true;
-	}
-	inline std::vector<type_ptr> get_expected_types() {
+	inline std::vector<type_ptr> get_param_types() const {
 		std::vector<type_ptr> expected_types;
 		for (const auto& param : parameters) {
 			expected_types.push_back(param->type);

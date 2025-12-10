@@ -9,7 +9,7 @@ class literal : public expression, public std::enable_shared_from_this<literal> 
 public:
 	ENABLE_ACCEPT(literal)
 
-	literal(primitive_type primitive, std::string value)
+	literal(data_type_kind primitive, std::string value)
 		: primitive(primitive), value(value) {
 	}
 
@@ -36,6 +36,6 @@ public:
 		return true; // literals are always constants
 	}
 
-	primitive_type primitive;
+	data_type_kind primitive;
 	std::string value;
 };

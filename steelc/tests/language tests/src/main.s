@@ -1,3 +1,0 @@
-func main() -> int {
-	print("Hello, World!\n");
-}

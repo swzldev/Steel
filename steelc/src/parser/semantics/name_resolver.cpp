@@ -3,20 +3,19 @@
 #include <memory>
 #include <string>
 
+#include "helpers/function_filter.h"
 #include "../compilation_pass.h"
 #include "../entities/entity.h"
-/*
-* note:
-* do NOT include the entity headers directly
-* they will get transitively included by identifier_expression.h
-* and will throw an error. Really identifier expression should have
-* a cpp file and implement it there, but thats overcomplicated
-* so for now im leaving it like this.
-*/
+#include "../entities/variable_entity.h"
+#include "../entities/function_entity.h"
+#include "../entities/type_entity.h"
+#include "../entities/module_entity.h"
+#include "../symbolics/lookup_result.h"
 #include "../symbolics/symbol_table.h"
 #include "../types/types_fwd.h"
 #include "../types/custom_type.h"
 #include "../types/container_types.h"
+#include "../symbolics/symbol_error.h"
 #include "../ast/declarations/function_declaration.h"
 #include "../ast/declarations/module_declaration.h"
 #include "../ast/declarations/type_declaration.h"
@@ -46,28 +45,45 @@ void name_resolver::visit(std::shared_ptr<function_declaration> func) {
 
 		// add generics to the current scope
 		for (const auto& generic : func->generics) {
-			auto err = sym_table->add_generic(generic);
-			if (err == ERR_DUPLICATE_GENERIC) {
-				ERROR(ERR_DUPLICATE_GENERIC, func->position, generic->identifier.c_str());
-				continue;
-			}
-			else if (err == ERR_GENERIC_SHADOWS_VARIABLE) {
-				// we know they have the same name with this error so we can use this sneaky trick to name both
-				ERROR(ERR_GENERIC_SHADOWS_VARIABLE, func->position, generic->identifier.c_str(), generic->identifier.c_str());
-				continue;
+			symbol_error err = sym_table->add_symbol(generic);
+			if (err != SYMBOL_OK) {
+				switch (err) {
+				case SYMBOL_CONFLICTS_WITH_GENERIC:
+					ERROR(ERR_DUPLICATE_GENERIC, func->position, generic->identifier.c_str());
+					continue;
+				case SYMBOL_CONFLICTS_WITH_VARIABLE:
+					// we know they have the same name with this error so we can use this sneaky trick to name both
+					ERROR(ERR_GENERIC_SHADOWS_VARIABLE, func->position, generic->identifier.c_str(), generic->identifier.c_str());
+					continue;
+				default:
+					ERROR(ERR_INTERNAL_ERROR, func->position, "Name Resolver", "Unknown error while adding generic parameter");
+					continue;
+				}
 			}
 		}
 
 		// add parameters to the current scope
 		for (const auto& param : func->parameters) {
-			if (sym_table->has_variable(param->identifier)) {
-				ERROR(ERR_DUPLICATE_PARAMETER, func->position, param->identifier.c_str());
-				continue;
-			}
-			if (sym_table->add_variable(param) == ERR_VARIABLE_SHADOWS_GENERIC) {
-				// we know they have the same name with this error so we can use this sneaky trick to name both
-				ERROR(ERR_VARIABLE_SHADOWS_GENERIC, func->position, param->identifier.c_str(), param->identifier.c_str());
-				continue;
+			symbol_error err = sym_table->add_symbol(param);
+			if (err != SYMBOL_OK) {
+				switch (err) {
+				case SYMBOL_CONFLICTS_WITH_GENERIC:
+					ERROR(ERR_VARIABLE_SHADOWS_GENERIC, func->position, param->identifier.c_str(), param->identifier.c_str());
+					continue;
+				case SYMBOL_CONFLICTS_WITH_VARIABLE:
+					// only possible if the conflicting variable is another parameter
+					// so we know its this error
+					ERROR(ERR_DUPLICATE_PARAMETER, func->position, param->identifier.c_str());
+					continue;
+				case SYMBOL_CONFLICTS_WITH_FUNCTION:
+					// im not sure if this is possible, but we'll add it just in case
+					ERROR(ERR_NAME_CONFLICT, func->position, "parameter", param->identifier.c_str(), "function");
+					continue;
+				// we dont need to check other cases as they are impossible since parameters will always be scoped
+				default:
+					ERROR(ERR_INTERNAL_ERROR, func->position, "Name Resolver", "Unknown error while adding parameter");
+					continue;
+				}
 			}
 		}
 
@@ -86,15 +102,24 @@ void name_resolver::visit(std::shared_ptr<variable_declaration> var) {
 	// only check local variables here - globals are already handled
 	// in the declaration collector pass
 	if (!sym_table->in_global_scope()) {
-		auto err = sym_table->add_variable(var);
-		if (err == ERR_VARIABLE_ALREADY_DECLARED_SCOPE) {
-			ERROR(ERR_VARIABLE_ALREADY_DECLARED_SCOPE, var->position, var->identifier.c_str());
-			return;
-		}
-		else if (err == ERR_VARIABLE_SHADOWS_GENERIC) {
-			// we know they have the same name with this error so we can use this sneaky trick to name both
-			ERROR(ERR_VARIABLE_SHADOWS_GENERIC, var->position, var->identifier.c_str(), var->identifier.c_str());
-			return;
+		symbol_error err = sym_table->add_symbol(var, current_type_entity());
+		// only check for scoped errors
+		// module level errors wont occur here
+		// as were in a local scope
+		if (err != SYMBOL_OK) {
+			switch (err) {
+			case SYMBOL_CONFLICTS_WITH_VARIABLE:
+				ERROR(ERR_VARIABLE_ALREADY_DECLARED_SCOPE, var->position, var->identifier.c_str());
+				break;
+			case SYMBOL_CONFLICTS_WITH_GENERIC:
+				// we know both have same name so use same string
+				ERROR(ERR_VARIABLE_SHADOWS_GENERIC, var->position, var->identifier.c_str(), var->identifier.c_str());
+				break;
+
+			default:
+				ERROR(ERR_INTERNAL_ERROR, var->position, "Declaration Collector", "Unknown error while adding variable symbol");
+				break;
+			}
 		}
 	}
 	// still accept all initializers including global ones
@@ -122,14 +147,14 @@ void name_resolver::visit(std::shared_ptr<type_declaration> decl) {
 	current_type = nullptr;
 	sym_table->pop_scope();
 }
-void name_resolver::visit(std::shared_ptr<module_declaration> decl) {
+void name_resolver::visit(std::shared_ptr<module_declaration> module) {
 	auto old_symbols = sym_table;
-	resolver.current_module = decl->module_info;
-	sym_table = &decl->module_info->symbols;
-	for (const auto& decl : decl->declarations) {
+	resolver.current_module = module->entity;
+	sym_table = &module->entity->symbols();
+	for (const auto& decl : module->declarations) {
 		decl->accept(*this);
 	}
-	resolver.current_module = decl->module_info->parent_module;
+	resolver.current_module = module->entity->parent_module;
 	sym_table = old_symbols;
 }
 void name_resolver::visit(std::shared_ptr<binary_expression> expr) {
@@ -137,62 +162,17 @@ void name_resolver::visit(std::shared_ptr<binary_expression> expr) {
 	expr->right->accept(*this);
 }
 void name_resolver::visit(std::shared_ptr<identifier_expression> expr) {
-	// variable identifier
-	auto var_decl = resolver.get_variable(current_type, expr->identifier);
-	if (var_decl.ambiguous()) {
-		auto names = var_decl.results_names();
+	// resolve identifier
+	auto entity = resolver.lookup(expr->identifier, current_type_entity());
+
+	if (entity.ambiguous()) {
+		auto names = entity.results_names();
 		std::string names_str = string_utils::vec_to_string(names);
 		ERROR(ERR_NAME_COLLISION, expr->position, expr->identifier.c_str(), names_str.c_str());
 		return;
 	}
-	else if (var_decl.found()) {
-		expr->id_type = IDENTIFIER_VARIABLE;
-		expr->variable_declaration = var_decl.first()->as_variable()->declaration;
-		return;
-	}
-
-	// module identifier
-	auto mod_decl = module_manager.get_module(expr->identifier);
-	if (mod_decl != nullptr) {
-		expr->id_type = IDENTIFIER_MODULE;
-		expr->module_info = mod_decl;
-		return;
-	}
-
-	// function identifier
-	/*auto func_decl = resolver.get_function(expr->identifier);
-	if (var_decl.error == LOOKUP_OK) {
-		expr->id_type = IDENTIFIER_VARIABLE;
-		expr->function_declaration = std::get<std::shared_ptr<function_declaration>>(var_decl.value);
-		return;
-	} WE DONT SUPPORT METHOD POINTERS ETC CURRENTLY SO THIS IS JUST COMMENTED */
-
-	// type identifier
-	auto type_decl = resolver.get_type(expr->identifier);
-	if (type_decl.ambiguous()) {
-		auto names = type_decl.results_names();
-		std::string names_str = string_utils::vec_to_string(names);
-		ERROR(ERR_NAME_COLLISION, expr->position, expr->identifier.c_str(), names_str.c_str());
-		return;
-	}
-	else if (type_decl.found()) {
-		expr->id_type = IDENTIFIER_TYPE;
-		expr->type_declaration = type_decl.first()->as_type()->type->as_custom()->declaration;
-		return;
-	}
-	// TODO: support for errors like collisions im just too lazy to implement them currently
-
-	// enum identifier
-	auto enum_decl = resolver.get_enum(expr->identifier);
-	if (enum_decl.ambiguous()) {
-		auto names = enum_decl.results_names();
-		std::string names_str = string_utils::vec_to_string(names);
-		ERROR(ERR_NAME_COLLISION, expr->position, expr->identifier.c_str(), names_str.c_str());
-		return;
-	}
-	else if (enum_decl.found()) {
-		expr->id_type = IDENTIFIER_ENUM;
-		expr->enum_declaration = enum_decl.first()->as_type()->type->as_enum()->declaration;
+	else if (entity.found()) {
+		expr->resolved_entity = entity.first();
 		return;
 	}
 
@@ -206,13 +186,18 @@ void name_resolver::visit(std::shared_ptr<member_expression> expr) {
 	if (expr->is_static_access()) {
 		auto entity = expr->object->entity();
 		if (!entity) {
-			// error
+			ERROR(ERR_STATIC_ACCESS_INVALID, expr->position, entity->kind_string().c_str(), entity->name().c_str());
+			return;
+		}
+		else if (entity == entity::UNRESOLVED) {
+			// dont bother reporting an error here
+			return;
 		}
 
 		// module
 		if (entity->kind() == ENTITY_MODULE) {
-			const auto& mod_info = entity->as_module()->mod_info;
-			const auto& syms = mod_info->symbols;
+			const auto& mod = entity->as_module();
+			const auto& syms = mod->symbols();
 
 			auto result = syms.lookup(expr->member);
 			if (result.ambiguous()) {
@@ -225,7 +210,7 @@ void name_resolver::visit(std::shared_ptr<member_expression> expr) {
 				expr->resolved_entity = result.first();
 			}
 			else {
-				ERROR(ERR_NO_MEMBER_WITH_NAME_MODULE, expr->position, mod_info->full_name(), expr->member.c_str());
+				ERROR(ERR_NO_MEMBER_WITH_NAME_MODULE, expr->position, mod->full_name(), expr->member.c_str());
 				return;
 			}
 		}
@@ -247,14 +232,14 @@ void name_resolver::visit(std::shared_ptr<member_expression> expr) {
 					expr->resolved_entity = variable_entity::make(field);
 				}
 				else {
-					ERROR(ERR_STATIC_ACCESS_ON_NONSTATIC_MEMBER, expr->position, expr->member.c_str());
+					ERROR(ERR_STATIC_ACCESS_NONSTATIC_MEMBER, expr->position, expr->member.c_str());
 					return;
 				}
 			}
 		}
-		// function
-		else if (entity->kind() == ENTITY_FUNCTION) {
-			ERROR(ERR_STATIC_ACCESS_ON_FUNCTION, expr->position, entity->name().c_str());
+		// other
+		else {
+			ERROR(ERR_STATIC_ACCESS_INVALID, expr->position, entity->kind_string().c_str(), entity->name().c_str());
 			return;
 		}
 	}
@@ -274,15 +259,29 @@ void name_resolver::visit(std::shared_ptr<function_call> func_call) {
 		// use entity instead of type for static access
 		auto entity = func_call->scope->entity();
 
-		// module::function()
-		if (entity->kind() == ENTITY_MODULE) {
-			auto syms = entity->as_module()->mod_info->symbols;
+		// ast node doesnt refer to an entity
+		if (!entity) {
+			ERROR(ERR_CALL_ON_NON_FUNCTION, func_call->position, func_call->identifier.c_str());
+			return;
+		}
+		// ast node does refer to an entity but its unresolved
+		else if (entity == entity::UNRESOLVED) {
+			// dont bother reporting an error here
+			return;
+		}
 
-			auto candidates = syms.get_function_candidates(func_call->identifier, func_call->args.size(), func_call->generic_args.size());
-			func_call->declaration_candidates = candidates;
+		switch (entity->kind()) {
+		case ENTITY_VARIABLE: {
+			ERROR(ERR_STATIC_ACCESS_INVALID, func_call->position, entity->kind_string().c_str(), entity->name().c_str());
+			return;
+		}
+		// function::function()
+		case ENTITY_FUNCTION: {
+			ERROR(ERR_STATIC_ACCESS_INVALID, func_call->position, entity->kind_string().c_str(), entity->name().c_str());
+			return;
 		}
 		// type::function()
-		else if (entity->kind() == ENTITY_TYPE) {
+		case ENTITY_TYPE: {
 			// lookup static method
 			auto custom = entity->as_type()->type->as_custom();
 			if (!custom) {
@@ -293,37 +292,95 @@ void name_resolver::visit(std::shared_ptr<function_call> func_call) {
 			// TODO:
 			// - gather candidates
 			// - ensure candidates are static
-		}
-		// function::function()
-		else if (entity->kind() == ENTITY_FUNCTION) {
-			ERROR(ERR_STATIC_ACCESS_ON_FUNCTION, func_call->position, entity->name().c_str());
 			return;
+		}
+		// module::function()
+		case ENTITY_MODULE: {
+			const auto& symbols = entity->as_module()->symbols();
+			auto result = symbols.lookup(func_call->identifier);
+
+			if (result.no_match()) {
+				ERROR(ERR_UNKNOWN_FUNCTION, func_call->position, func_call->identifier.c_str());
+				return;
+			}
+
+			std::vector<std::shared_ptr<function_entity>> func_entities;
+			for (const auto& res : result.results) {
+				if (res->kind() == ENTITY_FUNCTION) {
+					func_entities.push_back(res->as_function());
+				}
+				else {
+					// might change this in the future, e.g. for function pointer variables
+					ERROR(ERR_CALL_ON_NON_FUNCTION, func_call->position, func_call->identifier.c_str());
+					return;
+				}
+			}
+
+			function_filter filter(func_entities);
+			auto candidates = filter.filter_by_param_count(
+				func_call->args.size(),
+				func_call->generic_args.size()
+			);
+
+			for (const auto& candidate : candidates) {
+				func_call->declaration_candidates.push_back(candidate->declaration);
+			}
+			return;
+		}
+		// we might need to support other cases but im not sure
 		}
 	}
 	else if (func_call->is_method()) {
-		// only try to resolve the caller_obj, not the method
-		func_call->caller_obj->accept(*this);
+		// only try to resolve the callee, not the method
+		func_call->callee->accept(*this);
+	}
+	else if (func_call->identifier == "printf") {
+		// temporary - dont resolve printf calls
 	}
 	else {
 		// check if its a constructor call
-		auto result = resolver.get_type(func_call->identifier);
-		if (result.ambiguous()) {
-			func_call->is_constructor = true;
-			auto names = result.results_names();
+		lookup_result type = resolver.lookup(func_call->identifier);
+		if (type.ambiguous()) {
+			auto names = type.results_names();
 			std::string names_str = string_utils::vec_to_string(names);
 			ERROR(ERR_NAME_COLLISION, func_call->position, func_call->identifier.c_str(), names_str.c_str());
 			return;
 		}
-		else if (result.found()) {
+		else if (type.found() && type.first()->kind() == ENTITY_TYPE) {
 			// DONT RESOLVE CANDIDATES YET - GENERIC CONSTRUCTORS HAVNT BEEN INSTANTIATED
 			// we can still set the constructor type with the generic definition for later use
 			func_call->is_constructor = true;
-			func_call->ctor_type = result.first()->as_type()->type->as_custom()->declaration;
+			func_call->ctor_type = type.first()->as_type()->type->as_custom()->declaration;
 		}
-		else {
-			// lookup function as normal
-			auto func_candidates = resolver.get_function_candidates(func_call->identifier, func_call->args.size(), func_call->generic_args.size());
-			func_call->declaration_candidates = func_candidates;
+		
+		// lookup function as normal
+		lookup_result result = resolver.lookup(func_call->identifier);
+
+		if (result.no_match()) {
+			ERROR(ERR_UNKNOWN_FUNCTION, func_call->position, func_call->identifier.c_str());
+			return;
+		}
+
+		std::vector<std::shared_ptr<function_entity>> func_entities;
+		for (const auto& res : result.results) {
+			if (res->kind() == ENTITY_FUNCTION) {
+				func_entities.push_back(res->as_function());
+			}
+			else {
+				// might change this in the future, e.g. for function pointer variables
+				ERROR(ERR_CALL_ON_NON_FUNCTION, func_call->position, func_call->identifier.c_str());
+				return;
+			}
+		}
+
+		function_filter filter(func_entities);
+		auto candidates = filter.filter_by_param_count(
+			func_call->args.size(),
+			func_call->generic_args.size()
+		);
+
+		for (const auto& candidate : candidates) {
+			func_call->declaration_candidates.push_back(candidate->declaration);
 		}
 	}
 
@@ -374,6 +431,13 @@ void name_resolver::visit(std::shared_ptr<while_loop> while_loop) {
 	sym_table->push_scope();
 	while_loop->body->accept(*this);
 	sym_table->pop_scope();
+}
+
+std::shared_ptr<type_entity> name_resolver::current_type_entity() const {
+	if (current_type) {
+		return current_type->entity();
+	}
+	return nullptr;
 }
 
 void name_resolver::resolve_type_names(type_ptr& type) {

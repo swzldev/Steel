@@ -15,6 +15,9 @@
 #include "cleanup/scope.h"
 #include "memory/lvalue.h"
 #include "memory/variable.h"
+#include "../parser/entities/entities_fwd.h"
+#include "../parser/entities/entity.h"
+#include "../parser/entities/variable_entity.h"
 #include "../parser/ast/expressions/expression.h"
 #include "../parser/ast/expressions/identifier_expression.h"
 
@@ -97,14 +100,13 @@ std::shared_ptr<variable> codegen_env::lookup_local(const std::string& name) {
 }
 
 std::shared_ptr<lvalue> codegen_env::lvalue_from_expression(std::shared_ptr<expression> expr) {
-	if (auto id_expr = std::dynamic_pointer_cast<identifier_expression>(expr)) {
-		if (id_expr->id_type == IDENTIFIER_VARIABLE) {
-			auto var = lookup_local(id_expr->identifier);
-			if (!var) {
-				throw codegen_exception("Undefined variable: " + id_expr->identifier);
-			}
-			return var;
+	auto entity = expr->entity();
+	if (entity && entity->kind() == ENTITY_VARIABLE) {
+		auto var = lookup_local(entity->name());
+		if (!var) {
+			throw codegen_exception("Undefined variable: " + entity->name());
 		}
+		return var;
 	}
 
 	// add support for other lvalue expressions here

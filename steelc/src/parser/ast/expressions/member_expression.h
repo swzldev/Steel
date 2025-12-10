@@ -8,6 +8,8 @@
 #include "../../types/types_fwd.h"
 #include "../../types/data_type.h"
 #include "../../entities/entities_fwd.h"
+#include "../../entities/entity.h"
+#include "../../entities/variable_entity.h"
 #include "../../../lexer/token_type.h"
 
 class member_expression : public expression, public std::enable_shared_from_this<member_expression> {
@@ -45,6 +47,9 @@ public:
 	}
 
 	virtual type_ptr type() const override {
+		if (!resolved_type && resolved_entity && resolved_entity->kind() == ENTITY_VARIABLE) {
+			return resolved_entity->as_variable()->var_type();
+		}
 		return resolved_type ? resolved_type : data_type::UNKNOWN;
 	}
 	bool is_rvalue() const override {
@@ -55,7 +60,7 @@ public:
 	}
 
 	entity_ptr entity() const override {
-		return resolved_entity;
+		return resolved_entity ? resolved_entity : entity::UNRESOLVED;
 	}
 
 	inline bool is_resolved() const {
