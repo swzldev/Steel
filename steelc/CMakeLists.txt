@@ -2,8 +2,8 @@
 
 set(SOURCES
     "src/main.cpp"
-    "src/compiler.cpp"
-    "src/compiler.h"
+    "src/compiler/compiler.cpp"
+    "src/compiler/compiler.h"
     "src/input/console_args.cpp"
     "src/input/console_args.h"
     "src/stproj/source_file.cpp"
@@ -165,7 +165,9 @@ llvm_map_components_to_libnames(LLVM_LIBS
 target_link_libraries(steelc PRIVATE ${LLVM_LIBS})
 
 # Support for includes in /lib/
-target_include_directories(steelc PRIVATE lib)
+target_include_directories(steelc PRIVATE "lib")
+# Support for includes in /src/
+target_include_directories(steelc PRIVATE "src")
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET steelc PROPERTY CXX_STANDARD 20)
