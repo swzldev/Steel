@@ -148,10 +148,7 @@ void codegen_visitor::visit(std::shared_ptr<function_call> func_call) {
 		cg_assert(result != nullptr, "Failed to generate argument for function call: " + func_call->identifier);
 	}
 
-	if (func_call->is_scoped_function()) {
-
-	}
-	else if (func_call->is_method()) {
+	if (func_call->is_method()) {
 
 	}
 	else if (func_call->is_constructor) {

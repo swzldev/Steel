@@ -6,7 +6,6 @@
     - Build output directory: `/build/`
     - Intermediate output directory: `/build/intermediate/`
     - IR output directory: `/build/intermediate/IR/`
-    - Cache output directory: `/build/cache/`
 - Added a new build flag `--llvm-asm` which outputs the generated LLVM IR as assembly files (.ll) instead of bitcode files (.bc). Useful for debugging and inspecting the generated IR.
 
 ## [0.5.0] - 10-12-2025

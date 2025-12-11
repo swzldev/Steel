@@ -6,6 +6,7 @@ source_filename = "main.st"
 define i32 @main() {
 entry:
   %ret.slot = alloca i32, align 4
+  call void @_ZN5tests2io5printEPc(ptr @0)
   store i32 0, ptr %ret.slot, align 4
   br label %scope.clean
 
