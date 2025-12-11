@@ -1,4 +1,4 @@
-name = "Language Tests"
+name = "Basics (steel tests)"
 version = "0.1.0"
 type = "executable"
 
