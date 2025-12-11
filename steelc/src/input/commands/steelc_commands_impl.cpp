@@ -52,6 +52,9 @@ bool steelc_commands_impl::build_command_handler(const command_flags& flags) {
 	if (flags.has("--all")) {
 		cfg.build_all = true;
 	}
+	if (flags.has("--llvm-asm")) {
+		cfg.generate_llvm_asm = true;
+	}
 	if (flags.has("--out")) {
 		cfg.output_dir = flags.get_first("--out");
 	}

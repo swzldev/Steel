@@ -104,12 +104,18 @@ bool project_builder::build_project() {
 		outputter->clear_intermediate_files("IR");
 
 		for (const auto& mod_holder : codegen_result->modules) {
+			// automatically gets correct extension based on config (.ll / .bc)
 			std::string path = get_ir_path(*mod_holder.owning_unit->source_file);
 			
-			code_output_error err = OUTPUT_SUCCESS;
 			// default to outputting bitcode (may change later)
-			std::string bitcode = ir_generator::llvm_module_to_bitcode(*mod_holder.module);
-			err = outputter->output_code(bitcode, path, OUTPUT_LOCATION_INTERMEDIATE);
+			std::string code;
+			if (build_cfg.generate_llvm_asm) {
+				code = ir_generator::llvm_module_to_asm(*mod_holder.module);
+			}
+			else {
+				code = ir_generator::llvm_module_to_bitcode(*mod_holder.module);
+			}
+			auto err = outputter->output_code(code, path, OUTPUT_LOCATION_INTERMEDIATE);
 
 			if (err != OUTPUT_SUCCESS) {
 				output::err("Failed to output IR file: {}\n", console_colors::BOLD + console_colors::RED, path);
@@ -125,7 +131,7 @@ bool project_builder::build_project() {
 
 	// link to one module
 	project_linker linker;
-	linker.load_modules_from_paths(all_irs);
+	linker.load_modules_from_paths(all_irs, /* is_bitcode */ !build_cfg.generate_llvm_asm);
 	if (linker.has_error()) {
 		output::err("Link error: {}\n", console_colors::BOLD + console_colors::RED, linker.get_error_message());
 		return false;
@@ -136,12 +142,20 @@ bool project_builder::build_project() {
 		output::err("Link error: {}\n", console_colors::BOLD + console_colors::RED, linker.get_error_message());
 		return false;
 	}
-	std::string linked_code = ir_generator::llvm_module_to_bitcode(*linked);
+	std::string linked_code;
+	if (build_cfg.generate_llvm_asm) {
+		linked_code = ir_generator::llvm_module_to_asm(*linked);
+	}
+	else {
+		linked_code = ir_generator::llvm_module_to_bitcode(*linked);
+	}
 
-	outputter->output_code(linked_code, "linked.bc", OUTPUT_LOCATION_INTERMEDIATE);
+	std::string linked_filename = project_filename() + (build_cfg.generate_llvm_asm ? ".ll" : ".bc");
+
+	outputter->output_code(linked_code, linked_filename, OUTPUT_LOCATION_INTERMEDIATE);
 
 	// build with clang
-	if (!clang_build({ (outputter->get_intermediate_dir() / "linked.bc").string() })) {
+	if (!clang_build({ (outputter->get_intermediate_dir() / linked_filename).string()})) {
 		output::err("Clang: building failed.\n", console_colors::BOLD + console_colors::RED);
 		return false;
 	}
@@ -177,7 +191,8 @@ double project_builder::get_compilation_time() const {
 }
 
 std::string project_builder::get_ir_path(const source_file& src, bool relative) const {
-	std::string rel_path = "./IR/" + src.relative_path + ".bc";
+	std::string extension = build_cfg.generate_llvm_asm ? ".ll" : ".bc";
+	std::string rel_path = "./IR/" + src.relative_path + extension;
 	if (!relative) {
 		return path_utils::normalize_path(get_intermediate_dir() / rel_path).string();
 	}

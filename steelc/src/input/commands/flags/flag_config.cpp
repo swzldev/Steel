@@ -20,6 +20,7 @@ const flag_config* flag_config::from_command(steelc_command_id cmd_id) {
 			{
 				{ "--no-link", 0 },
 				{ "--all", 0 },
+				{ "--llvm-asm", 0 },
 				{ "--out", 1 },
 				{ "--int", 1 },
 			}
