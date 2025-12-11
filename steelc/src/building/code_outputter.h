@@ -13,6 +13,11 @@ enum code_output_location {
 	OUTPUT_LOCATION_OUTPUT
 };
 
+enum code_output_format {
+	OUTPUT_FORMAT_BINARY,
+	OUTPUT_FORMAT_TEXT
+};
+
 enum code_output_error {
 	OUTPUT_SUCCESS = 0,
 	OUTPUT_FAIL_INIT,
@@ -30,7 +35,7 @@ public:
 		return outputter;
 	}
 
-	code_output_error output_code(const std::string& code, const std::string& filename, code_output_location location);
+	code_output_error output_code(const std::string& code, const std::string& filename, code_output_location location, code_output_format = OUTPUT_FORMAT_TEXT);
 
 	void clear_intermediate_files(const std::string& subpath = "") const;
 
@@ -52,5 +57,5 @@ private:
 	build_config build_cfg;
 
 	bool init();
-	code_output_error output_to(const std::string& data, const std::filesystem::path& path);
+	code_output_error output_to(const std::string& data, const std::filesystem::path& path, bool binary);
 };

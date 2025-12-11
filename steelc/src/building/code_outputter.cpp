@@ -4,12 +4,12 @@
 #include <fstream>
 #include <string>
 
-code_output_error code_outputter::output_code(const std::string& code, const std::string& filename, code_output_location location) {
+code_output_error code_outputter::output_code(const std::string& code, const std::string& filename, code_output_location location, code_output_format format) {
 	switch (location) {
 	case OUTPUT_LOCATION_OUTPUT:
-		return output_to(code, output_dir / filename);
+		return output_to(code, output_dir / filename, format == OUTPUT_FORMAT_BINARY);
 	case OUTPUT_LOCATION_INTERMEDIATE:
-		return output_to(code, intermediate_dir / filename);
+		return output_to(code, intermediate_dir / filename, format == OUTPUT_FORMAT_BINARY);
 	}
 
 	return OUTPUT_SUCCESS;
@@ -41,16 +41,29 @@ bool code_outputter::init() {
 
 	return true;
 }
-code_output_error code_outputter::output_to(const std::string& data, const std::filesystem::path& path) {
+code_output_error code_outputter::output_to(const std::string& data, const std::filesystem::path& path, bool binary) {
 	// create directories (if nescessary)
 	std::filesystem::create_directories(path.parent_path());
 
-	std::ofstream file(path);
+	std::ofstream file;
+	if (binary) {
+		file.open(path, std::ios::out | std::ios::binary);
+	}
+	else {
+		file.open(path, std::ios::out);
+	}
+
 	if (!file || !file.is_open()) {
 		return OUTPUT_FAIL_CREATE_FILE;
 	}
 
-	file << data;
+	if (binary) {
+		file.write(data.data(), static_cast<std::streamsize>(data.size()));
+	}
+	else {
+		file << data;
+	}
+
 	file.close();
 
 	return OUTPUT_SUCCESS;
