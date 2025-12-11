@@ -17,10 +17,15 @@
 #include <ast/ast_visitor.h>
 #include <ast/ast_fwd.h>
 
+// notes:
+// codegen visitor expects both the module and context are created outside
+// it does not create either of them due to object lifetime issues
+
 class codegen_visitor : public ast_visitor {
 public:
-	codegen_visitor(std::string unit_name)
-		: module(unit_name, context),
+	codegen_visitor(llvm::Module& module)
+		: context(module.getContext()),
+		module(module),
 		builder(context),
 		type_converter(context),
 		function_builder(module, type_converter),
@@ -58,14 +63,10 @@ public:
 	void visit(std::shared_ptr<while_loop> while_loop);
 	void visit(std::shared_ptr<return_statement> ret_stmt) override;
 	void visit(std::shared_ptr<break_statement> brk_stmt);
-	
-	llvm::Module& get_module() {
-		return module;
-	}
 
 private:
-	llvm::LLVMContext context;
-	llvm::Module module;
+	llvm::LLVMContext& context;
+	llvm::Module& module;
 	llvm::IRBuilder<> builder;
 	// with the new accept method, NEVER directly use this field
 	// it should ONLY be set

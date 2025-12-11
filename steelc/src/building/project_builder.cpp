@@ -10,6 +10,10 @@
 #include <cstdint>
 #include <unordered_set>
 
+#include <llvm/IR/Module.h>
+#include <llvm/Bitcode/BitcodeWriter.h>
+#include <llvm/Support/raw_ostream.h>
+
 #include <config/compile_config.h>
 #include <utils/console_colors.h>
 #include <utils/path_utils.h>
@@ -21,10 +25,13 @@
 #include <building/cache/file_hasher.h>
 #include <building/build_config.h>
 #include <building/code_outputter.h>
+#include <building/linking/link_error.h>
+#include <building/linking/project_linker.h>
+#include <building/ir/ir_generator.h>
 #include <compiler/compiler.h>
 #include <stproj/source_file.h>
 #include <stproj/stproj_file.h>
-#include <codegen/ir/ir_holder.h>
+#include <codegen/modules/module_holder.h>
 
 bool project_builder::load_project(const std::string& project_path) {
 	// load stproj
@@ -45,7 +52,7 @@ bool project_builder::build_project() {
 	// load build cache
 	build_cache_file cache = load_cache();
 	std::vector<source_file> to_compile;
-	std::vector<ir_holder> generated_ir;
+	std::unique_ptr<codegen_result> codegen_result;
 
 	if (build_cfg.build_all) {
 		to_compile = project_file->sources;
@@ -79,23 +86,32 @@ bool project_builder::build_project() {
 			return false;
 		}
 
-		generated_ir = cmp.get_generated_ir();
+		codegen_result = cmp.get_result();
+	}
+
+	output::verbose("Initializing output system...\n");
+	output::verbose("Output directory: {}\n", console_colors::DIM, build_cfg.output_dir);
+	output::verbose("Intermediate directory: {}\n", console_colors::DIM, build_cfg.intermediate_dir);
+	outputter = code_outputter::create(project_file->parent_path().string(), build_cfg);
+	if (!outputter) {
+		output::err("Failed to initialize output system, ensure output paths are valid and accessable.\n", console_colors::BOLD + console_colors::RED);
+		return false;
 	}
 
 	// output code (if any)
-	if (generated_ir.size() > 0) {
-		output::verbose("Initializing output system...\n");
-		output::verbose("Output directory: {}\n", console_colors::DIM, build_cfg.output_dir);
-		output::verbose("Intermediate directory: {}\n", console_colors::DIM, build_cfg.intermediate_dir);
-		outputter = code_outputter::create(project_file->parent_path().string(), build_cfg);
-		if (!outputter) {
-			output::err("Failed to initialize output system, ensure output paths are valid and accessable.\n", console_colors::BOLD + console_colors::RED);
-			return false;
-		}
+	if (codegen_result->modules.size() > 0) {
+		// clear all irs
+		outputter->clear_intermediate_files("IR");
 
-		for (const auto& il_h : generated_ir) {
-			std::string path = get_ir_path(*il_h.owning_unit->source_file);
-			if (outputter->output_il(il_h.ir, path) != OUTPUT_SUCCESS) {
+		for (const auto& mod_holder : codegen_result->modules) {
+			std::string path = get_ir_path(*mod_holder.owning_unit->source_file);
+			
+			code_output_error err = OUTPUT_SUCCESS;
+			// default to outputting bitcode (may change later)
+			std::string bitcode = ir_generator::llvm_module_to_bitcode(*mod_holder.module);
+			err = outputter->output_code(bitcode, path, OUTPUT_LOCATION_INTERMEDIATE);
+
+			if (err != OUTPUT_SUCCESS) {
 				output::err("Failed to output IR file: {}\n", console_colors::BOLD + console_colors::RED, path);
 				return false;
 			}
@@ -107,8 +123,25 @@ bool project_builder::build_project() {
 		all_irs.push_back(get_ir_path(src, false));
 	}
 
+	// link to one module
+	project_linker linker;
+	linker.load_modules_from_paths(all_irs);
+	if (linker.has_error()) {
+		output::err("Link error: {}\n", console_colors::BOLD + console_colors::RED, linker.get_error_message());
+		return false;
+	}
+
+	std::unique_ptr<llvm::Module> linked = linker.link_all();
+	if (linker.has_error()) {
+		output::err("Link error: {}\n", console_colors::BOLD + console_colors::RED, linker.get_error_message());
+		return false;
+	}
+	std::string linked_code = ir_generator::llvm_module_to_bitcode(*linked);
+
+	outputter->output_code(linked_code, "linked.bc", OUTPUT_LOCATION_INTERMEDIATE);
+
 	// build with clang
-	if (!clang_build(all_irs)) {
+	if (!clang_build({ (outputter->get_intermediate_dir() / "linked.bc").string() })) {
 		output::err("Clang: building failed.\n", console_colors::BOLD + console_colors::RED);
 		return false;
 	}
@@ -144,7 +177,7 @@ double project_builder::get_compilation_time() const {
 }
 
 std::string project_builder::get_ir_path(const source_file& src, bool relative) const {
-	std::string rel_path = "./IL/" + src.relative_path + ".ll";
+	std::string rel_path = "./IR/" + src.relative_path + ".bc";
 	if (!relative) {
 		return path_utils::normalize_path(get_intermediate_dir() / rel_path).string();
 	}

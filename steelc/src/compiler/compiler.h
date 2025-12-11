@@ -8,7 +8,8 @@
 #include <config/compile_config.h>
 #include <ast/compilation_unit.h>
 #include <modules/module_manager.h>
-#include <codegen/ir/ir_holder.h>
+#include <codegen/modules/module_holder.h>
+#include <codegen/codegen_result.h>
 
 class source_file;
 
@@ -41,8 +42,8 @@ public:
 		return warnings.size();
 	}
 
-	inline const std::vector<ir_holder>& get_generated_ir() const {
-		return generated_ir;
+	inline std::unique_ptr<codegen_result> get_result() {
+		return std::move(codegen_result);
 	}
 
 private:
@@ -54,7 +55,7 @@ private:
 	module_manager module_manager;
 
 	std::vector<source_file> sources;
-	std::vector<ir_holder> generated_ir;
+	std::unique_ptr<codegen_result> codegen_result;
 
 	std::vector<std::string> read_source(std::string& path);
 };

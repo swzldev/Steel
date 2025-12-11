@@ -4,7 +4,7 @@
 #include <vector>
 #include <string>
 
-#include <codegen/ir/ir_holder.h>
+#include <codegen/codegen_result.h>
 #include <ast/ast_fwd.h>
 #include <modules/module_manager.h>
 
@@ -14,7 +14,7 @@ public:
 		: module_manager(module_manager), compilation_units(units) {
 	}
 
-	std::vector<ir_holder> generate_ir();
+	std::unique_ptr<codegen_result> generate_modules();
 
 private:
 	module_manager& module_manager;

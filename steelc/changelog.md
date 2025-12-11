@@ -1,5 +1,12 @@
 # STEELC CHANGELOG
 
+## [Unreleased]
+- Changed some of the default output directories:
+    - Build output directory: `/build/`
+    - Intermediate output directory: `/build/intermediate/`
+    - IR output directory: `/build/intermediate/IR/`
+    - Cache output directory: `/build/cache/`
+
 ## [0.5.0] - 10-12-2025
 - Added support for the '::' operator for static scope resolution.
 - Added support for module member resolution without having to import.

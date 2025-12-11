@@ -5,6 +5,9 @@
 #include <vector>
 #include <memory>
 #include <filesystem>
+#include <cstdint>
+
+#include <llvm/IR/Module.h>
 
 #include <building/cache/file_metadata.h>
 #include <building/cache/build_cache_file.h>
@@ -13,7 +16,6 @@
 #include <compiler/compiler.h>
 #include <stproj/source_file.h>
 #include <stproj/stproj_file.h>
-#include <codegen/ir/ir_holder.h>
 
 class project_builder {
 public:

@@ -9,7 +9,7 @@ public:
 
 	// output options
 	std::string output_dir = "build/";
-	std::string intermediate_dir = "build/cache/";
+	std::string intermediate_dir = "build/intermediate/";
 	std::string build_cache_file = "build/cache/build_cache.dat";
 
 	// build options

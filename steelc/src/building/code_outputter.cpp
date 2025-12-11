@@ -4,9 +4,6 @@
 #include <fstream>
 #include <string>
 
-code_output_error code_outputter::output_il(const std::string& il, const std::string& filename) {
-	return output_code(il, filename, OUTPUT_LOCATION_INTERMEDIATE);
-}
 code_output_error code_outputter::output_code(const std::string& code, const std::string& filename, code_output_location location) {
 	switch (location) {
 	case OUTPUT_LOCATION_OUTPUT:
@@ -16,6 +13,17 @@ code_output_error code_outputter::output_code(const std::string& code, const std
 	}
 
 	return OUTPUT_SUCCESS;
+}
+
+void code_outputter::clear_intermediate_files(const std::string& subpath) const {
+	if (subpath.empty()) {
+		std::filesystem::remove_all(intermediate_dir);
+		std::filesystem::create_directories(intermediate_dir);
+	}
+	else {
+		std::filesystem::remove_all(intermediate_dir / subpath);
+		std::filesystem::create_directories(intermediate_dir / subpath);
+	}
 }
 
 bool code_outputter::init() {

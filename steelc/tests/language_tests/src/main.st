@@ -4,7 +4,7 @@
 import tests;
 
 func main() -> int {
-	io()::print("Hello, Steel!\n");
+	io::print("Hello, Steel!\n");
 
 	return 0;
 }

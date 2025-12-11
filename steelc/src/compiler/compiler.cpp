@@ -21,6 +21,7 @@
 #include <ast_passes/init_checker.h>
 #include <ast_passes/flow_analyzer.h>
 #include <codegen/codegen.h>
+#include <codegen/codegen_result.h>
 #include <output/output.h>
 
 bool compiler::compile(compile_config cfg) {
@@ -115,11 +116,12 @@ bool compiler::compile(compile_config cfg) {
 		}
 	}
 
-	// generate ir for all units
+	// generate modules for all units
 	codegen codegen(module_manager, compilation_units);
-	generated_ir = codegen.generate_ir();
+	codegen_result = codegen.generate_modules();
 
-	if (generated_ir.size() != compilation_units.size()) {
+	// not all sources could be generated
+	if (codegen_result->modules.size() != compilation_units.size()) {
 		return false;
 	}
 

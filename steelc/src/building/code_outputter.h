@@ -3,6 +3,8 @@
 #include <string>
 #include <filesystem>
 #include <memory>
+#include <vector>
+#include <cstdint>
 
 #include <building/build_config.h>
 
@@ -28,8 +30,9 @@ public:
 		return outputter;
 	}
 
-	code_output_error output_il(const std::string& il, const std::string& filename);
 	code_output_error output_code(const std::string& code, const std::string& filename, code_output_location location);
+
+	void clear_intermediate_files(const std::string& subpath = "") const;
 
 	inline std::filesystem::path get_output_dir() const {
 		return output_dir;

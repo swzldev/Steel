@@ -80,12 +80,18 @@ set(SOURCES
     "src/building/cache/file_hasher.cpp"
     "src/building/cache/file_hasher.h"
     "src/building/cache/file_metadata.h"
+    "src/building/ir/ir_generator.cpp"
+    "src/building/ir/ir_generator.h"
+    "src/building/linking/link_error.h"
+    "src/building/linking/project_linker.cpp"
+    "src/building/linking/project_linker.h"
 
     # codegen/
     "src/codegen/codegen.cpp"
     "src/codegen/codegen.h"
     "src/codegen/codegen_env.cpp"
     "src/codegen/codegen_env.h"
+    "src/codegen/codegen_result.h"
     "src/codegen/codegen_visitor.cpp"
     "src/codegen/codegen_visitor.h"
     "src/codegen/builders/llvm_expression_builder.cpp"
@@ -96,8 +102,8 @@ set(SOURCES
     "src/codegen/cleanup/cleanup_action.h"
     "src/codegen/cleanup/scope.h"
     "src/codegen/constants/codegen_constants.h"
-    "src/codegen/error/codegen_exception.h" 
-    "src/codegen/ir/ir_holder.h"
+    "src/codegen/error/codegen_exception.h"
+    "src/codegen/modules/module_holder.h"
     "src/codegen/memory/lvalue.cpp"
     "src/codegen/memory/lvalue.h"
     "src/codegen/memory/variable.h"
@@ -243,6 +249,8 @@ llvm_map_components_to_libnames(LLVM_LIBS
     core
     support
     irreader
+    linker
+    bitwriter
 )
 target_link_libraries(steelc PRIVATE ${LLVM_LIBS})
 
