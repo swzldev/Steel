@@ -19,7 +19,6 @@
 bool project_linker::load_modules_from_paths(const std::vector<std::string>& paths, bool is_bitcode) {
 	modules.clear();
 
-	llvm::LLVMContext ctx;
 	llvm::SMDiagnostic err;
 
 	// load modules from paths

@@ -30,6 +30,7 @@ public:
 	}
 
 private:
+	llvm::LLVMContext ctx;
 	std::vector<std::unique_ptr<llvm::Module>> modules;
 
 	link_error last_error = LINK_OK;
