@@ -98,6 +98,8 @@ bool project_builder::build_project() {
 		return false;
 	}
 
+	bool generate_asm = build_cfg.generate_llvm_asm;
+
 	// output code (if any)
 	if (codegen_result->modules.size() > 0) {
 		// clear all irs
@@ -109,13 +111,13 @@ bool project_builder::build_project() {
 			
 			// default to outputting bitcode (may change later)
 			std::string code;
-			if (build_cfg.generate_llvm_asm) {
+			if (generate_asm) {
 				code = ir_generator::llvm_module_to_asm(*mod_holder.module);
 			}
 			else {
 				code = ir_generator::llvm_module_to_bitcode(*mod_holder.module);
 			}
-			auto err = outputter->output_code(code, path, OUTPUT_LOCATION_INTERMEDIATE);
+			auto err = outputter->output_code(code, path, OUTPUT_LOCATION_INTERMEDIATE, generate_asm ? OUTPUT_FORMAT_TEXT : OUTPUT_FORMAT_BINARY);
 
 			if (err != OUTPUT_SUCCESS) {
 				output::err("Failed to output IR file: {}\n", console_colors::BOLD + console_colors::RED, path);
@@ -131,7 +133,7 @@ bool project_builder::build_project() {
 
 	// link to one module
 	project_linker linker;
-	linker.load_modules_from_paths(all_irs, /* is_bitcode */ !build_cfg.generate_llvm_asm);
+	linker.load_modules_from_paths(all_irs, /* is_bitcode */ !generate_asm);
 	if (linker.has_error()) {
 		output::err("Link error: {}\n", console_colors::BOLD + console_colors::RED, linker.get_error_message());
 		return false;
@@ -143,7 +145,7 @@ bool project_builder::build_project() {
 		return false;
 	}
 	std::string linked_code;
-	if (build_cfg.generate_llvm_asm) {
+	if (generate_asm) {
 		linked_code = ir_generator::llvm_module_to_asm(*linked);
 	}
 	else {
@@ -152,7 +154,7 @@ bool project_builder::build_project() {
 
 	std::string linked_filename = project_filename() + (build_cfg.generate_llvm_asm ? ".ll" : ".bc");
 
-	outputter->output_code(linked_code, linked_filename, OUTPUT_LOCATION_INTERMEDIATE);
+	outputter->output_code(linked_code, linked_filename, OUTPUT_LOCATION_INTERMEDIATE, generate_asm ? OUTPUT_FORMAT_TEXT : OUTPUT_FORMAT_BINARY);
 
 	// build with clang
 	if (!clang_build({ (outputter->get_intermediate_dir() / linked_filename).string()})) {
