@@ -1,6 +1,6 @@
 #include "lexer.h"
 
-#include "token_utils.h"
+#include <lexer/token_utils.h>
 
 std::vector<token> lexer::tokenize() {
 	// seperate source into tokens

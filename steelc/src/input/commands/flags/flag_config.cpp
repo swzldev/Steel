@@ -2,7 +2,7 @@
 
 #include <unordered_map>
 
-#include "../steelc_command_id.h"
+#include <input/commands/steelc_command_id.h>
 
 const flag_config* flag_config::from_command(steelc_command_id cmd_id) {
 	static const flag_config default_config;

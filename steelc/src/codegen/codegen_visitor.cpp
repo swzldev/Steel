@@ -14,30 +14,14 @@
 #include <llvm/Support/Casting.h>
 #include <llvm/IR/DerivedTypes.h>
 
-#include "error/codegen_exception.h"
-#include "memory/variable.h"
-#include "codegen_env.h"
-#include "../parser/types/data_type.h"
-#include "../parser/entities/entities_fwd.h"
-#include "../parser/entities/entity.h"
-#include "../parser/ast/ast_node.h"
-#include "../parser/ast/declarations/function_declaration.h"
-#include "../parser/ast/declarations/variable_declaration.h"
-#include "../parser/ast/expressions/binary_expression.h"
-#include "../parser/ast/expressions/unary_expression.h"
-#include "../parser/ast/expressions/assignment_expression.h"
-#include "../parser/ast/expressions/address_of_expression.h"
-#include "../parser/ast/expressions/deref_expression.h"
-#include "../parser/ast/expressions/index_expression.h"
-#include "../parser/ast/expressions/function_call.h"
-#include "../parser/ast/expressions/identifier_expression.h"
-#include "../parser/ast/expressions/literal.h"
-#include "../parser/ast/statements/block_statement.h"
-#include "../parser/ast/statements/control_flow/if_statement.h"
-#include "../parser/ast/statements/control_flow/for_loop.h"
-#include "../parser/ast/statements/control_flow/while_loop.h"
-#include "../parser/ast/statements/control_flow/return_statement.h"
-#include "../parser/ast/statements/control_flow/break_statement.h"
+#include <codegen/error/codegen_exception.h>
+#include <codegen/memory/variable.h>
+#include <codegen/codegen_env.h>
+#include <ast/ast.h>
+#include <representations/types/types_fwd.h>
+#include <representations/types/data_type.h>
+#include <representations/entities/entities_fwd.h>
+#include <representations/entities/entity.h>
 
 void codegen_visitor::visit(std::shared_ptr<function_declaration> func) { 
 	llvm::Function* fn = function_builder.build(func);

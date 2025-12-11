@@ -5,8 +5,8 @@
 #include <memory>
 #include <toml++/toml.hpp>
 
-#include "source_file.h"
-#include "bad_stproj_exception.h"
+#include <stproj/source_file.h>
+#include <stproj/bad_stproj_exception.h>
 
 std::unique_ptr<stproj_file> stproj_file::load(const std::string& path) {
 	auto proj = std::unique_ptr<stproj_file>(new stproj_file());

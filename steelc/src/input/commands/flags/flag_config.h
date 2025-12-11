@@ -4,7 +4,7 @@
 #include <map>
 #include <vector>
 
-#include "../steelc_command_id.h"
+#include <input/commands/steelc_command_id.h>
 
 class flag_config {
 public:

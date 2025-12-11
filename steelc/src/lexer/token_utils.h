@@ -4,7 +4,7 @@
 #include <map>
 #include <vector>
 
-#include "token.h"
+#include <lexer/token.h>
 
 bool is_identifier(token& tk);
 bool is_keyword(token& tk);

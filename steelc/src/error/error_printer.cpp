@@ -6,9 +6,9 @@
 #include <string>
 #include <algorithm>
 
-#include "error.h"
-#include "../parser/ast/compilation_unit.h"
-#include "../utils/console_colors.h"
+#include <error/error.h>
+#include <ast/compilation_unit.h>
+#include <utils/console_colors.h>
 
 void error_printer::print_errors(const std::vector<error>& errors) {
 	for (const auto& err : errors) {

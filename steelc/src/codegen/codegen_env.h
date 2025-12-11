@@ -13,11 +13,11 @@
 #include <llvm/IR/Type.h>
 #include <llvm/IR/Value.h>
 
-#include "cleanup/scope.h"
-#include "cleanup/cleanup_action.h"
-#include "memory/lvalue.h"
-#include "memory/variable.h"
-#include "../parser/ast/expressions/expression.h"
+#include <codegen/cleanup/scope.h>
+#include <codegen/cleanup/cleanup_action.h>
+#include <codegen/memory/lvalue.h>
+#include <codegen/memory/variable.h>
+#include <ast/expressions/expression.h>
 
 class codegen_env {
 public:

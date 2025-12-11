@@ -1,0 +1,46 @@
+#pragma once
+
+#include <memory>
+#include <string>
+
+#include <representations/entities/entities_fwd.h>
+
+enum entity_kind {
+	// reserved for unresolved entities
+	// shouldnt really be used directly
+	// just compare to entity::UNRESOLVED
+	ENTITY_UNRESOLVED,
+
+	ENTITY_VARIABLE,
+	ENTITY_FUNCTION,
+	ENTITY_TYPE,
+	ENTITY_MODULE,
+	ENTITY_GENERIC_PARAM,
+};
+
+class entity {
+public:
+	entity(entity_kind kind)
+		: e_kind(kind) {
+	}
+	virtual ~entity() = default;
+
+	// acts seperate from a nullptr entity for unresolved references
+	// e.g. 3 + 3 -> nullptr entity (no entity) vs unknown_var -> UNRESOLVED entity
+	static entity_ptr UNRESOLVED;
+
+	inline entity_kind kind() const { return e_kind; }
+	std::string kind_string() const;
+
+	virtual std::string name() const { return "<unknown entity>"; }
+	virtual std::string full_name() const { return "<unknown entity>"; }
+
+	virtual std::shared_ptr<variable_entity> as_variable() { return nullptr; }
+	virtual std::shared_ptr<function_entity> as_function() { return nullptr; }
+	virtual std::shared_ptr<type_entity> as_type() { return nullptr; }
+	virtual std::shared_ptr<module_entity> as_module() { return nullptr; }
+	virtual std::shared_ptr<generic_param_entity> as_generic_param() { return nullptr; }
+
+private:
+	entity_kind e_kind;
+};

@@ -6,9 +6,9 @@
 #include <llvm/IR/Module.h>
 #include <llvm/IR/DerivedTypes.h>
 
-#include "../naming/name_mangler.h"
-#include "../type_handling/llvm_type_converter.h"
-#include "../../parser/ast/declarations/function_declaration.h"
+#include <codegen/naming/name_mangler.h>
+#include <codegen/type_handling/llvm_type_converter.h>
+#include <ast/declarations/function_declaration.h>
 
 class llvm_function_builder {
 public:

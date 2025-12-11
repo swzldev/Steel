@@ -2,8 +2,8 @@
 
 #include <llvm/IR/Value.h>
 
-#include "../error/codegen_exception.h"
-#include "../../lexer/token_type.h"
+#include <codegen/error/codegen_exception.h>
+#include <lexer/token_type.h>
 
 llvm::Value* llvm_expression_builder::build_binary_expr(llvm::Value* lhs, llvm::Value* rhs, token_type operation) {
 	switch (operation) {

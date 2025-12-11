@@ -3,8 +3,8 @@
 #include <string>
 #include <memory>
 
-#include "../../parser/types/data_type.h"
-#include "../../parser/ast/declarations/function_declaration.h"
+#include <representations/types/types_fwd.h>
+#include <ast/declarations/function_declaration.h>
 
 // name mangler
 // the name mangler in steel follows the itanium c++ abi mangling scheme

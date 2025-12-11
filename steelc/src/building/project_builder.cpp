@@ -10,21 +10,21 @@
 #include <cstdint>
 #include <unordered_set>
 
-#include "cache/file_metadata.h"
-#include "cache/build_cache_file.h"
-#include "cache/file_hasher.h"
-#include "build_config.h"
-#include "code_outputter.h"
-#include "../compiler.h"
-#include "../config/compile_config.h"
-#include "../utils/console_colors.h"
-#include "../utils/path_utils.h"
-#include "../stproj/source_file.h"
-#include "../stproj/stproj_file.h"
-#include "../stproj/bad_stproj_exception.h"
-#include "../output/output.h"
-#include "../error/error_printer.h"
-#include "../codegen/ir/ir_holder.h"
+#include <config/compile_config.h>
+#include <utils/console_colors.h>
+#include <utils/path_utils.h>
+#include <stproj/bad_stproj_exception.h>
+#include <output/output.h>
+#include <error/error_printer.h>
+#include <building/cache/file_metadata.h>
+#include <building/cache/build_cache_file.h>
+#include <building/cache/file_hasher.h>
+#include <building/build_config.h>
+#include <building/code_outputter.h>
+#include <compiler/compiler.h>
+#include <stproj/source_file.h>
+#include <stproj/stproj_file.h>
+#include <codegen/ir/ir_holder.h>
 
 bool project_builder::load_project(const std::string& project_path) {
 	// load stproj

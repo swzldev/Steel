@@ -1,8 +1,9 @@
 #include "parser_utils.h"
 
-#include "types/data_type.h"
-#include "types/custom_type.h"
-#include "types/container_types.h"
+#include <representations/types/types_fwd.h>
+#include <representations/types/data_type.h>
+#include <representations/types/custom_type.h>
+#include <representations/types/container_types.h>
 
 data_type_modifier to_type_modifier(token_type tt) {
 	data_type_modifier mod;
@@ -72,17 +73,4 @@ const type_ptr to_data_type(data_type_kind pt) {
 }
 const type_ptr to_data_type(const std::string& type_name) {
 	return custom_type::get(type_name);
-}
-
-bool is_numeric(data_type_kind primitive) {
-	switch (primitive) {
-	case DT_I16:
-	case DT_I32:
-	case DT_I64:
-	case DT_FLOAT:
-	case DT_DOUBLE:
-		return true;
-	default:
-		return false;
-	}
 }

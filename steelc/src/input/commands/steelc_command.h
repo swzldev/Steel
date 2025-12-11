@@ -3,9 +3,9 @@
 #include <functional>
 #include <string>
 
-#include "flags/command_flags.h"
-#include "flags/flag_config.h"
-#include "../console_args.h"
+#include <input/commands/flags/command_flags.h>
+#include <input/commands/flags/flag_config.h>
+#include "input/console_args.h"
 
 class steelc_command {
 public:

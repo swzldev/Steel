@@ -2,10 +2,11 @@
 
 #include <memory>
 #include <vector>
+#include <string>
 
-#include "ir/ir_holder.h"
-#include "../parser/ast/ast.h"
-#include "../parser/modules/module_manager.h"
+#include <codegen/ir/ir_holder.h>
+#include <ast/ast_fwd.h>
+#include <modules/module_manager.h>
 
 class codegen {
 public:

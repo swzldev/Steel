@@ -8,11 +8,11 @@
 #include <llvm/IR/Function.h>
 #include <llvm/IR/Type.h>
 
-#include "../naming/name_mangler.h"
-#include "../constants/codegen_constants.h"
-#include "../error/codegen_exception.h"
-#include "../../parser/ast/declarations/function_declaration.h"
-#include "../../parser/ast/declarations/type_declaration.h"
+#include <codegen/naming/name_mangler.h>
+#include <codegen/constants/codegen_constants.h>
+#include <codegen/error/codegen_exception.h>
+#include <ast/declarations/function_declaration.h>
+#include <ast/declarations/type_declaration.h>
 
 llvm::Function* llvm_function_builder::build(std::shared_ptr<function_declaration> func_ast) {
 	if (func_ast->is_generic && !func_ast->is_generic_instance) {

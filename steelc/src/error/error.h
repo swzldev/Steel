@@ -4,8 +4,8 @@
 #include <memory>
 #include <vector>
 
-#include "advice.h"
-#include "../lexer/token.h"
+#include <error/advice.h>
+#include <lexer/token.h>
 
 class compilation_unit;
 

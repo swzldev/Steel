@@ -4,7 +4,7 @@
 #include <filesystem>
 #include <memory>
 
-#include "build_config.h"
+#include <building/build_config.h>
 
 enum code_output_location {
 	OUTPUT_LOCATION_INTERMEDIATE,

@@ -2,7 +2,7 @@
 
 #include <vector>
 
-#include "error.h"
+#include <error/error.h>
 
 namespace error_printer {
 	void print_errors(const std::vector<error>& errors);

@@ -6,11 +6,11 @@
 #include <vector>
 #include <utility>
 
-#include "flags/command_flags.h"
-#include "flags/flag_config.h"
-#include "../console_args.h"
-#include "../../output/output.h"
-#include "../../utils/console_colors.h"
+#include <input/commands/flags/command_flags.h>
+#include <input/commands/flags/flag_config.h>
+#include <input/console_args.h>
+#include <output/output.h>
+#include <utils/console_colors.h>
 
 bool steelc_command::execute(const console_args& args) const {
 	command_flags flags({});

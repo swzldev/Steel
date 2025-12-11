@@ -3,7 +3,7 @@
 #include <string>
 #include <memory>
 
-#include "../../parser/ast/compilation_unit.h"
+#include <ast/compilation_unit.h>
 
 class ir_holder {
 public:

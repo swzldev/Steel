@@ -3,7 +3,7 @@
 #include <string>
 #include <unordered_map>
 
-#include "steelc_command.h"
+#include <input/commands/steelc_command.h>
 
 class steelc_command_manager {
 public:

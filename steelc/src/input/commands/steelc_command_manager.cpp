@@ -2,10 +2,10 @@
 
 #include <string>
 
-#include "flags/flag_config.h"
-#include "steelc_command.h"
-#include "steelc_commands_impl.h"
-#include "steelc_command_id.h"
+#include <input/commands/flags/command_flags.h>
+#include <input/commands/steelc_command.h>
+#include <input/commands/steelc_commands_impl.h>
+#include <input/commands/steelc_command_id.h>
 
 const steelc_command* steelc_command_manager::get_command(const std::string& name) const {
 	auto it = commands.find(name);

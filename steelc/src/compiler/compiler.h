@@ -4,11 +4,11 @@
 #include <string>
 #include <memory>
 
-#include "error/error.h"
-#include "config/compile_config.h"
-#include "parser/ast/compilation_unit.h"
-#include "parser/modules/module_manager.h"
-#include "codegen/ir/ir_holder.h"
+#include <error/error.h>
+#include <config/compile_config.h>
+#include <ast/compilation_unit.h>
+#include <modules/module_manager.h>
+#include <codegen/ir/ir_holder.h>
 
 class source_file;
 

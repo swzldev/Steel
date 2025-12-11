@@ -6,14 +6,14 @@
 #include <memory>
 #include <filesystem>
 
-#include "cache/file_metadata.h"
-#include "cache/build_cache_file.h"
-#include "build_config.h"
-#include "code_outputter.h"
-#include "../compiler.h"
-#include "../stproj/source_file.h"
-#include "../stproj/stproj_file.h"
-#include "../codegen/ir/ir_holder.h"
+#include <building/cache/file_metadata.h>
+#include <building/cache/build_cache_file.h>
+#include <building/build_config.h>
+#include <building/code_outputter.h>
+#include <compiler/compiler.h>
+#include <stproj/source_file.h>
+#include <stproj/stproj_file.h>
+#include <codegen/ir/ir_holder.h>
 
 class project_builder {
 public:
@@ -23,7 +23,6 @@ public:
 
 	bool load_project(const std::string& project_path);
 	bool build_project();
-	std::vector<ir_holder> compile_project();
 	
 	int run_build_command(const std::string& command);
 

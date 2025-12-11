@@ -2,7 +2,7 @@
 
 #include <string>
 
-#include "token_type.h"
+#include <lexer/token_type.h>
 
 struct position {
 	size_t line;

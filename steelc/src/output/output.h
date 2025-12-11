@@ -5,8 +5,8 @@
 #include <ostream>
 #include <iostream>
 
-#include "log_file.h"
-#include "../utils/console_colors.h"
+#include <output/log_file.h>
+#include <utils/console_colors.h>
 
 enum log_verbosity {
 	LOG_VERBOSITY_NORMAL,

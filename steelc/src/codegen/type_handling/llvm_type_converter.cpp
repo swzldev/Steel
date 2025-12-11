@@ -3,9 +3,9 @@
 #include <llvm/IR/Type.h>
 #include <llvm/IR/DerivedTypes.h>
 
-#include "../codegen_visitor.h"
-#include "../../parser/types/data_type.h"
-#include "../../parser/types/container_types.h"
+#include <codegen/codegen_visitor.h>
+#include <representations/types/data_type.h>
+#include <representations/types/container_types.h>
 
 llvm::Type* llvm_type_converter::convert(type_ptr t) {
 	if (t->is_primitive()) {

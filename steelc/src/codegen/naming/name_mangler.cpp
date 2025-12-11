@@ -5,12 +5,12 @@
 #include <vector>
 #include <stdexcept>
 
-#include "../../parser/types/types_fwd.h"
-#include "../../parser/types/data_type.h"
-#include "../../parser/types/custom_type.h"
-#include "../../parser/types/container_types.h"
-#include "../../parser/ast/declarations/function_declaration.h"
-#include "../../parser/entities/module_entity.h"
+#include <representations/types/types_fwd.h>
+#include <representations/types/data_type.h>
+#include <representations/types/custom_type.h>
+#include <representations/types/container_types.h>
+#include <ast/declarations/function_declaration.h>
+#include <representations/entities/module_entity.h>
 
 std::string name_mangler::mangle_function(std::shared_ptr<function_declaration> func_ast) {
 	// no mangle for bare-bone functions

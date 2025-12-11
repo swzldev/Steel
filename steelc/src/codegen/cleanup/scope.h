@@ -7,8 +7,8 @@
 
 #include <llvm/IR/BasicBlock.h>
 
-#include "cleanup_action.h"
-#include "../memory/variable.h"
+#include <codegen/cleanup/cleanup_action.h>
+#include <codegen/memory/variable.h>
 
 struct scope {
 	llvm::BasicBlock* cleanup_block = nullptr;

@@ -1,13 +1,14 @@
 #include "codegen.h"
 
-
+#include <iostream>
 #include <string>
 #include <vector>
-#include <iostream>
 
-#include "error/codegen_exception.h"
-#include "codegen_visitor.h"
-#include "../output/output.h"
+#include <ast/compilation_unit.h>
+#include <codegen/codegen_visitor.h>
+#include <codegen/error/codegen_exception.h>
+#include <codegen/ir/ir_holder.h>
+#include <output/output.h>
 
 std::vector<ir_holder> codegen::generate_ir() {
 	std::vector<ir_holder> ir_modules;
@@ -16,9 +17,7 @@ std::vector<ir_holder> codegen::generate_ir() {
 		std::string module_name = get_module_name(unit);
 		codegen_visitor visitor(module_name);
 		try {
-			for (const auto& decl : unit->declarations) {
-				decl->accept(visitor);
-			}
+			unit->accept(visitor);
 		}
 		catch (const codegen_exception& e) {
 			output::err("Codegen error in module {}: {}\n", console_colors::RED, module_name, e.message());

@@ -3,8 +3,8 @@
 #include <string>
 #include <vector>
 
-#include "token.h"
-#include "../parser/compilation_pass.h"
+#include <lexer/token.h>
+#include <compiler/compilation_pass.h>
 
 enum lexer_flag {
 	LF_NONE = 0,

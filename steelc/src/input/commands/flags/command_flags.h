@@ -6,7 +6,7 @@
 #include <vector>
 #include <stdexcept>
 
-#include "flag_config.h"
+#include <input/commands/flags/flag_config.h>
 
 class command_flags {
 public:

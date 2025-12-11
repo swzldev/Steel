@@ -5,7 +5,7 @@
 #include <string>
 #include <cstdint>
 
-#include "file_metadata.h"
+#include <building/cache/file_metadata.h>
 
 bool build_cache_file::deserialize(const std::filesystem::path& path) {
 	if (!std::filesystem::exists(path)) {

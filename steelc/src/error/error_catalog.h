@@ -2,8 +2,8 @@
 
 #include <string>
 
-#include "error.h"
-#include "advice.h"
+#include <error/error.h>
+#include <error/advice.h>
 
 enum error_code {
     ERR_SUCCESS = 0,

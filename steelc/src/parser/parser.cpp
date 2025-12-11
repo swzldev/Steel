@@ -1,8 +1,9 @@
 #include "parser.h"
 
-#include "parser_utils.h"
-#include "../lexer/token_utils.h"
-#include "../error/error_catalog.h"
+#include <lexer/token_utils.h>
+#include <parser/parser_utils.h>
+#include <ast/ast.h>
+#include <error/error_catalog.h>
 
 void parser::parse() {
 	while (!is_at_end()) {

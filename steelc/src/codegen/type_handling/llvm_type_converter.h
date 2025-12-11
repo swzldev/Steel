@@ -3,7 +3,7 @@
 #include <llvm/IR/Type.h>
 #include <llvm/IR/LLVMContext.h>
 
-#include "../../parser/types/data_type.h"
+#include <representations/types/data_type.h>
 
 class codegen_visitor;
 

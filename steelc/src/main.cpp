@@ -1,10 +1,10 @@
 #include <string>
 
-#include "utils/console_colors.h"
-#include "output/output.h"
-#include "input/console_args.h"
-#include "input/commands/steelc_command_manager.h"
-#include "input/commands/steelc_command.h"
+#include <utils/console_colors.h>
+#include <output/output.h>
+#include <input/console_args.h>
+#include <input/commands/steelc_command_manager.h>
+#include <input/commands/steelc_command.h>
 
 int main(int argc, char** argv) {
 	output::init();

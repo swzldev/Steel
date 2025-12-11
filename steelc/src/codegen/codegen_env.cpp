@@ -10,16 +10,16 @@
 #include <llvm/IR/IRBuilder.h>
 #include <llvm/IR/Type.h>
 
-#include "error/codegen_exception.h"
-#include "cleanup/cleanup_action.h"
-#include "cleanup/scope.h"
-#include "memory/lvalue.h"
-#include "memory/variable.h"
-#include "../parser/entities/entities_fwd.h"
-#include "../parser/entities/entity.h"
-#include "../parser/entities/variable_entity.h"
-#include "../parser/ast/expressions/expression.h"
-#include "../parser/ast/expressions/identifier_expression.h"
+#include <codegen/error/codegen_exception.h>
+#include <codegen/cleanup/cleanup_action.h>
+#include <codegen/cleanup/scope.h>
+#include <codegen/memory/lvalue.h>
+#include <codegen/memory/variable.h>
+#include <representations/entities/entities_fwd.h>
+#include <representations/entities/entity.h>
+#include <representations/entities/variable_entity.h>
+#include <ast/expressions/expression.h>
+#include <ast/expressions/identifier_expression.h>
 
 llvm::BasicBlock* codegen_env::make_block(const std::string& name, bool append_to_func) {
 	if (append_to_func) {

@@ -5,10 +5,11 @@
 #include <vector>
 #include <unordered_set>
 
-#include "compilation_pass.h"
-#include "ast/ast.h"
-#include "symbolics/symbol_table.h"
-#include "../lexer/token.h"
+#include <lexer/token.h>
+#include <compiler/compilation_pass.h>
+#include <ast/ast_fwd.h>
+#include <symbolics/symbol_error.h>
+#include <representations/types/types_fwd.h>
 
 constexpr auto ENABLE_GENERICS = true;
 

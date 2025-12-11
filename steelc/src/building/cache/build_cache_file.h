@@ -5,8 +5,8 @@
 #include <unordered_map>
 #include <string>
 
-#include "file_metadata.h"
-#include "../../steelc/steelc_definitions.h"
+#include <building/cache/file_metadata.h>
+#include <steelc/steelc_definitions.h>
 
 class build_cache_file {
 public:

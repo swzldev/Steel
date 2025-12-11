@@ -3,14 +3,14 @@
 #include <string>
 #include <filesystem>
 
-#include "flags/command_flags.h"
-#include "../../steelc/steelc_definitions.h"
-#include "../../output/output.h"
-#include "../../utils/console_colors.h"
-#include "../../utils/path_utils.h"
-#include "../../building/build_config.h"
-#include "../../building/project_builder.h"
-#include "../../stproj/stproj_generator.h"
+#include <input/commands/flags/command_flags.h>
+#include <steelc/steelc_definitions.h>
+#include <output/output.h>
+#include <utils/console_colors.h>
+#include <utils/path_utils.h>
+#include <building/build_config.h>
+#include <building/project_builder.h>
+#include <stproj/stproj_generator.h>
 
 bool steelc_commands_impl::help_command_handler(const command_flags& flags) {
 	output::print("Commands:\n", console_colors::BOLD);

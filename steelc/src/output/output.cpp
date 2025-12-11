@@ -4,8 +4,8 @@
 #include <ostream>
 #include <iostream>
 
-#include "log_file.h"
-#include "../utils/console_colors.h"
+#include <output/log_file.h>
+#include <utils/console_colors.h>
 
 bool output::log_to_file(const std::string& file_path) {
     if (log != nullptr) return false;

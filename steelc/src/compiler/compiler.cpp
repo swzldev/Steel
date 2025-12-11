@@ -6,22 +6,22 @@
 #include <memory>
 #include <string>
 
-#include "stproj/source_file.h"
-#include "lexer/lexer.h"
-#include "lexer/token.h"
-#include "parser/parser.h"
-#include "codegen/codegen.h"
-#include "utils/console_colors.h"
-#include "config/compile_config.h"
-#include "output/output.h"
-#include "parser/semantics/declaration_collector.h"
-#include "parser/semantics/import_resolver.h"
-#include "parser/semantics/type_resolver.h"
-#include "parser/semantics/name_resolver.h"
-#include "parser/semantics/type_checker.h"
-#include "parser/semantics/init_checker.h"
-#include "parser/semantics/flow_analyzer.h"
-#include "parser/ast/compilation_unit.h"
+#include <utils/console_colors.h>
+#include <config/compile_config.h>
+#include <stproj/source_file.h>
+#include <lexer/lexer.h>
+#include <lexer/token.h>
+#include <parser/parser.h>
+#include <ast/compilation_unit.h>
+#include <ast_passes/declaration_collector.h>
+#include <ast_passes/import_resolver.h>
+#include <ast_passes/type_resolver.h>
+#include <ast_passes/name_resolver.h>
+#include <ast_passes/type_checker.h>
+#include <ast_passes/init_checker.h>
+#include <ast_passes/flow_analyzer.h>
+#include <codegen/codegen.h>
+#include <output/output.h>
 
 bool compiler::compile(compile_config cfg) {
 	for (auto& file : sources) {

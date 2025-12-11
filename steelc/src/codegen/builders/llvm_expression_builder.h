@@ -4,7 +4,7 @@
 #include <llvm/IR/LLVMContext.h>
 #include <llvm/IR/Value.h>
 
-#include "../../lexer/token_type.h"
+#include <lexer/token_type.h>
 
 class llvm_expression_builder {
 public:

@@ -2,7 +2,7 @@
 
 #include <string>
 
-#include "../lexer/token.h"
+#include <lexer/token.h>
 
 struct error;
 

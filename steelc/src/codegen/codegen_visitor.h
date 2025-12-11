@@ -8,14 +8,14 @@
 #include <llvm/IR/IRBuilder.h>
 #include <llvm/IR/Value.h>
 
-#include "codegen_env.h"
-#include "type_handling/llvm_type_converter.h"
-#include "builders/llvm_function_builder.h"
-#include "builders/llvm_expression_builder.h"
-#include "naming/name_mangler.h"
-#include "../lexer/token_type.h"
-#include "../parser/ast/ast_visitor.h"
-#include "../parser/ast/ast_fwd.h"
+#include <codegen/codegen_env.h>
+#include <codegen/type_handling/llvm_type_converter.h>
+#include <codegen/builders/llvm_function_builder.h>
+#include <codegen/builders/llvm_expression_builder.h>
+#include <codegen/naming/name_mangler.h>
+#include <lexer/token_type.h>
+#include <ast/ast_visitor.h>
+#include <ast/ast_fwd.h>
 
 class codegen_visitor : public ast_visitor {
 public:

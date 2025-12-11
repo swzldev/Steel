@@ -1,6 +1,6 @@
 #pragma once
 
-#include "flags/command_flags.h"
+#include <input/commands/flags/command_flags.h>
 
 namespace steelc_commands_impl {
 	bool help_command_handler(const command_flags& flags);
