@@ -20,7 +20,7 @@ public:
 	std::shared_ptr<module_entity> get_global_module();
 	std::shared_ptr<module_entity> get_parent(std::shared_ptr<module_entity> module);
 
-	static std::string module_path_to_full_name(const std::vector<std::string>& name_path) const;
+	static std::string module_path_to_full_name(const std::vector<std::string>& name_path);
 
 	std::shared_ptr<function_declaration> entry_point;
 
