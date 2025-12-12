@@ -11,7 +11,7 @@ int main(int argc, char** argv) {
 	console_args args(argc, argv);
 
 	if (args.count() < 2) {
-		output::err("Usage: steelc <command> [args]\n", console_colors::RED);
+		output::err("Usage: steelc <command> [<args>]\n", console_colors::RED);
 		return 1;
 	}
 	std::string command = *args.get_arg(1); // safe deref
