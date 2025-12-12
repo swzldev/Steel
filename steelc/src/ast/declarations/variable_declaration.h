@@ -45,6 +45,7 @@ public:
 		cloned->initialized = initialized;
 		cloned->is_parameter = is_parameter;
 		cloned->is_field = is_field;
+		cloned->field_index = field_index;
 		return cloned;
 	}
 
@@ -59,4 +60,5 @@ public:
 	bool is_const = false;
 	bool is_parameter = false;
 	bool is_field = false;
+	size_t field_index = 0;
 };

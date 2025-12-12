@@ -112,6 +112,11 @@ void codegen_visitor::visit(std::shared_ptr<member_expression> expr) {
 	}
 	else if (expr->is_instance_access()) {
 		auto object = accept(expr->object);
+
+		auto entity = expr->entity();
+		cg_assert(entity == entity::UNRESOLVED, "Member expression entity is unresolved");
+
+
 	}
 	
 	throw codegen_exception("Unknown member expression access type");
