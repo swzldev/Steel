@@ -12,7 +12,10 @@
 #include <representations/types/container_types.h>
 
 llvm::Type* llvm_type_converter::convert(type_ptr t) {
-	if (t->is_primitive()) {
+	if (t->is_unknown()) {
+		throw codegen_exception("Cannot convert unknown type");
+	}
+	else if (t->is_primitive()) {
 		return get_primitive_type(t);
 	}
 	else if (auto custom = t->as_custom()) {

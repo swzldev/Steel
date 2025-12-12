@@ -158,7 +158,7 @@ void codegen_visitor::visit(std::shared_ptr<initializer_list> init) {
 		element_values.push_back(elem_value);
 	}
 
-	llvm::Type* struct_type = type_converter.convert(init->result_type);
+	llvm::Type* struct_type = type_converter.convert(init->type());
 	result = expression_builder.build_struct_init(struct_type, element_values);
 }
 void codegen_visitor::visit(std::shared_ptr<function_call> func_call) {
