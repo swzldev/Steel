@@ -15,8 +15,8 @@ public:
 
 	std::shared_ptr<module_entity> add_module(const std::string& name, std::shared_ptr<module_entity> parent);
 
-	inline bool has_module(const std::string& name) const;
-	std::shared_ptr<module_entity> get_module(const std::string& name);
+	inline bool has_module(const std::vector<std::string>& name_path) const;
+	std::shared_ptr<module_entity> get_module(const std::vector<std::string>& name_path);
 	std::shared_ptr<module_entity> get_global_module();
 	std::shared_ptr<module_entity> get_parent(std::shared_ptr<module_entity> module);
 
@@ -27,4 +27,6 @@ private:
 	std::unordered_map<std::string, std::shared_ptr<module_entity>> modules;
 
 	std::shared_ptr<module_info> create_info(const std::string& name);
+
+	std::string to_full_name(const std::vector<std::string>& name_path) const;
 };
