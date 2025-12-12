@@ -114,7 +114,7 @@ void codegen_visitor::visit(std::shared_ptr<member_expression> expr) {
 		auto object = accept(expr->object);
 
 		auto entity = expr->entity();
-		cg_assert(entity == entity::UNRESOLVED, "Member expression entity is unresolved");
+		cg_assert(entity != entity::UNRESOLVED, "Member expression entity is unresolved");
 
 		switch (entity->kind()) {
 		case ENTITY_VARIABLE: {
