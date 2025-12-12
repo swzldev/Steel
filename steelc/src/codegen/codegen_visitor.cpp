@@ -104,6 +104,18 @@ void codegen_visitor::visit(std::shared_ptr<assignment_expression> expr) {
 
 	lval->store(env->builder, rhs);
 }
+void codegen_visitor::visit(std::shared_ptr<member_expression> expr) {
+	if (expr->is_static_access()) {
+		// static accesses are purely semantic
+		// shouldnt compile to anything
+		return;
+	}
+	else if (expr->is_instance_access()) {
+		auto object = accept(expr->object);
+	}
+	
+	throw codegen_exception("Unknown member expression access type");
+}
 void codegen_visitor::visit(std::shared_ptr<address_of_expression> expr) {
 	auto lval = env->lvalue_from_expression(expr->value);
 	cg_assert(lval->valid(), "Operand of address-of expression is not a valid lvalue");

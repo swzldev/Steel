@@ -44,7 +44,7 @@ public:
 	//void visit(std::shared_ptr<expression_statement> expr);
 	void visit(std::shared_ptr<binary_expression> expr);
 	void visit(std::shared_ptr<assignment_expression> expr);
-	//void visit(std::shared_ptr<member_expression> expr);
+	void visit(std::shared_ptr<member_expression> expr);
 	void visit(std::shared_ptr<address_of_expression> expr);
 	void visit(std::shared_ptr<deref_expression> expr);
 	void visit(std::shared_ptr<unary_expression> expr);
