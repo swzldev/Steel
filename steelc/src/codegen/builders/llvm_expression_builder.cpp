@@ -78,3 +78,12 @@ llvm::Value* llvm_expression_builder::build_index_expr(llvm::Type* elem_type, ll
 
 	return builder.CreateGEP(elem_type, base_ptr, index, "ptr.index");
 }
+llvm::Value* llvm_expression_builder::build_struct_init(llvm::Type* struct_type, const std::vector<llvm::Value*>& elements) {
+	llvm::Value* agg = llvm::UndefValue::get(struct_type);
+
+	for (unsigned i = 0; i < elements.size(); ++i) {
+		agg = builder.CreateInsertValue(agg, elements[i], { i });
+	}
+
+	return agg;
+}

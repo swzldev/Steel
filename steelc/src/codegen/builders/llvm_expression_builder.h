@@ -18,6 +18,7 @@ public:
 	// elem_type is the type of the elements being indexed, e.g. int[] -> int
 	// this function does no conversion or type checking on base_ptr or index.
 	llvm::Value* build_index_expr(llvm::Type* elem_type, llvm::Value* base_ptr, llvm::Value* index);
+	llvm::Value* build_struct_init(llvm::Type* struct_type, const std::vector<llvm::Value*>& elements);
 
 private:
 	llvm::IRBuilder<>& builder;

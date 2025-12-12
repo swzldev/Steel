@@ -140,6 +140,9 @@ void codegen_visitor::visit(std::shared_ptr<identifier_expression> id) {
 		result = var->load(env->builder);
 	}
 }
+void codegen_visitor::visit(std::shared_ptr<initializer_list> init) {
+	
+}
 void codegen_visitor::visit(std::shared_ptr<function_call> func_call) {
 	std::vector<llvm::Value*> arg_values;
 
