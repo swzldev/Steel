@@ -1,8 +1,0 @@
-name = "Basics (steel tests)"
-version = "0.1.0"
-type = "executable"
-
-sources = [
-	"src/main.st",
-	"src/io.st"
-]

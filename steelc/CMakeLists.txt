@@ -236,6 +236,14 @@ set(SOURCES
     "src/utils/path_utils.h"
     "src/utils/string_utils.h"
     "src/utils/string_utils.cpp"
+
+    # tests/
+    "tests/test.cpp"
+    "tests/test.h"
+
+    # tests/lexer_tests/
+    "tests/lexer_tests/lexer_tests.cpp"
+    "tests/lexer_tests/lexer_tests.h"
 )
 
 # Add source to this project's executable.
@@ -254,10 +262,10 @@ llvm_map_components_to_libnames(LLVM_LIBS
 )
 target_link_libraries(steelc PRIVATE ${LLVM_LIBS})
 
-# Support for includes in /lib/
+# Support for includes in /lib/, /src/ and /tests/
 target_include_directories(steelc PRIVATE "lib")
-# Support for includes in /src/
 target_include_directories(steelc PRIVATE "src")
+target_include_directories(steelc PRIVATE "tests")
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET steelc PROPERTY CXX_STANDARD 20)

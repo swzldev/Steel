@@ -15,6 +15,11 @@ class source_file;
 
 class compiler {
 public:
+	// these flags are mostly meant for debugging purposes
+	static constexpr bool PRINT_SRC = false;
+	static constexpr bool PRINT_TOKENS = false;
+
+public:
 	compiler(std::vector<source_file> sources)
 		: sources(sources) {
 	}

@@ -11,6 +11,7 @@
 #include <stproj/source_file.h>
 #include <lexer/lexer.h>
 #include <lexer/token.h>
+#include <lexer/token_utils.h>
 #include <parser/parser.h>
 #include <ast/compilation_unit.h>
 #include <ast_passes/declaration_collector.h>
@@ -32,8 +33,26 @@ bool compiler::compile(compile_config cfg) {
 		output::print("Compiling: ", console_colors::BLUE);
 		output::print("\'{}\'\n", "", file.relative_path);
 
+		if (PRINT_SRC) {
+			output::print("Source:\n");
+			output::print("{}\n\n", "", file.content);
+		}
+
 		lexer lexer(file.content, unit);
 		std::vector<token> tokens = lexer.tokenize();
+
+		if (PRINT_TOKENS) {
+			output::print("Generated tokens:\n");
+			for (const auto& token : tokens) {
+				std::string type = to_string(token.type);
+				std::string value = token.value;
+				std::string line = std::to_string(token.pos.line);
+				std::string col = std::to_string(token.pos.column);
+
+				output::print("[ {}, \"{}\", ln: {}, col: {}]\n", type, value, line, col);
+			}
+			output::print("\n");
+		}
 
 		if (lexer.has_errors()) {
 			auto lexer_errors = lexer.get_errors();
