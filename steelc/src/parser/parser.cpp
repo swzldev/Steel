@@ -234,6 +234,7 @@ std::shared_ptr<type_declaration> parser::parse_type_declaration(token& kind_tok
 		return nullptr;
 	}
 
+	size_t current_field_index = 0;
 	while (!is_at_end() && !check(TT_RBRACE)) {
 		if (match(TT_CONSTRUCTOR)) {
 			ast_ptr constructor = parse_constructor_declaration(identifier_token);
@@ -272,7 +273,10 @@ std::shared_ptr<type_declaration> parser::parse_type_declaration(token& kind_tok
 				continue;
 			}
 
-			type_decl->fields.push_back(make_ast<variable_declaration>(field_name_token, /* not const */ false, field_type, field_name_token.value));
+			auto field = make_ast<variable_declaration>(field_name_token, /* not const */ false, field_type, field_name_token.value);
+			field->is_field = true;
+			field->field_index = current_field_index++;
+			type_decl->fields.push_back(field);
 		}
 		else {
 			ERROR_TOKEN(ERR_MEMBER_DECLARATION_EXPECTED, peek());
