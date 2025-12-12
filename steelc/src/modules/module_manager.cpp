@@ -64,7 +64,7 @@ std::shared_ptr<module_entity> module_manager::get_parent(std::shared_ptr<module
 	return module->parent_module ? module->parent_module : global_module;
 }
 
-std::string module_manager::module_path_to_full_name(const std::vector<std::string>& name_path) const {
+std::string module_manager::module_path_to_full_name(const std::vector<std::string>& name_path) {
 	// this function normalizes lookup paths into the actual path, this means we dont have to
 	// deal with full name changes, e.g. parent::child may change to parent.child, etc, so
 	// therefore we unify the format here
