@@ -4,12 +4,16 @@
 #include <llvm/IR/DerivedTypes.h>
 
 #include <codegen/codegen_visitor.h>
+#include <codegen/error/codegen_exception.h>
 #include <representations/types/data_type.h>
 #include <representations/types/container_types.h>
 
 llvm::Type* llvm_type_converter::convert(type_ptr t) {
 	if (t->is_primitive()) {
 		return get_primitive_type(t);
+	}
+	else if (auto custom = t->as_custom()) {
+
 	}
 	else if (auto arr = t->as_array()) {
 		llvm::Type* element_type = convert(arr->base_type);
@@ -28,22 +32,22 @@ llvm::Type* llvm_type_converter::convert(type_ptr t) {
 llvm::Type* llvm_type_converter::get_primitive_type(type_ptr t) {
 	switch (t->primitive) {
 		case DT_I16:
-			return (llvm::Type*)llvm::Type::getInt16Ty(context);
+			return llvm::Type::getInt16Ty(context);
 		case DT_I32:
-			return (llvm::Type*)llvm::Type::getInt32Ty(context);
+			return llvm::Type::getInt32Ty(context);
 		case DT_I64:
-			return (llvm::Type*)llvm::Type::getInt64Ty(context);
+			return llvm::Type::getInt64Ty(context);
 		case DT_FLOAT:
 			return llvm::Type::getFloatTy(context);
 		case DT_DOUBLE:
 			return llvm::Type::getDoubleTy(context);
 		case DT_CHAR:
-			return (llvm::Type*)llvm::Type::getInt8Ty(context);
+			return llvm::Type::getInt8Ty(context);
 		case DT_STRING:
 			// strings are represented as i8*
 			return llvm::PointerType::getUnqual(llvm::Type::getInt8Ty(context));
 		case DT_BOOL:
-			return (llvm::Type*)llvm::Type::getInt1Ty(context);
+			return llvm::Type::getInt1Ty(context);
 		case DT_VOID:
 			return llvm::Type::getVoidTy(context);
 		default:
@@ -53,7 +57,7 @@ llvm::Type* llvm_type_converter::get_primitive_type(type_ptr t) {
 unsigned long long llvm_type_converter::get_array_size(type_ptr t) {
 	auto arr = t->as_array();
 	if (!arr) {
-		throw; // shouldnt be possible
+		throw codegen_exception("Non-array type passed to get_array_size");
 	}
 
 	// TODO
