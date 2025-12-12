@@ -8,7 +8,7 @@
 #include <error/error_catalog.h>
 #include <symbolics/import_table.h>
 
-void import_resolver::visit(std::shared_ptr<class import_statement> import_stmt) {
+void import_resolver::visit(std::shared_ptr<import_statement> import_stmt) {
 	// find the module
 	auto module = module_manager.get_module(import_stmt->module_name);
 	if (module == nullptr) {
