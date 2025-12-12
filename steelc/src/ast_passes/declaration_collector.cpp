@@ -210,10 +210,11 @@ void declaration_collector::visit(std::shared_ptr<type_declaration> decl) {
 
 	current_type = decl;
 	for (const auto& member : decl->fields) {
+		member->is_field = true;
 		member->accept(*this);
 	}
 	for (const auto& constructor : decl->constructors) {
-		//constructor->is_constructor = true;
+		constructor->is_constructor = true;
 		constructor->accept(*this);
 	}
 	for (const auto& method : decl->methods) {
