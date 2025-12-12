@@ -125,6 +125,8 @@ void type_checker::visit(std::shared_ptr<variable_declaration> var) {
 					ERROR(ERR_INTERFACE_INITIALIZER, var->position);
 					return;
 				}
+				// set result type (assuming no errors)
+				init_list->result_type = var->type;
 			}
 			else {
 				ERROR(ERR_INVALID_INITIALIZER_LIST_USAGE, var->position);
