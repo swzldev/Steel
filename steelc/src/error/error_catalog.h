@@ -331,7 +331,7 @@ struct error_catalog {
         static const advice_info advices[] = {
             {"SA01", "Conditional returns are not guaranteed to return, ensure an unconditional return is present incase all conditional returns are not executed"},
             {"SA02", "Implement required interface method: '%s'"},
-            {"SA03", "To store objects of a type within itself, consider using a pointer, e.g. %s -> %s*"},
+            {"SA03", "To store objects of a type within itself, consider using a pointer (%s*)"},
         };
         return advices[code];
 	}
