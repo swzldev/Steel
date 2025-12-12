@@ -340,6 +340,7 @@ void name_resolver::visit(std::shared_ptr<function_call> func_call) {
 			// we can still set the constructor type with the generic definition for later use
 			func_call->is_constructor = true;
 			func_call->ctor_type = type.first()->as_type()->type->as_custom()->declaration;
+			return;
 		}
 		
 		// lookup function as normal
