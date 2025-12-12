@@ -147,6 +147,7 @@ enum error_code {
     ERR_NOT_A_TYPE,
     ERR_NAME_CONFLICT,
     ERR_CALL_ON_NON_FUNCTION,
+    ERR_FIELD_CANNOT_BE_OWN_TYPE,
 };
 
 enum warning_code {
@@ -162,6 +163,7 @@ enum warning_code {
 enum advice_code {
     ADV_CONDITIONAL_NOT_GUARANTEED_TO_RETURN,
     ADV_IMPLEMENT_INTERFACE_METHOD,
+    ADV_USE_POINTER_INSTEAD_OF_OWN_TYPE,
 };
 
 struct error_catalog {
@@ -307,6 +309,7 @@ struct error_catalog {
             {"S151", "'%s' is not a type"},
             {"S152", "Cannot declare %s '%s' because a %s with the same name already exists in this scope"},
             {"S153", "Cannot call non-function"},
+            {"S154", "The recursive field '%s' of type '%s' has infinite size"},
         };
         return errors[code - 1 /* -1 to avoid ERR_SUCCESS */];
     }
@@ -328,6 +331,7 @@ struct error_catalog {
         static const advice_info advices[] = {
             {"SA01", "Conditional returns are not guaranteed to return, ensure an unconditional return is present incase all conditional returns are not executed"},
             {"SA02", "Implement required interface method: '%s'"},
+            {"SA03", "To store objects of a type within itself, consider using a pointer, e.g. %s -> %s*"},
         };
         return advices[code];
 	}

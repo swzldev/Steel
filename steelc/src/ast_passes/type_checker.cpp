@@ -202,6 +202,16 @@ void type_checker::visit(std::shared_ptr<type_declaration> decl) {
 	}
 	for (const auto& member : decl->fields) {
 		member->accept(*this);
+		// cannot contain fields of own type
+		if (auto custom = member->type->as_custom()) {
+			// should be okay, but i should note its generally
+			// not safe to compare pointers like this
+			if (custom->declaration == decl) {
+				ERROR(ERR_FIELD_CANNOT_BE_OWN_TYPE, member->position, member->identifier.c_str(), decl->identifier.c_str());
+				ADVISE(ADV_USE_POINTER_INSTEAD_OF_OWN_TYPE, member->position, decl->identifier.c_str(), decl->identifier.c_str());
+				return;
+			}
+		}
 	}
 	for (const auto& method : decl->methods) {
 		// check method
