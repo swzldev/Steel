@@ -62,6 +62,7 @@ void codegen_visitor::visit(std::shared_ptr<function_declaration> func) {
 	env->finalize_function();
 }
 void codegen_visitor::visit(std::shared_ptr<variable_declaration> var) {
+
 	llvm::Type* var_type = type_converter.convert(var->type);
 	auto var_inst = env->alloc_local(var_type, var->identifier);
 

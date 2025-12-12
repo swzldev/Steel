@@ -44,6 +44,7 @@ public:
 		}
 		cloned->initialized = initialized;
 		cloned->is_parameter = is_parameter;
+		cloned->is_field = is_field;
 		return cloned;
 	}
 
@@ -57,4 +58,5 @@ public:
 	bool initialized = false;
 	bool is_const = false;
 	bool is_parameter = false;
+	bool is_field = false;
 };
