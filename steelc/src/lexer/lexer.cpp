@@ -225,11 +225,13 @@ bool lexer::check_for_char(std::string& src, size_t& index) {
 		ERROR(ERR_TOO_MANY_CHARS_IN_CHAR_LITERAL, { line, column });
 	}
 
-	column += true_length + 1;
+	
+	// see note in check_for_string about line and column handling
 
 	// add literal token
-	add_token(literal, TT_CHAR_LITERAL);
-	index += true_length + 1;
+	add_token(literal, TT_CHAR_LITERAL, column, column);
+	column += true_length + 2; // both quotes
+	index += true_length + 1; // for loop will increment one more (closing quote)
 
 	return true;
 }
@@ -258,11 +260,21 @@ bool lexer::check_for_string(std::string& src, size_t& index) {
 	size_t true_length = literal.length();
 	literal = parse_text_literal(literal);
 
-	column += true_length + 1;
+	// important notes:
+	// we need to provide the line and column manually,
+	// this is because string and char literals' sizes may
+	// differ from that in the source code, due to the removal
+	// of escape sequences, quotes, etc.
+	// therefore, we cannot rely on subtracting the literal length
+	// from the current column to get the starting column.
+	// in this case to do so we just use the current column and
+	// increment it after adding the token (which usually wouldnt
+	// be possible)
 
 	// add literal token
-	add_token(literal, TT_STRING_LITERAL);
-	index += true_length + 1;
+	add_token(literal, TT_STRING_LITERAL, line, column);
+	column += true_length + 2; // both quotes
+	index += true_length + 1; // for loop will increment one more (closing quote)
 
 	return true;
 }
@@ -331,4 +343,7 @@ void lexer::add_token(const std::string& value) {
 }
 void lexer::add_token(const std::string& value, token_type type) {
 	tokens.push_back({ value, type, line, column - value.length() });
+}
+void lexer::add_token(const std::string& value, token_type type, size_t line, size_t col) {
+	tokens.push_back({ value, type, line, col });
 }

@@ -37,4 +37,5 @@ private:
 
 	void add_token(const std::string& value);
 	void add_token(const std::string& value, token_type type);
+	void add_token(const std::string& value, token_type type, size_t line, size_t col);
 };
