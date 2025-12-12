@@ -49,7 +49,7 @@ bool compiler::compile(compile_config cfg) {
 				std::string line = std::to_string(token.pos.line);
 				std::string col = std::to_string(token.pos.column);
 
-				output::print("[ {}, \"{}\", ln: {}, col: {}]\n", type, value, line, col);
+				output::print("[ {}, \"{}\", ln: {}, col: {}]\n", "", type, value, line, col);
 			}
 			output::print("\n");
 		}
