@@ -214,7 +214,8 @@ void declaration_collector::visit(std::shared_ptr<type_declaration> decl) {
 		member->accept(*this);
 	}
 	for (const auto& constructor : decl->constructors) {
-		constructor->is_constructor = true;
+		// this is done during parsing (whether it should or not idk but ill leave it for now)
+		//constructor->is_constructor = true;
 		constructor->accept(*this);
 	}
 	for (const auto& method : decl->methods) {
