@@ -10,6 +10,7 @@ std::string module_entity::name() const {
 	return mod_info->name;
 }
 std::string module_entity::full_name() const {
+	// should change this - need to stop hardcoding the "::" separator
 	if (parent_module && !parent_module->is_global()) {
 		return parent_module->full_name() + "::" + mod_info->name;
 	}
