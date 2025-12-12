@@ -114,7 +114,7 @@ void type_checker::visit(std::shared_ptr<variable_declaration> var) {
 							const auto& value_type = init_list->values[i]->type();
 							const auto& field_type = custom->declaration->fields[i]->type;
 							if (*field_type != value_type) {
-								ERROR(ERR_TYPE_MISMATCH_INITIALIZER, init_list->values[i]->position, field_type->name(), value_type->name());
+								ERROR(ERR_TYPE_MISMATCH_INITIALIZER, init_list->values[i]->position, field_type->name().c_str(), value_type->name().c_str());
 								return;
 							}
 						}
