@@ -2,6 +2,7 @@
 
 #include <string>
 #include <memory>
+#include <vector>
 
 #include <modules/module_info.h>
 
@@ -13,6 +14,15 @@ std::string module_entity::full_name() const {
 		return parent_module->full_name() + "::" + mod_info->name;
 	}
 	return mod_info->name;
+}
+
+std::vector<std::string> module_entity::name_path() const {
+	if (parent_module) {
+		auto path = parent_module->name_path();
+		path.push_back(mod_info->name);
+		return path;
+	}
+	return { mod_info->name };
 }
 
 std::shared_ptr<module_entity> module_entity::as_module() {

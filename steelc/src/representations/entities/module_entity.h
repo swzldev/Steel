@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <string>
+#include <vector>
 
 #include <representations/entities/entity.h>
 
@@ -16,6 +17,8 @@ public:
 
 	std::string name() const override;
 	std::string full_name() const override;
+
+	std::vector<std::string> name_path() const;
 
 	std::shared_ptr<module_entity> as_module() override;
 
