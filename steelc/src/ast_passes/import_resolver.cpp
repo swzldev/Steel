@@ -10,9 +10,10 @@
 
 void import_resolver::visit(std::shared_ptr<import_statement> import_stmt) {
 	// find the module
-	auto module = module_manager.get_module(import_stmt->module_name);
+	auto module = module_manager.get_module(import_stmt->module_path);
 	if (module == nullptr) {
-		ERROR(ERR_MODULE_NOT_FOUND, import_stmt->position, import_stmt->module_name.c_str());
+		std::string full_name = module_manager::module_path_to_full_name(import_stmt->module_path);
+		ERROR(ERR_MODULE_NOT_FOUND, import_stmt->position, full_name.c_str());
 		return;
 	}
 

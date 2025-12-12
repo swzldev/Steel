@@ -40,7 +40,7 @@ std::shared_ptr<module_entity> module_manager::add_module(const std::string& nam
 }
 
 inline bool module_manager::has_module(const std::vector<std::string>& name_path) const {
-	std::string full_name = to_full_name(name_path);
+	std::string full_name = module_path_to_full_name(name_path);
 	for (const auto& mod : modules) {
 		if (mod.first == full_name) {
 			return true;
@@ -49,7 +49,7 @@ inline bool module_manager::has_module(const std::vector<std::string>& name_path
 	return false;
 }
 std::shared_ptr<module_entity> module_manager::get_module(const std::vector<std::string>& name_path) {
-	std::string full_name = to_full_name(name_path);
+	std::string full_name = module_path_to_full_name(name_path);
 	for (const auto& mod : modules) {
 		if (mod.first == full_name) {
 			return mod.second;
@@ -64,17 +64,7 @@ std::shared_ptr<module_entity> module_manager::get_parent(std::shared_ptr<module
 	return module->parent_module ? module->parent_module : global_module;
 }
 
-std::shared_ptr<module_info> module_manager::create_info(const std::string& name) {
-	static module_id next_id = 0;
-
-	auto info = std::make_shared<module_info>();
-	info->id = ++next_id;
-	info->name = name;
-
-	return info;
-}
-
-std::string module_manager::to_full_name(const std::vector<std::string>& name_path) const {
+std::string module_manager::module_path_to_full_name(const std::vector<std::string>& name_path) const {
 	// this function normalizes lookup paths into the actual path, this means we dont have to
 	// deal with full name changes, e.g. parent::child may change to parent.child, etc, so
 	// therefore we unify the format here
@@ -86,4 +76,14 @@ std::string module_manager::to_full_name(const std::vector<std::string>& name_pa
 		}
 	}
 	return full_name;
+}
+
+std::shared_ptr<module_info> module_manager::create_info(const std::string& name) {
+	static module_id next_id = 0;
+
+	auto info = std::make_shared<module_info>();
+	info->id = ++next_id;
+	info->name = name;
+
+	return info;
 }

@@ -227,19 +227,20 @@ void declaration_collector::visit(std::shared_ptr<type_declaration> decl) {
 	current_type = nullptr;
 }
 void declaration_collector::visit(std::shared_ptr<module_declaration> mod) {
-	std::string module_name = mod->name;
+	std::vector<std::string> module_path;
 
 	// identify full module name
 	if (!current_module->is_global()) {
-		module_name = current_module->full_name() + "::" + module_name;
+		module_path = current_module->name_path();
 	}
+	module_path.push_back(mod->name);
 
 	// set the parent module (of the declaration, this doesnt effect the module_info representation)
 	// not sure if this will ever come in handy, but its good to have it for all declarations
 	mod->parent_module = current_module;
 
 	// lookup module
-	auto module = module_manager.get_module(module_name);
+	auto module = module_manager.get_module(module_path);
 	if (module != nullptr) {
 		current_module = module;
 	}
