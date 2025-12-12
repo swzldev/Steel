@@ -74,7 +74,6 @@ void type_checker::visit(std::shared_ptr<variable_declaration> var) {
 		if (var->has_initializer()) {
 			auto init_type = var->initializer->type();
 			if (init_type == data_type::UNKNOWN) {
-				return; // might change this later
 				ERROR(ERR_CANNOT_INFER_TYPE_UNKNOWN_INIT, var->position, var->identifier.c_str());
 				return;
 			}
