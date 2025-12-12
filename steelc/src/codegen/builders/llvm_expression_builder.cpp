@@ -87,3 +87,13 @@ llvm::Value* llvm_expression_builder::build_struct_init(llvm::Type* struct_type,
 
 	return agg;
 }
+llvm::Value* llvm_expression_builder::build_field_access(llvm::Type* struct_type, llvm::Value* object, unsigned field_index) {
+	llvm::Type* obj_type = object->getType();
+
+	cg_assert(struct_type->isStructTy(), "Field access on non-struct type in LLVM expression builder");
+
+	if (obj_type->isPointerTy()) {
+		return builder.CreateStructGEP(struct_type, object, field_index, "field.access");
+	}
+	return builder.CreateExtractValue(object, { field_index }, "field.access");
+}

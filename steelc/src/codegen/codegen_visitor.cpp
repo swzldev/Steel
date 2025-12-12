@@ -116,7 +116,23 @@ void codegen_visitor::visit(std::shared_ptr<member_expression> expr) {
 		auto entity = expr->entity();
 		cg_assert(entity == entity::UNRESOLVED, "Member expression entity is unresolved");
 
+		switch (entity->kind()) {
+		case ENTITY_VARIABLE: {
+			auto var_entity = entity->as_variable();
+			result = expression_builder.build_field_access(
+				/* this should be safe, as sema should catch member access on non-composites */
+				type_converter.convert(var_entity->var_type()),
+				object,
+				var_entity->declaration->field_index
+			);
+			break;
+		}
 
+		default:
+			throw codegen_exception("Unsupported entity in member expression");
+		}
+
+		return;
 	}
 	
 	throw codegen_exception("Unknown member expression access type");

@@ -19,6 +19,9 @@ public:
 	// this function does no conversion or type checking on base_ptr or index.
 	llvm::Value* build_index_expr(llvm::Type* elem_type, llvm::Value* base_ptr, llvm::Value* index);
 	llvm::Value* build_struct_init(llvm::Type* struct_type, const std::vector<llvm::Value*>& elements);
+	// note: struct_type is contexted to llvm structs, it can be class, struct, etc.
+	// this function works for struct pointers and struct values.
+	llvm::Value* build_field_access(llvm::Type* struct_type, llvm::Value* object, unsigned field_index);
 
 private:
 	llvm::IRBuilder<>& builder;
