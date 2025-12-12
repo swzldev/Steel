@@ -208,7 +208,7 @@ void type_checker::visit(std::shared_ptr<type_declaration> decl) {
 			// not safe to compare pointers like this
 			if (custom->declaration == decl) {
 				ERROR(ERR_FIELD_CANNOT_BE_OWN_TYPE, member->position, member->identifier.c_str(), decl->identifier.c_str());
-				ADVISE(ADV_USE_POINTER_INSTEAD_OF_OWN_TYPE, member->position, decl->identifier.c_str(), decl->identifier.c_str());
+				ADVISE(ADV_USE_POINTER_INSTEAD_OF_OWN_TYPE, member->position, decl->identifier.c_str());
 				return;
 			}
 		}
