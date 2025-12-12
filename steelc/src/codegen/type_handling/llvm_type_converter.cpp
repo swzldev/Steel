@@ -16,6 +16,11 @@ llvm::Type* llvm_type_converter::convert(type_ptr t) {
 		return get_primitive_type(t);
 	}
 	else if (auto custom = t->as_custom()) {
+		std::string custom_name_full = custom->name(); // change this when scoped types are implemented
+		if (struct_type_cache.find(custom_name_full) != struct_type_cache.end()) {
+			return struct_type_cache[custom_name_full];
+		}
+
 		std::vector<llvm::Type*> member_types;
 		for (const auto& field : custom->declaration->fields) {
 			member_types.push_back(convert(field->type));
@@ -23,6 +28,8 @@ llvm::Type* llvm_type_converter::convert(type_ptr t) {
 
 		llvm::StructType* strct = llvm::StructType::create(context, custom->name());
 		strct->setBody(member_types);
+		struct_type_cache[custom_name_full] = strct;
+		return strct;
 	}
 	else if (auto arr = t->as_array()) {
 		llvm::Type* element_type = convert(arr->base_type);
