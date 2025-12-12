@@ -112,6 +112,10 @@ std::shared_ptr<function_declaration> parser::parse_function_declaration(bool is
 		}
 		identifier_token = previous();
 	}
+	else {
+		// constructors dont have identifiers, so we can use the 'constructor' token
+		identifier_token = previous();
+	}
 	
 	std::vector<std::shared_ptr<generic_parameter>> generics;
 	if (ENABLE_GENERICS && !is_override && !is_constructor) { // TODO: make this a semantic check
