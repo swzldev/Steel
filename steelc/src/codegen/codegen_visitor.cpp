@@ -141,7 +141,19 @@ void codegen_visitor::visit(std::shared_ptr<identifier_expression> id) {
 	}
 }
 void codegen_visitor::visit(std::shared_ptr<initializer_list> init) {
-	
+	if (init->is_array_initializer) {
+		return; // not implemented yet
+	}
+
+	std::vector<llvm::Value*> element_values;
+	for (auto& val : init->values) {
+		auto elem_value = accept(val);
+		cg_assert(elem_value != nullptr, "Failed to generate value for initializer list element");
+		element_values.push_back(elem_value);
+	}
+
+	llvm::Type* struct_type = type_converter.convert(init->result_type);
+	result = expression_builder.build_struct_init(struct_type, element_values);
 }
 void codegen_visitor::visit(std::shared_ptr<function_call> func_call) {
 	std::vector<llvm::Value*> arg_values;
