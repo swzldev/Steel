@@ -5,7 +5,10 @@
 
 #include <codegen/codegen_visitor.h>
 #include <codegen/error/codegen_exception.h>
+#include <ast/declarations/type_declaration.h>
+#include <representations/types/types_fwd.h>
 #include <representations/types/data_type.h>
+#include <representations/types/custom_type.h>
 #include <representations/types/container_types.h>
 
 llvm::Type* llvm_type_converter::convert(type_ptr t) {
@@ -13,7 +16,13 @@ llvm::Type* llvm_type_converter::convert(type_ptr t) {
 		return get_primitive_type(t);
 	}
 	else if (auto custom = t->as_custom()) {
+		std::vector<llvm::Type*> member_types;
+		for (const auto& field : custom->declaration->fields) {
+			member_types.push_back(convert(field->type));
+		}
 
+		llvm::StructType* strct = llvm::StructType::create(context, custom->name());
+		strct->setBody(member_types);
 	}
 	else if (auto arr = t->as_array()) {
 		llvm::Type* element_type = convert(arr->base_type);
