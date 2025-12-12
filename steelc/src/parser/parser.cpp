@@ -51,19 +51,16 @@ ast_ptr parser::parse_declaration() {
 	}
 	// module import
 	else if (match(TT_IMPORT)) {
-		std::string module_name = "";
-		token& module_name_token = peek();
+		std::vector<std::string> module_path;
+		token& module_token = peek();
 
-		bool first = true;
 		do {
 			if (!match(TT_IDENTIFIER)) {
 				ERROR_TOKEN(ERR_MODULE_NAME_EXPECTED, peek());
 				return nullptr;
 			}
 
-			if (!first) module_name += "::";
-			module_name += previous().value;
-			first = false;
+			module_path.push_back(previous().value);
 		} while (match(TT_SCOPE));
 
 		if (!match(TT_SEMICOLON)) {
@@ -71,7 +68,7 @@ ast_ptr parser::parse_declaration() {
 			return nullptr;
 		}
 		
-		return make_ast<import_statement>(module_name_token, module_name);
+		return make_ast<import_statement>(module_token, module_path);
 	}
 	// type declaration
 	else if (match(3, TT_STRUCT, TT_CLASS, TT_INTERFACE)) {
