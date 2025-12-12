@@ -7,6 +7,7 @@
     - Intermediate output directory: `/build/intermediate/`
     - IR output directory: `/build/intermediate/IR/`
 - Added a new build flag `--llvm-asm` which outputs the generated LLVM IR as assembly files (.ll) instead of bitcode files (.bc). Useful for debugging and inspecting the generated IR.
+- Fixed a bug where constructors dont have identifiers therefore the declaration had an invalid position.
 
 ## [0.5.0] - 10-12-2025
 - Added support for the '::' operator for static scope resolution.
