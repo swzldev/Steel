@@ -110,9 +110,11 @@ void type_checker::visit(std::shared_ptr<variable_declaration> var) {
 						return;
 					}
 					else {
-						for (int i = 0; i < init_list->values.size(); i++) {
-							if (custom->declaration->fields[i]->type != init_list->values[i]->type()) {
-								ERROR(ERR_TYPE_MISMATCH_INITIALIZER, init_list->position);
+						for (size_t i = 0; i < init_list->values.size(); i++) {
+							const auto& value_type = init_list->values[i]->type();
+							const auto& field_type = custom->declaration->fields[i]->type;
+							if (*field_type != value_type) {
+								ERROR(ERR_TYPE_MISMATCH_INITIALIZER, init_list->values[i]->position, field_type->name(), value_type->name());
 								return;
 							}
 						}
