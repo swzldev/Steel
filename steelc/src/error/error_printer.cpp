@@ -44,7 +44,7 @@ void error_printer::print_error(const error& error) {
 			std::cerr << console_colors::DIM << std::setw(line_num_width) << i << " | " << console_colors::RESET << code_line << "\n";
 			if (i == error.pos.line) {
 				std::cerr << std::setw(line_num_width) << " " << " | "
-					<< std::string(error.pos.column - 1, ' ')
+					<< std::string(error.pos.column - 2, ' ')
 					<< console_colors::BOLD << console_colors::RED << "^\033[0m" << console_colors::RESET << " HERE\n";
 			}
 		}
