@@ -4,9 +4,10 @@
 #include <string>
 
 #include <llvm/IR/Type.h>
+#include <llvm/IR/DerivedTypes.h>
 #include <llvm/IR/LLVMContext.h>
 
-#include <representations/types/data_type.h>
+#include <representations/types/types_fwd.h>
 
 class codegen_visitor;
 
