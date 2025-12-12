@@ -202,7 +202,7 @@ struct error_catalog {
             {"S033", "Unknown type '%s'"},
             {"S034", "No constructor for type '%s' matches argument types provided"},
             {"S035", "Too many values in initializer list"},
-            {"S036", "Type mismatch in initializer list"},
+            {"S036", "Type mismatch in initializer list, expected: '%s', got: '%s'"},
             {"S037", "Interface initializer is not allowed"},
             {"S038", "Array initializers are unsupported"},
             {"S039", "Initializer list can only be used with custom types"},
