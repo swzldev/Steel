@@ -14,7 +14,15 @@ public:
 	}
 
 	std::string string(int indent) const override {
-		return indent_s(indent) + "Import Statement: " + module_name + "\n";
+		std::string ind = indent_s(indent);
+		std::string result = ind + "Import Statement: ";
+		for (size_t i = 0; i < module_path.size(); ++i) {
+			result += module_path[i];
+			if (i < module_path.size() - 1) {
+				result += "::";
+			}
+		}
+		return result;
 	}
 
 	std::vector<std::string> module_path;
