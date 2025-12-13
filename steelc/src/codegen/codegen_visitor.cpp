@@ -112,6 +112,12 @@ void codegen_visitor::visit(std::shared_ptr<member_expression> expr) {
 	}
 	else if (expr->is_instance_access()) {
 		auto object = accept(expr->object);
+		cg_assert(object != nullptr, "Failed to generate object of member expression");
+
+		auto object_entity = expr->object->entity();
+		cg_assert(object_entity != entity::UNRESOLVED, "Member expression object entity is unresolved");
+
+		auto object_type = type_converter.convert(object_entity->as_variable()->var_type());
 
 		auto entity = expr->entity();
 		cg_assert(entity != entity::UNRESOLVED, "Member expression entity is unresolved");
@@ -121,7 +127,7 @@ void codegen_visitor::visit(std::shared_ptr<member_expression> expr) {
 			auto var_entity = entity->as_variable();
 			result = expression_builder.build_field_access(
 				/* this should be safe, as sema should catch member access on non-composites */
-				type_converter.convert(var_entity->var_type()),
+				object_type,
 				object,
 				var_entity->declaration->field_index
 			);
