@@ -3,14 +3,14 @@
 #include <string>
 #include <memory>
 #include <vector>
-#include <stdexcept>
 
 #include <representations/types/types_fwd.h>
 #include <representations/types/data_type.h>
 #include <representations/types/custom_type.h>
 #include <representations/types/container_types.h>
-#include <ast/declarations/function_declaration.h>
 #include <representations/entities/module_entity.h>
+#include <ast/declarations/function_declaration.h>
+#include <codegen/error/codegen_exception.h>
 
 std::string name_mangler::mangle_function(std::shared_ptr<function_declaration> func_ast) {
 	// no mangle for bare-bone functions
@@ -59,6 +59,18 @@ std::string name_mangler::mangle_function(std::shared_ptr<function_declaration> 
 	// E for end of nested name
 	if (scopes.size() > 0) {
 		mangled += "E";
+	}
+
+	// mangle generic params (if applicable)
+	if (func_ast->is_generic) {
+		if (!func_ast->is_generic_instance) {
+			throw codegen_exception("Attempted to mangle non-monomorphized function");
+		}
+		mangled += "I"; // start of generic args
+		for (const auto& gen_arg : func_ast->generics) {
+			mangled += mangle_type(gen_arg->substitution);
+		}
+		mangled += "E"; // end of generic args
 	}
 
 	// mangle parameter types
@@ -120,7 +132,7 @@ std::string name_mangler::mangle_type(type_ptr t) {
 	else if (t->is_generic()) {
 		// this should not happen, as all generic types should be
 		// monomorphized before any codegen
-		throw std::runtime_error("Cannot mangle generic type parameter");
+		throw codegen_exception("Cannot mangle generic type parameter");
 	}
 
 	return "";
