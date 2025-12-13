@@ -115,8 +115,17 @@ std::string name_mangler::mangle_type(type_ptr t) {
 		}
 	}
 	else if (auto custom = t->as_custom()) {
+		// we will need to change some of this when adding nested type support
+		if (custom->is_generic_instance()) {
+			// generic type instance
+			std::string mangled = "I"; // start of generic args
+			for (const auto& gen_arg : custom->generic_args) {
+				mangled += mangle_type(gen_arg);
+			}
+			mangled += "E"; // end of generic args
+			return mangle_text(custom->name()) + mangled;
+		}
 		return mangle_text(custom->name());
-		// we will need to change this when adding nested type support
 	}
 	else if (auto ptr = t->as_pointer()) {
 		return "P" + mangle_type(ptr->base_type);
