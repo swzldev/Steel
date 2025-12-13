@@ -41,7 +41,7 @@ private:
 
 	std::map<std::shared_ptr<function_declaration>, std::vector<std::shared_ptr<function_declaration>>> generic_function_instances;
 	std::map<std::shared_ptr<type_declaration>, std::vector<std::shared_ptr<type_declaration>>> generic_type_instances;
-	std::vector<type_ptr> generic_substitutions;
+	std::vector<std::vector<type_ptr>> generic_substitution_stack;
 
 	struct candidate_score {
 		std::shared_ptr<function_declaration> candidate;

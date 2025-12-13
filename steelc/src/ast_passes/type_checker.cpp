@@ -607,9 +607,13 @@ void type_checker::visit(std::shared_ptr<function_call> func_call) {
 				continue; // argument count doesn't match
 			}
 
-			// set explicit generics if they exist for scoring
-			for (auto& gen_arg : func_call->generic_args) {
-				generic_substitutions.push_back(gen_arg);
+			// set generics (for scoring)
+			if (candidate->is_generic) {
+				// push generic substitutions
+				generic_substitution_stack.push_back({});
+				for (size_t i = 0; i < func_call->generic_args.size(); i++) {
+					generic_substitution_stack.back().push_back(func_call->generic_args[i]);
+				}
 			}
 
 			int score = score_candidate(candidate, arg_types);
@@ -618,8 +622,8 @@ void type_checker::visit(std::shared_ptr<function_call> func_call) {
 			}
 
 			// reset generics
-			for (size_t i = 0; i < func_call->generic_args.size(); i++) {
-				generic_substitutions.pop_back();
+			if (candidate->is_generic) {
+				generic_substitution_stack.pop_back();
 			}
 		}
 		if (matches.empty()) {
@@ -895,11 +899,13 @@ int type_checker::score_candidate(std::shared_ptr<function_declaration> candidat
 void type_checker::check_type(type_ptr& type) {
 	if (type->is_custom() && type->generic_args.size() > 0) {
 		unbox_type(type);
+		return;
 	}
-	if (auto ptr = type->as_pointer()) {
+	else if (auto ptr = type->as_pointer()) {
 		check_type(ptr->base_type);
+		return;
 	}
-	if (auto arr = type->as_array()) {
+	else if (auto arr = type->as_array()) {
 		check_type(arr->base_type);
 		if (auto& sz = arr->size_expression) {
 			sz->accept(*this);
@@ -914,7 +920,17 @@ void type_checker::check_type(type_ptr& type) {
 				ERROR(ERR_ARRAY_SIZE_MUST_BE_INTEGER, arr->size_expression->position);
 				return;
 			}
+			return;
 		}
+	}
+	else if (auto gen = type->as_generic()) {
+		const auto& cur_subs = generic_substitution_stack.back();
+		if (cur_subs.size() < gen->generic_param_index) {
+			ERROR(ERR_INTERNAL_ERROR, gen->position, "Type Checker", "Generic substitution index out of bounds");
+			return;
+		}
+		type = cur_subs[gen->generic_param_index];
+		return;
 	}
 }
 void type_checker::unbox_type(type_ptr& type) {
@@ -953,11 +969,6 @@ std::shared_ptr<function_declaration> type_checker::unbox_generic_func(std::shar
 			}
 		}
 	}
-	
-	// add substitutions to generic substitutions list
-	for (const auto& type : types) {
-		generic_substitutions.push_back(type);
-	}
 
 	// clone the function
 	auto new_func = std::dynamic_pointer_cast<function_declaration>(func->clone());
@@ -972,18 +983,13 @@ std::shared_ptr<function_declaration> type_checker::unbox_generic_func(std::shar
 	generic_function_instances[func].push_back(new_func);
 
 	// substitute
-	generic_substitutor substitutor(pass_unit, generic_substitutions);
+	generic_substitutor substitutor(pass_unit, types);
 	new_func->accept(substitutor);
 
 	// type check instance
 	std::shared_ptr<function_declaration> old_current = current_function;
 	new_func->accept(*this);
 	current_function = old_current;
-
-	// erase from substitutions list
-	for (size_t i = 0; i < types.size(); i++) {
-		generic_substitutions.pop_back();
-	}
 
 	return new_func;
 }
@@ -1009,11 +1015,6 @@ std::shared_ptr<type_declaration> type_checker::unbox_generic_type(std::shared_p
 		}
 	}
 
-	// add substitutions to generic substitutions list
-	for (const auto& type : types) {
-		generic_substitutions.push_back(type);
-	}
-
 	// clone the type
 	auto new_type = std::dynamic_pointer_cast<type_declaration>(type->clone());
 	new_type->is_generic_instance = true;
@@ -1031,17 +1032,8 @@ std::shared_ptr<type_declaration> type_checker::unbox_generic_type(std::shared_p
 		ctor->return_type = new_type->type();
 	}
 
-	// substitute
-	generic_substitutor substitutor(pass_unit, generic_substitutions);
-	new_type->accept(substitutor);
-
 	// type check instance
 	new_type->accept(*this);
-
-	// erase from substitutions list
-	for (size_t i = 0; i < types.size(); i++) {
-		generic_substitutions.pop_back();
-	}
 
 	return new_type;
 }
