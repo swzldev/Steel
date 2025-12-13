@@ -148,6 +148,7 @@ enum error_code {
     ERR_NAME_CONFLICT,
     ERR_CALL_ON_NON_FUNCTION,
     ERR_FIELD_CANNOT_BE_OWN_TYPE,
+    ERR_MEMBER_ACCESS_NOT_ON_VARIABLE,
 };
 
 enum warning_code {
@@ -310,6 +311,7 @@ struct error_catalog {
             {"S152", "Cannot declare %s '%s' because a %s with the same name already exists in this scope"},
             {"S153", "Cannot call non-function"},
             {"S154", "The recursive field '%s' of type '%s' has infinite size"},
+            {"S155", "Non-static member access only allowed on variables"},
         };
         return errors[code - 1 /* -1 to avoid ERR_SUCCESS */];
     }

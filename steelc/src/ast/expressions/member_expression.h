@@ -47,6 +47,7 @@ public:
 	}
 
 	virtual type_ptr type() const override {
+		// this should be deprecated soon, should fully switch to using the entity
 		if (!resolved_type && resolved_entity && resolved_entity->kind() == ENTITY_VARIABLE) {
 			return resolved_entity->as_variable()->var_type();
 		}

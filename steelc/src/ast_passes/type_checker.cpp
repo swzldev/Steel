@@ -435,14 +435,20 @@ void type_checker::visit(std::shared_ptr<cast_expression> expr) {
 void type_checker::visit(std::shared_ptr<member_expression> expr) {
 	expr->object->accept(*this);
 
-	if (expr->is_resolved()) {
-		// already resolved, likely a static member access
+	if (expr->is_static_access()) {
 		// all static member accesses are resolved in the name resolver
 		// we ONLY need to resolve here if it involves types
 		return;
 	}
 
-	auto type = expr->object->type();
+	// instance access only allowed on variables
+	auto entity = expr->entity();
+	if (entity->kind() != ENTITY_VARIABLE) {
+		ERROR(ERR_MEMBER_ACCESS_NOT_ON_VARIABLE, expr->position);
+		return;
+	}
+
+	auto type = entity->as_variable()->var_type();
 	if (type == data_type::UNKNOWN) {
 		// some other error occured
 		return;
