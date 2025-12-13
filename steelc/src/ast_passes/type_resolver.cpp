@@ -17,6 +17,7 @@
 
 void type_resolver::visit(std::shared_ptr<function_declaration> func) {
 	sym_table->push_scope();
+	sym_table->push_generic_scope();
 	// add generics to the current scope
 	for (const auto& generic : func->generics) {
 		generic->param_index = cur_generic_index++;
@@ -39,6 +40,7 @@ void type_resolver::visit(std::shared_ptr<function_declaration> func) {
 	if (func->body) {
 		func->body->accept(*this);
 	}
+	sym_table->pop_generic_scope();
 	sym_table->pop_scope();
 }
 void type_resolver::visit(std::shared_ptr<variable_declaration> var) {
@@ -47,6 +49,7 @@ void type_resolver::visit(std::shared_ptr<variable_declaration> var) {
 }
 void type_resolver::visit(std::shared_ptr<type_declaration> decl) {
 	sym_table->push_scope();
+	sym_table->push_generic_scope();
 	// add generics to the current scope
 	for (const auto& generic : decl->generics) {
 		generic->param_index = cur_generic_index++;
@@ -74,6 +77,7 @@ void type_resolver::visit(std::shared_ptr<type_declaration> decl) {
 	for (type_ptr& base : decl->base_types) {
 		resolve_type(base);
 	}
+	sym_table->pop_generic_scope();
 	sym_table->pop_scope();
 }
 void type_resolver::visit(std::shared_ptr<module_declaration> decl) {
