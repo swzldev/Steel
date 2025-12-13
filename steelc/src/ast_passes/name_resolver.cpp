@@ -24,6 +24,7 @@
 void name_resolver::visit(std::shared_ptr<function_declaration> func) {
 	if (func->body) {
 		sym_table->push_scope();
+		sym_table->push_generic_scope();
 
 		if (func->is_constructor) {
 			current_ctor = func;
@@ -80,6 +81,7 @@ void name_resolver::visit(std::shared_ptr<function_declaration> func) {
 		current_func = nullptr;
 		current_ctor = nullptr;
 		sym_table->pop_scope();
+		sym_table->pop_generic_scope();
 	}
 
 	resolve_type_names(func->return_type);
