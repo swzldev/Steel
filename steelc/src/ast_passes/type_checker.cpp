@@ -442,7 +442,7 @@ void type_checker::visit(std::shared_ptr<member_expression> expr) {
 	}
 
 	// instance access only allowed on variables
-	auto entity = expr->entity();
+	auto entity = expr->object->entity();
 	if (entity->kind() != ENTITY_VARIABLE) {
 		ERROR(ERR_MEMBER_ACCESS_NOT_ON_VARIABLE, expr->position);
 		return;
