@@ -99,8 +99,11 @@ public:
 		// generic types are used to represent generic parameter usages
 		// NOT types with generic arguments
 		// to check if a type is a generic type instantiation you should
-		// check that generic_args.size() > 0
+		// use is_generic_instance()
 		return primitive == DT_GENERIC;
+	}
+	inline bool is_generic_instance() const {
+		return !generic_args.empty();
 	}
 	inline bool is_function() const {
 		return primitive == DT_FUNCTION;
