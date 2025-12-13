@@ -118,7 +118,7 @@ std::shared_ptr<function_declaration> parser::parse_function_declaration(bool is
 	}
 	
 	std::vector<std::shared_ptr<generic_parameter>> generics;
-	if (ENABLE_GENERICS && !is_override && !is_constructor) { // TODO: make this a semantic check
+	if (ENABLE_GENERICS) {
 		generics = parse_generics();
 		if (generics.empty()) {
 			ERROR_TOKEN(ERR_ONE_GENERIC_REQUIRED, previous());
