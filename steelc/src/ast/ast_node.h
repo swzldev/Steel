@@ -21,11 +21,7 @@ public:
 
 	virtual void accept(ast_visitor& visitor) = 0;
 
-	// this doesnt need to be overridden at least for now so i dont
-	// have to make a clone method for every ast node
-	virtual ast_ptr clone() const override {
-		return nullptr;
-	}
+	virtual ast_ptr clone() const override { return nullptr; }
 
 	position position = { 0, 0 };
 

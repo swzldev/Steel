@@ -19,6 +19,7 @@ public:
 
 	ast_ptr clone() const override {
 		auto cloned = std::make_shared<literal>(primitive, value);
+		cloned->position = position;
 		return cloned;
 	}
 

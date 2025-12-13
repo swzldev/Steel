@@ -41,6 +41,7 @@ public:
 			member,
 			access_operator
 		);
+		cloned->position = position;
 		cloned->resolved_type = resolved_type;
 		cloned->resolved_entity = resolved_entity;
 		return cloned;

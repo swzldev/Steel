@@ -39,6 +39,7 @@ public:
 			std::dynamic_pointer_cast<expression>(condition->clone()),
 			body->clone()
 		);
+		cloned->position = position;
 		return cloned;
 	}
 

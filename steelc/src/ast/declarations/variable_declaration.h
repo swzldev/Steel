@@ -39,6 +39,7 @@ public:
 			type,
 			identifier
 		);
+		cloned->position = position;
 		if (initializer) {
 			cloned->initializer = std::dynamic_pointer_cast<expression>(initializer->clone());
 		}

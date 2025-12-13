@@ -26,6 +26,7 @@ public:
 
 	ast_ptr clone() const override { 
 		auto cloned = std::make_shared<generic_parameter>(identifier, type);
+		cloned->position = position;
 		cloned->param_index = param_index;
 		return cloned;
 	}

@@ -32,6 +32,7 @@ public:
 			std::dynamic_pointer_cast<expression>(base->clone()),
 			std::dynamic_pointer_cast<expression>(indexer->clone())
 		);
+		cloned->position = position;
 		return cloned;
 	}
 

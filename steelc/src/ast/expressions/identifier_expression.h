@@ -26,6 +26,7 @@ public:
 
 	ast_ptr clone() const override {
 		auto cloned = std::make_shared<identifier_expression>(identifier);
+		cloned->position = position;
 		cloned->resolved_entity = resolved_entity;
 		return cloned;
 	}

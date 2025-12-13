@@ -43,6 +43,7 @@ public:
 			identifier,
 			std::vector<std::shared_ptr<expression>>{}
 		);
+		cloned->position = position;
 		if (callee) {
 			cloned->callee = std::dynamic_pointer_cast<expression>(callee->clone());
 		}

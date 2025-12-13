@@ -25,6 +25,7 @@ public:
 		auto cloned = std::make_shared<address_of_expression>(
 			std::dynamic_pointer_cast<expression>(value->clone())
 		);
+		cloned->position = position;
 		return cloned;
 	}
 

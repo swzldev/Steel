@@ -29,6 +29,7 @@ public:
 
 	ast_ptr clone() const override {
 		auto cloned = std::make_shared<code_block>();
+		cloned->position = position;
 		cloned->is_body = is_body;
 		for (const auto& stmt : body) {
 			cloned->body.push_back(stmt->clone());

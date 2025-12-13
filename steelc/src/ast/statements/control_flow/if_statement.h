@@ -43,6 +43,7 @@ public:
 
 	ast_ptr clone() const override {
 		auto cloned = std::make_shared<if_statement>();
+		cloned->position = position;
 		if (condition) {
 			cloned->condition = std::dynamic_pointer_cast<expression>(condition->clone());
 		}

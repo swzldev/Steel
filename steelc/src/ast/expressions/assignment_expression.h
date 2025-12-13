@@ -26,6 +26,7 @@ public:
 			std::dynamic_pointer_cast<expression>(left->clone()),
 			std::dynamic_pointer_cast<expression>(right->clone())
 		);
+		cloned->position = position;
 		return cloned;
 	}
 
