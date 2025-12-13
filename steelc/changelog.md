@@ -9,6 +9,7 @@
 - Added a new build flag `--llvm-asm` which outputs the generated LLVM IR as assembly files (.ll) instead of bitcode files (.bc). Useful for debugging and inspecting the generated IR.
 - Fixed a bug where constructors dont have identifiers therefore the declaration had an invalid position.
 - Fixed a bug where column was incremented incorrectly in string/char literals causing incorrect error message positions.
+- Added basic class/struct codegen support, as well as field access, however it is still very limited and not fully functional yet.
 
 ## [0.5.0] - 10-12-2025
 - Added support for the '::' operator for static scope resolution.
