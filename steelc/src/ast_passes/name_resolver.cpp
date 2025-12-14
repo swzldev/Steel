@@ -198,7 +198,7 @@ void name_resolver::visit(std::shared_ptr<member_expression> expr) {
 				return;
 			}
 			else if (result.found()) {
-				expr->resolved_entity = result.first()->ref();
+				expr->entity_ref = result.first()->ref();
 			}
 			else {
 				ERROR(ERR_NO_MEMBER_WITH_NAME_MODULE, expr->position, mod->full_name(), expr->member.c_str());

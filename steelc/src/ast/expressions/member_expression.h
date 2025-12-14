@@ -18,7 +18,7 @@ public:
 	ENABLE_ACCEPT(member_expression)
 
 	member_expression(std::shared_ptr<expression> object, std::string member, token_type access_operator)
-		: object(object), member(member), access_operator(access_operator), resolved_type(nullptr) {
+		: object(object), member(member), access_operator(access_operator) {
 	}
 
 	std::string string(int indent) const override {
@@ -44,7 +44,7 @@ public:
 		);
 		cloned->position = position;
 		cloned->resolved_type = resolved_type;
-		cloned->resolved_entity = resolved_entity;
+		cloned->entity_ref = entity_ref;
 		return cloned;
 	}
 
@@ -58,12 +58,12 @@ public:
 		return false;
 	}
 
-	entity_ptr entity() const override {
-		return resolved_entity ? resolved_entity : entity::UNRESOLVED;
+	entity_ptr entity(const symbol_table& sym_table) const override {
+		return entity_ref.resolve(sym_table);
 	}
 
 	inline bool is_resolved() const {
-		return resolved_type != nullptr && resolved_entity != nullptr;
+		return resolved_type != nullptr; /* && entity_ref != nullptr; */
 	}
 
 	inline bool is_static_access() const {
@@ -77,6 +77,6 @@ public:
 	std::string member;
 	token_type access_operator;
 	type_ptr resolved_type;
-	entity_ref resolved_entity;
+	entity_ref entity_ref;
 	bool is_lvalue = true;
 };

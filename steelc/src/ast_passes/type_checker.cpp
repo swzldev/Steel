@@ -473,7 +473,7 @@ void type_checker::visit(std::shared_ptr<member_expression> expr) {
 			for (const auto& member : custom->declaration->fields) {
 				if (member->identifier == expr->member) {
 					expr->resolved_type = member->type;
-					expr->resolved_entity = variable_entity::make(member);
+					expr->entity_ref = variable_entity::make(member);
 					found = true;
 					break;
 				}
