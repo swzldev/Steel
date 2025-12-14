@@ -175,6 +175,7 @@ set(SOURCES
     "src/representations/entities/entities_fwd.h"
     "src/representations/entities/entity.cpp"
     "src/representations/entities/entity.h"
+    "src/representations/entities/entity_ref.h"
     "src/representations/entities/function_entity.cpp"
     "src/representations/entities/function_entity.h"
     "src/representations/entities/generic_param_entity.cpp"
