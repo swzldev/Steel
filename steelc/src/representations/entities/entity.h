@@ -41,7 +41,7 @@ public:
 
 protected:
 	entity(entity_kind kind)
-		: e_kind(kind) {
+		: e_kind(kind), id(-1) {
 	}
 
 private:
