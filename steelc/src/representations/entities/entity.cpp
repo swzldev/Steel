@@ -3,6 +3,7 @@
 #include <memory>
 
 #include <representations/entities/entities_fwd.h>
+#include <representations/entities/entity_ref.h>
 
 entity_ptr entity::UNRESOLVED = std::make_shared<entity>(ENTITY_UNRESOLVED);
 
@@ -22,4 +23,8 @@ std::string entity::kind_string() const {
 	case ENTITY_GENERIC_PARAM:
 		return "generic parameter";
     }
+}
+
+entity_ref entity::ref() const {
+	return entity_ref(id);
 }

@@ -10,6 +10,9 @@ public:
 	entity_ref()
 		: id(-1) {
 	}
+	explicit entity_ref(entity_id eid)
+		: id(eid) {
+	}
 
 	inline bool valid() const {
 		return id >= 0;

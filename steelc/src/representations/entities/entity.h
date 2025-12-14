@@ -30,6 +30,9 @@ public:
 	inline entity_kind kind() const { return e_kind; }
 	std::string kind_string() const;
 
+	// constructs an entity_ref with this entity's id
+	entity_ref ref() const;
+
 	virtual std::string name() const { return "<unknown entity>"; }
 	virtual std::string full_name() const { return "<unknown entity>"; }
 
