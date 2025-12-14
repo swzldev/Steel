@@ -10,6 +10,7 @@
 #include <representations/types/data_type.h>
 #include <representations/entities/entities_fwd.h>
 #include <representations/entities/entity.h>
+#include <representations/entities/entity_ref.h>
 #include <representations/entities/variable_entity.h>
 
 class member_expression : public expression, public std::enable_shared_from_this<member_expression> {
@@ -48,10 +49,6 @@ public:
 	}
 
 	virtual type_ptr type() const override {
-		// this should be deprecated soon, should fully switch to using the entity
-		if (!resolved_type && resolved_entity && resolved_entity->kind() == ENTITY_VARIABLE) {
-			return resolved_entity->as_variable()->var_type();
-		}
 		return resolved_type ? resolved_type : data_type::UNKNOWN;
 	}
 	bool is_rvalue() const override {
@@ -80,6 +77,6 @@ public:
 	std::string member;
 	token_type access_operator;
 	type_ptr resolved_type;
-	entity_ptr resolved_entity;
+	entity_ref resolved_entity;
 	bool is_lvalue = true;
 };
