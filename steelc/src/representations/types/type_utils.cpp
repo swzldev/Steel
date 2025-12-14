@@ -13,7 +13,7 @@ std::vector<std::shared_ptr<function_declaration>> get_method_candidates(std::sh
 				candidates.push_back(method);
 			}
 		}
-		type = type->base_class;
+		type = type->base_type;
 	}
 	return candidates;
 }
@@ -72,7 +72,7 @@ bool derives_from(type_ptr type, type_ptr base) {
 		if (custom->type() == base) {
 			return true;
 		}
-		custom = custom->base_class;
+		custom = custom->base_type;
 	} while (custom != nullptr);
 
 	return false;

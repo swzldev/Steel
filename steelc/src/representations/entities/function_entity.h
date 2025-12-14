@@ -10,7 +10,7 @@
 
 class function_entity : public entity, public std::enable_shared_from_this<function_entity> {
 public:
-	static std::shared_ptr<function_entity> make(std::shared_ptr<function_declaration> declaration);
+	static std::shared_ptr<function_entity> get(std::shared_ptr<function_declaration> declaration);
 
 	std::string name() const override;
 	std::string full_name() const override;

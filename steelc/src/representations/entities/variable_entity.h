@@ -9,7 +9,7 @@
 
 class variable_entity : public entity, public std::enable_shared_from_this<variable_entity> {
 public:
-	static std::shared_ptr<variable_entity> make(std::shared_ptr<variable_declaration> declaration);
+	static std::shared_ptr<variable_entity> get(std::shared_ptr<variable_declaration> declaration);
 
 	std::string name() const override;
 	std::string full_name() const override;

@@ -170,7 +170,7 @@ void type_checker::visit(std::shared_ptr<type_declaration> decl) {
 						ERROR(ERR_BASE_CLASS_NOT_FIRST, decl->position, base->name());
 						return;
 					}
-					decl->base_class = custom->declaration;
+					decl->base_type = custom->declaration;
 					derives_class = true;
 				}
 				else if (custom->declaration->type_kind == CT_INTERFACE) {
@@ -193,9 +193,9 @@ void type_checker::visit(std::shared_ptr<type_declaration> decl) {
 				ERROR(ERR_CIRCULAR_INHERITANCE, decl->position, decl->name().c_str(), chain.c_str());
 				return;
 			}
-			if (current->base_class) chain += " -> ";
+			if (current->base_type) chain += " -> ";
 			visited.insert(current->identifier);
-			current = current->base_class;
+			current = current->base_type;
 		}
 	}
 
@@ -468,18 +468,16 @@ void type_checker::visit(std::shared_ptr<member_expression> expr) {
 
 	bool found = false;
 	if (auto custom = type->as_custom()) {
-		std::shared_ptr<const type_declaration> type_decl = custom->declaration;
+		auto entity = type_entity::get(custom->declaration);
 		do {
-			for (const auto& member : custom->declaration->fields) {
-				if (member->identifier == expr->member) {
-					expr->resolved_type = member->type;
-					expr->entity_ref = variable_entity::make(member);
-					found = true;
-					break;
-				}
+			auto var = entity->symbols.get_field(expr->member);
+			if (var) {
+				expr->entity_ref = var->ref();
+				found = true;
+				break;
 			}
-			type_decl = type_decl->base_class;
-		} while (type_decl != nullptr);
+			entity = entity->base_type();
+		} while (entity != nullptr);
 	}
 	else if (auto enm = type->as_enum()) {
 		for (const auto& option : enm->declaration->options) {
@@ -843,7 +841,7 @@ bool type_checker::is_valid_upcast(type_ptr from, type_ptr to, position pos) {
 		for (const auto& base : current->base_types) {
 			inherited.insert(base->name());
 		}
-		current = current->base_class;
+		current = current->base_type;
 	}
 	return inherited.count(to_base->name()) > 0;
 }

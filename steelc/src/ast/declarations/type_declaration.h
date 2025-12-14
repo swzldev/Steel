@@ -83,7 +83,7 @@ public:
 		auto cloned = std::make_shared<type_declaration>(type_kind, identifier);
 		cloned->position = position;
 		cloned->base_types = base_types;
-		cloned->base_class = base_class;
+		cloned->base_type = base_type;
 		for (const auto& gen : generics) {
 			cloned->generics.push_back(std::dynamic_pointer_cast<generic_parameter>(gen->clone()));
 		}
@@ -105,17 +105,10 @@ public:
 		return cloned;
 	}
 
-	std::shared_ptr<type_entity> entity() {
-		if (!cached_entity) {
-			cached_entity = type_entity::make(type());
-		}
-		return cached_entity;
-	}
-
 	custom_type_type type_kind;
 	std::string identifier;
 	std::vector<type_ptr> base_types;
-	std::shared_ptr<type_declaration> base_class;
+	std::shared_ptr<type_declaration> base_type;
 	std::vector<std::shared_ptr<generic_parameter>> generics;
 	std::vector<std::shared_ptr<function_declaration>> constructors;
 	std::vector<std::shared_ptr<variable_declaration>> fields;
@@ -123,7 +116,4 @@ public:
 	std::vector<std::shared_ptr<operator_declaration>> operators;
 	bool is_generic = false;
 	bool is_generic_instance = false;
-
-private:
-	std::shared_ptr<type_entity> cached_entity;
 };

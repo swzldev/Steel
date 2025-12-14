@@ -11,7 +11,7 @@ class symbol_table;
 
 class module_entity : public entity, public std::enable_shared_from_this<module_entity> {
 public:
-	static std::shared_ptr<module_entity> make(std::shared_ptr<module_info> mod_info, std::shared_ptr<module_entity> owner = nullptr) {
+	static std::shared_ptr<module_entity> get(std::shared_ptr<module_info> mod_info, std::shared_ptr<module_entity> owner = nullptr) {
 		return std::shared_ptr<module_entity>(new module_entity(mod_info, owner));
 	}
 

@@ -8,7 +8,7 @@
 
 class generic_param_entity : public entity, public std::enable_shared_from_this<generic_param_entity> {
 public:
-	static std::shared_ptr<generic_param_entity> make(std::shared_ptr<generic_parameter> gp);
+	static std::shared_ptr<generic_param_entity> get(std::shared_ptr<generic_parameter> gp);
 
 	std::string name() const override;
 	std::string full_name() const override;

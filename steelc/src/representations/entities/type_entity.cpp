@@ -7,7 +7,7 @@
 #include <representations/types/data_type.h>
 #include <ast/declarations/type_declaration.h>
 
-std::shared_ptr<type_entity> type_entity::make(std::shared_ptr<type_declaration> declaration) {
+std::shared_ptr<type_entity> type_entity::get(std::shared_ptr<type_declaration> declaration) {
 	static std::unordered_map<std::shared_ptr<type_declaration>, std::shared_ptr<type_entity>> cache;
 	auto it = cache.find(declaration);
 	if (it != cache.end()) {
@@ -27,4 +27,8 @@ std::string type_entity::full_name() const {
 
 std::shared_ptr<type_entity> type_entity::as_type() {
 	return shared_from_this();
+}
+
+std::shared_ptr<type_entity> type_entity::base_type() const {
+	return declaration->base_type ? type_entity::get(declaration->base_type) : nullptr;
 }

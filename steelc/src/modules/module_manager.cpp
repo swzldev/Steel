@@ -9,7 +9,7 @@
 
 module_manager::module_manager() {
 	auto info = create_info("<global module>");
-	global_module = module_entity::make(info);
+	global_module = module_entity::get(info);
 	// dont register as an actual module
 	// we dont want to be able to look it up by name
 }
@@ -31,7 +31,7 @@ std::shared_ptr<module_entity> module_manager::add_module(const std::string& nam
 
 	// create module
 	auto info = create_info(name);
-	auto module = module_entity::make(info, parent);
+	auto module = module_entity::get(info, parent);
 
 	// register module
 	modules[full_name] = module;

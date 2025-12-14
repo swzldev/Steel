@@ -82,19 +82,19 @@ add_symbol_result symbol_table::add_symbol(entity_ptr entity, std::shared_ptr<ty
 	return add_symbol_result(err);
 }
 add_symbol_result symbol_table::add_symbol(std::shared_ptr<variable_declaration> var, std::shared_ptr<type_entity> owner) {
-	return add_symbol(variable_entity::make(var), owner);
+	return add_symbol(variable_entity::get(var), owner);
 }
 add_symbol_result symbol_table::add_symbol(std::shared_ptr<function_declaration> func, std::shared_ptr<type_entity> owner) {
-	return add_symbol(function_entity::make(func), owner);
+	return add_symbol(function_entity::get(func), owner);
 }
 add_symbol_result symbol_table::add_symbol(std::shared_ptr<type_declaration> type) {
-	return add_symbol(type_entity::make(type->type()));
+	return add_symbol(type_entity::get(type->type()));
 }
 add_symbol_result symbol_table::add_symbol(std::shared_ptr<enum_declaration> type_enum) {
-	return add_symbol(type_entity::make(type_enum->type()));
+	return add_symbol(type_entity::get(type_enum->type()));
 }
 add_symbol_result symbol_table::add_symbol(std::shared_ptr<generic_parameter> param) {
-	return add_symbol(generic_param_entity::make(param));
+	return add_symbol(generic_param_entity::get(param));
 }
 add_symbol_result symbol_table::add_symbol(std::shared_ptr<module_declaration> module) {
 	return add_symbol(module->entity);

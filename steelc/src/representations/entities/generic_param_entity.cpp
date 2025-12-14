@@ -6,7 +6,7 @@
 
 #include <ast/generics/generic_parameter.h>
 
-std::shared_ptr<generic_param_entity> generic_param_entity::make(std::shared_ptr<generic_parameter> gp) {
+std::shared_ptr<generic_param_entity> generic_param_entity::get(std::shared_ptr<generic_parameter> gp) {
     static std::unordered_map<std::shared_ptr<generic_parameter>, std::shared_ptr<generic_param_entity>> cache;
     auto it = cache.find(gp);
     if (it != cache.end()) {

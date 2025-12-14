@@ -6,7 +6,7 @@
 
 #include <ast/declarations/function_declaration.h>
 
-std::shared_ptr<function_entity> function_entity::make(std::shared_ptr<function_declaration> declaration) {
+std::shared_ptr<function_entity> function_entity::get(std::shared_ptr<function_declaration> declaration) {
 	static std::unordered_map<std::shared_ptr<function_declaration>, std::shared_ptr<function_entity>> cache;
 	auto it = cache.find(declaration);
 	if (it != cache.end()) {

@@ -10,12 +10,15 @@
 
 class type_entity : public entity, public std::enable_shared_from_this<type_entity> {
 public:
-	static std::shared_ptr<type_entity> make(std::shared_ptr<type_declaration> declaration);
+	static std::shared_ptr<type_entity> get(std::shared_ptr<type_declaration> declaration);
 
 	std::string name() const override;
 	std::string full_name() const override;
 
 	std::shared_ptr<type_entity> as_type() override;
+
+	// shorthands
+	std::shared_ptr<type_entity> base_type() const;
 
 	std::shared_ptr<type_declaration> declaration;
 	type_symbols symbols;
