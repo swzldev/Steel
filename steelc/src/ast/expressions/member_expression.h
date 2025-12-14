@@ -61,9 +61,12 @@ public:
 	entity_ptr entity(const symbol_table& sym_table) override {
 		return entity_ref.resolve(sym_table);
 	}
+	entity_ptr entity() override {
+		return entity_ref.get();
+	}
 
 	inline bool is_resolved() const {
-		return resolved_type != nullptr; /* && entity_ref != nullptr; */
+		return resolved_type != nullptr && entity_ref.get() != entity::UNRESOLVED;
 	}
 
 	inline bool is_static_access() const {

@@ -29,7 +29,7 @@ public:
 	// may be UNRESOLVED if it has not been resolved yet
 	// avoids needing to pass current symbol table
 	// but may be stale
-	inline entity_ptr get() {
+	inline entity_ptr get() const {
 		return last_entity;
 	}
 	entity_ptr resolve(const symbol_table& sym_table);

@@ -49,6 +49,9 @@ public:
 	entity_ptr entity(const symbol_table& sym_table) override {
 		return entity_ref.resolve(sym_table);
 	}
+	entity_ptr entity() override {
+		return entity_ref.get();
+	}
 
 	std::string identifier;
 	entity_ref entity_ref;

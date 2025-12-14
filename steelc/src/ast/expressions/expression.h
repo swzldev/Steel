@@ -26,4 +26,7 @@ public:
 	// the entity this expression refers to (variable, function, type, etc)
 	// this is dynamically resolved using the provided symbol table
 	virtual entity_ptr entity(const symbol_table& sym_table) { return nullptr; }
+	// the entity this expression refers to (variable, function, type, etc)
+	// non-dynamically resolved version (uses the cached entity if available)
+	virtual entity_ptr entity() { return nullptr; }
 };
