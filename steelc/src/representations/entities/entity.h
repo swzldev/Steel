@@ -20,9 +20,6 @@ enum entity_kind {
 
 class entity {
 public:
-	entity(entity_kind kind)
-		: e_kind(kind) {
-	}
 	virtual ~entity() = default;
 
 	// acts seperate from a nullptr entity for unresolved references
@@ -41,6 +38,11 @@ public:
 	virtual std::shared_ptr<type_entity> as_type() { return nullptr; }
 	virtual std::shared_ptr<module_entity> as_module() { return nullptr; }
 	virtual std::shared_ptr<generic_param_entity> as_generic_param() { return nullptr; }
+
+protected:
+	entity(entity_kind kind)
+		: e_kind(kind) {
+	}
 
 private:
 	entity_kind e_kind;
