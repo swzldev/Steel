@@ -88,10 +88,10 @@ add_symbol_result symbol_table::add_symbol(std::shared_ptr<function_declaration>
 	return add_symbol(function_entity::get(func), owner);
 }
 add_symbol_result symbol_table::add_symbol(std::shared_ptr<type_declaration> type) {
-	return add_symbol(type_entity::get(type->type()));
+	return add_symbol(type_entity::get(type));
 }
 add_symbol_result symbol_table::add_symbol(std::shared_ptr<enum_declaration> type_enum) {
-	return add_symbol(type_entity::get(type_enum->type()));
+	return add_symbol(type_entity::get(type_enum));
 }
 add_symbol_result symbol_table::add_symbol(std::shared_ptr<generic_parameter> param) {
 	return add_symbol(generic_param_entity::get(param));

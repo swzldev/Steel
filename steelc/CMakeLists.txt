@@ -177,6 +177,8 @@ set(SOURCES
     "src/representations/entities/entity.h"
     "src/representations/entities/entity_ref.cpp"
     "src/representations/entities/entity_ref.h"
+    "src/representations/entities/enum_entity.cpp"
+    "src/representations/entities/enum_entity.h"
     "src/representations/entities/function_entity.cpp"
     "src/representations/entities/function_entity.h"
     "src/representations/entities/generic_param_entity.cpp"
