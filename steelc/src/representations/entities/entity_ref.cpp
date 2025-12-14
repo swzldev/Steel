@@ -3,9 +3,10 @@
 #include <representations/entities/entities_fwd.h>
 #include <representations/entities/entity.h>
 
-entity_ptr entity_ref::resolve(const symbol_table& sym_table) const {
+entity_ptr entity_ref::resolve(const symbol_table& sym_table) {
 	if (!valid()) {
 		return entity::UNRESOLVED;
 	}
-	return sym_table.get_by_id(id);
+	last_entity = sym_table.get_by_id(id);
+	return last_entity;
 }
