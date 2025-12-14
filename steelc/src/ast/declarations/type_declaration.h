@@ -101,11 +101,11 @@ public:
 		}
 		cloned->is_generic = is_generic;
 		cloned->is_generic_instance = is_generic_instance;
+		// do not clone cached entity
 		return cloned;
 	}
 
 	std::shared_ptr<type_entity> entity() {
-		static std::shared_ptr<type_entity> cached_entity = nullptr;
 		if (!cached_entity) {
 			cached_entity = type_entity::make(type());
 		}
@@ -123,4 +123,7 @@ public:
 	std::vector<std::shared_ptr<operator_declaration>> operators;
 	bool is_generic = false;
 	bool is_generic_instance = false;
+
+private:
+	std::shared_ptr<type_entity> cached_entity;
 };
