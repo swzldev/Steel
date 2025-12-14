@@ -24,5 +24,5 @@ public:
 	virtual bool is_constant() const = 0;
 
 	// the entity this expression refers to (variable, function, type, etc)
-	virtual entity_ptr entity(const symbol_table& sym_table) const { return nullptr; }
+	virtual entity_ptr entity(const symbol_table& sym_table) { return nullptr; }
 };

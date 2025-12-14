@@ -46,7 +46,7 @@ public:
 		return false;
 	}
 
-	entity_ptr entity(const symbol_table& sym_table) const override {
+	entity_ptr entity(const symbol_table& sym_table) override {
 		return entity_ref.resolve(sym_table);
 	}
 
