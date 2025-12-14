@@ -11,3 +11,4 @@ class module_entity;
 class generic_param_entity;
 
 using entity_ptr = std::shared_ptr<entity>;
+using entity_id = long long; // long long to allow -1 for invalid id
