@@ -62,9 +62,9 @@ void declaration_collector::visit(std::shared_ptr<function_declaration> func) {
 	//if (true) {}
 
 	// add to symbol table
-	symbol_error err = sym_table->add_symbol(func, current_type ? current_type->entity() : nullptr);
-	if (err != SYMBOL_OK) {
-		switch (err) {
+	add_symbol_result res = sym_table->add_symbol(func, current_type ? current_type->entity() : nullptr);
+	if (res.error != SYMBOL_OK) {
+		switch (res.error) {
 		case SYMBOL_CONFLICTS_WITH_FUNCTION: // in this case it means exact same signature
 			ERROR(ERR_FUNCTION_ALREADY_DEFINED, func->position, func->identifier.c_str());
 			break;
@@ -114,11 +114,11 @@ void declaration_collector::visit(std::shared_ptr<variable_declaration> var) {
 	}
 
 	if (!current_function && !current_constructor && !current_type) {
-		symbol_error err = sym_table->add_symbol(var);
+		add_symbol_result res = sym_table->add_symbol(var);
 		// only check for module level errors
 		// as this is a module-level variable
-		if (err != SYMBOL_OK) {
-			switch (err) {
+		if (res.error != SYMBOL_OK) {
+			switch (res.error) {
 				case SYMBOL_CONFLICTS_WITH_VARIABLE:
 					ERROR(ERR_VARIABLE_ALREADY_DECLARED_SCOPE, var->position, var->identifier.c_str());
 					break;
@@ -147,9 +147,9 @@ void declaration_collector::visit(std::shared_ptr<variable_declaration> var) {
 }
 void declaration_collector::visit(std::shared_ptr<type_declaration> decl) {
 	// check if type is already defined
-	symbol_error err = sym_table->add_symbol(decl);
-	if (err != SYMBOL_OK) {
-		switch (err) {
+	add_symbol_result res = sym_table->add_symbol(decl);
+	if (res.error != SYMBOL_OK) {
+		switch (res.error) {
 			case SYMBOL_CONFLICTS_WITH_TYPE:
 				ERROR(ERR_TYPE_ALREADY_DEFINED, decl->position, decl->name().c_str());
 				break;
@@ -272,9 +272,9 @@ void declaration_collector::visit(std::shared_ptr<enum_declaration> enm) {
 	}
 
 	// add to symbol table
-	symbol_error err = sym_table->add_symbol(enm);
-	if (err != SYMBOL_OK) {
-		switch (err) {
+	add_symbol_result res = sym_table->add_symbol(enm);
+	if (res.error != SYMBOL_OK) {
+		switch (res.error) {
 		case SYMBOL_CONFLICTS_WITH_ENUM:
 			ERROR(ERR_ENUM_ALREADY_DEFINED, enm->position, enm->identifier);
 			break;
