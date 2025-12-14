@@ -3,6 +3,8 @@
 #include <memory>
 
 // entity forward declarations
+class entity_ref;
+
 class entity;
 class variable_entity;
 class function_entity;
