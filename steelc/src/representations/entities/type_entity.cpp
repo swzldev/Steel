@@ -5,18 +5,24 @@
 
 #include <representations/types/types_fwd.h>
 #include <representations/types/data_type.h>
+#include <ast/declarations/type_declaration.h>
 
-std::shared_ptr<type_entity> type_entity::make(type_ptr type) {
-	return std::shared_ptr<type_entity>(new type_entity(type));
+std::shared_ptr<type_entity> type_entity::make(std::shared_ptr<type_declaration> declaration) {
+	static std::unordered_map<std::shared_ptr<type_declaration>, std::shared_ptr<type_entity>> cache;
+	auto it = cache.find(declaration);
+	if (it != cache.end()) {
+		return it->second;
+	}
+	return std::shared_ptr<type_entity>(new type_entity(declaration));
 }
 
 std::string type_entity::name() const {
-	return type->name();
+	return declaration->identifier;
 }
 std::string type_entity::full_name() const {
 	// may change in the future when scoped
 	// types are implemented e.g. module::type
-	return type->name();
+	return declaration->identifier;
 }
 
 std::shared_ptr<type_entity> type_entity::as_type() {
