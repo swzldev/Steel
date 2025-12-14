@@ -46,5 +46,8 @@ private:
 	entity_kind e_kind;
 	entity_id id;
 
+	// may change this in the future
+	// if more classes need to set the id
+	// but thats fairly unlikely
 	friend class symbol_table;
 };
