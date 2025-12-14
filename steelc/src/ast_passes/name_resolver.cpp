@@ -163,7 +163,7 @@ void name_resolver::visit(std::shared_ptr<identifier_expression> expr) {
 		return;
 	}
 	else if (entity.found()) {
-		expr->resolved_entity = entity.first();
+		expr->resolved_entity = entity.first()->ref();
 		return;
 	}
 
@@ -198,7 +198,7 @@ void name_resolver::visit(std::shared_ptr<member_expression> expr) {
 				return;
 			}
 			else if (result.found()) {
-				expr->resolved_entity = result.first();
+				expr->resolved_entity = result.first()->ref();
 			}
 			else {
 				ERROR(ERR_NO_MEMBER_WITH_NAME_MODULE, expr->position, mod->full_name(), expr->member.c_str());
@@ -220,7 +220,7 @@ void name_resolver::visit(std::shared_ptr<member_expression> expr) {
 				}
 
 				if (false) {
-					expr->resolved_entity = variable_entity::make(field);
+					//expr->resolved_entity = variable_entity::make(field);
 				}
 				else {
 					ERROR(ERR_STATIC_ACCESS_NONSTATIC_MEMBER, expr->position, expr->member.c_str());
