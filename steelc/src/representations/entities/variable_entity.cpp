@@ -2,10 +2,16 @@
 
 #include <memory>
 #include <string>
+#include <unordered_map>
 
 #include <ast/declarations/variable_declaration.h>
 
 std::shared_ptr<variable_entity> variable_entity::make(std::shared_ptr<variable_declaration> declaration) {
+	static std::unordered_map<std::shared_ptr<variable_declaration>, std::shared_ptr<variable_entity>> cache;
+	auto it = cache.find(declaration);
+	if (it != cache.end()) {
+		return it->second;
+	}
 	return std::shared_ptr<variable_entity>(new variable_entity(declaration));
 }
 

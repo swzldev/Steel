@@ -1,8 +1,17 @@
 #include "function_entity.h"
 
+#include <memory>
+#include <string>
+#include <unordered_map>
+
 #include <ast/declarations/function_declaration.h>
 
 std::shared_ptr<function_entity> function_entity::make(std::shared_ptr<function_declaration> declaration) {
+	static std::unordered_map<std::shared_ptr<function_declaration>, std::shared_ptr<function_entity>> cache;
+	auto it = cache.find(declaration);
+	if (it != cache.end()) {
+		return it->second;
+	}
 	return std::shared_ptr<function_entity>(new function_entity(declaration));
 }
 

@@ -2,10 +2,16 @@
 
 #include <string>
 #include <memory>
+#include <unordered_map>
 
 #include <ast/generics/generic_parameter.h>
 
 std::shared_ptr<generic_param_entity> generic_param_entity::make(std::shared_ptr<generic_parameter> gp) {
+    static std::unordered_map<std::shared_ptr<generic_parameter>, std::shared_ptr<generic_param_entity>> cache;
+    auto it = cache.find(gp);
+    if (it != cache.end()) {
+        return it->second;
+    }
     return std::shared_ptr<generic_param_entity>(new generic_param_entity(gp));
 }
 
