@@ -180,7 +180,7 @@ void type_resolver::resolve_custom(type_ptr& custom) {
 	// custom type or enum
 	case ENTITY_TYPE: {
 		auto ent = t.first()->as_type();
-		custom = ent->type;
+		custom = ent->declaration->type();
 		return;
 	}
 	// non-type (e.g. module/function)
