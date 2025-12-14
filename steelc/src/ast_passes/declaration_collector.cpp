@@ -25,6 +25,7 @@ void declaration_collector::visit(std::shared_ptr<function_declaration> func) {
 		ERROR(ERR_OVERRIDE_CANT_BE_GENERIC, func->position);
 	}
 
+	// TODO: this should be a type checker variable check
 	// void parameters are not allowed in functions & constructors
 	for (const auto& param : func->parameters) {
 		if (param->type->is_primitive() && param->type->primitive == DT_VOID) {
