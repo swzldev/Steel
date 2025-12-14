@@ -8,7 +8,9 @@
 #include <representations/types/data_type.h>
 #include <representations/entities/entities_fwd.h>
 #include <representations/entities/entity.h>
+#include <representations/entities/entity_ref.h>
 #include <representations/entities/variable_entity.h>
+#include <symbolics/symbol_table.h>
 
 struct module_info;
 
@@ -17,7 +19,7 @@ public:
 	ENABLE_ACCEPT(identifier_expression)
 
 	identifier_expression(std::string identifier)
-		: identifier(identifier), resolved_entity(nullptr) {
+		: identifier(identifier), entity_ref(nullptr) {
 	}
 
 	std::string string(int indent) const override {
@@ -27,7 +29,7 @@ public:
 	ast_ptr clone() const override {
 		auto cloned = std::make_shared<identifier_expression>(identifier);
 		cloned->position = position;
-		cloned->resolved_entity = resolved_entity;
+		cloned->entity_ref = entity_ref;
 		return cloned;
 	}
 
@@ -35,18 +37,19 @@ public:
 		return data_type::UNKNOWN;
 	}
 	bool is_rvalue() const override {
-		// only modifiable if its a variable
-		return resolved_entity && resolved_entity->kind() != ENTITY_VARIABLE;
+		// technically yes if variable, but we dont have that
+		// kind of context here, maybe we will change this later
+		return false;
 	}
 	bool is_constant() const override {
 		// TODO: we could allow for CONSTANT variables here
 		return false;
 	}
 
-	entity_ptr entity() const override {
-		return resolved_entity ? resolved_entity : entity::UNRESOLVED;
+	entity_ptr entity(const symbol_table& sym_table) const override {
+		return entity_ref.resolve(sym_table);
 	}
 
 	std::string identifier;
-	entity_ref resolved_entity;
+	entity_ref entity_ref;
 };

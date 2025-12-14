@@ -163,7 +163,7 @@ void name_resolver::visit(std::shared_ptr<identifier_expression> expr) {
 		return;
 	}
 	else if (entity.found()) {
-		expr->resolved_entity = entity.first()->ref();
+		expr->entity_ref = entity.first()->ref();
 		return;
 	}
 
@@ -220,7 +220,7 @@ void name_resolver::visit(std::shared_ptr<member_expression> expr) {
 				}
 
 				if (false) {
-					//expr->resolved_entity = variable_entity::make(field);
+					//expr->entity_ref = variable_entity::make(field);
 				}
 				else {
 					ERROR(ERR_STATIC_ACCESS_NONSTATIC_MEMBER, expr->position, expr->member.c_str());
