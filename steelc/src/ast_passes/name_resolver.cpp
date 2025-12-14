@@ -35,9 +35,9 @@ void name_resolver::visit(std::shared_ptr<function_declaration> func) {
 
 		// add generics to the current scope
 		for (const auto& generic : func->generics) {
-			symbol_error err = sym_table->add_symbol(generic);
-			if (err != SYMBOL_OK) {
-				switch (err) {
+			add_symbol_result res = sym_table->add_symbol(generic);
+			if (res.error != SYMBOL_OK) {
+				switch (res.error) {
 				case SYMBOL_CONFLICTS_WITH_GENERIC:
 					ERROR(ERR_DUPLICATE_GENERIC, func->position, generic->identifier.c_str());
 					continue;
@@ -54,9 +54,9 @@ void name_resolver::visit(std::shared_ptr<function_declaration> func) {
 
 		// add parameters to the current scope
 		for (const auto& param : func->parameters) {
-			symbol_error err = sym_table->add_symbol(param);
-			if (err != SYMBOL_OK) {
-				switch (err) {
+			add_symbol_result res = sym_table->add_symbol(param);
+			if (res.error != SYMBOL_OK) {
+				switch (res.error) {
 				case SYMBOL_CONFLICTS_WITH_GENERIC:
 					ERROR(ERR_VARIABLE_SHADOWS_GENERIC, func->position, param->identifier.c_str(), param->identifier.c_str());
 					continue;
@@ -93,12 +93,12 @@ void name_resolver::visit(std::shared_ptr<variable_declaration> var) {
 	// only check local variables here - globals are already handled
 	// in the declaration collector pass
 	if (!sym_table->in_global_scope()) {
-		symbol_error err = sym_table->add_symbol(var, current_type_entity());
+		add_symbol_result res = sym_table->add_symbol(var, current_type_entity());
 		// only check for scoped errors
 		// module level errors wont occur here
 		// as were in a local scope
-		if (err != SYMBOL_OK) {
-			switch (err) {
+		if (res.error != SYMBOL_OK) {
+			switch (res.error) {
 			case SYMBOL_CONFLICTS_WITH_VARIABLE:
 				ERROR(ERR_VARIABLE_ALREADY_DECLARED_SCOPE, var->position, var->identifier.c_str());
 				break;
@@ -175,7 +175,7 @@ void name_resolver::visit(std::shared_ptr<member_expression> expr) {
 	expr->object->accept(*this);
 
 	if (expr->is_static_access()) {
-		auto entity = expr->object->entity();
+		auto entity = expr->object->entity(*sym_table);
 		if (!entity) {
 			ERROR(ERR_STATIC_ACCESS_INVALID, expr->position, entity->kind_string().c_str(), entity->name().c_str());
 			return;
@@ -208,13 +208,9 @@ void name_resolver::visit(std::shared_ptr<member_expression> expr) {
 		// type
 		else if (entity->kind() == ENTITY_TYPE) {
 			// lookup static member
-			auto custom = entity->as_type()->type->as_custom();
-			if (!custom) {
-				ERROR(ERR_MEMBER_ACCESS_ON_NONCOMPOSITE, expr->position, entity->name().c_str());
-				return;
-			}
+			auto& custom = entity->as_type()->declaration;
 
-			for (const auto& field : custom->declaration->fields) {
+			for (const auto& field : custom->fields) {
 				if (field->identifier != expr->member) {
 					continue;
 				}
@@ -248,7 +244,7 @@ void name_resolver::visit(std::shared_ptr<function_call> func_call) {
 		func_call->scope->accept(*this);
 
 		// use entity instead of type for static access
-		auto entity = func_call->scope->entity();
+		auto entity = func_call->scope->entity(*sym_table);
 
 		// ast node doesnt refer to an entity
 		if (!entity) {
@@ -274,11 +270,7 @@ void name_resolver::visit(std::shared_ptr<function_call> func_call) {
 		// type::function()
 		case ENTITY_TYPE: {
 			// lookup static method
-			auto custom = entity->as_type()->type->as_custom();
-			if (!custom) {
-				ERROR(ERR_METHOD_ACCESS_ON_NONCOMPOSITE, func_call->position, entity->name().c_str());
-				return;
-			}
+			auto& custom = entity->as_type()->declaration;
 
 			// TODO:
 			// - gather candidates
@@ -341,7 +333,7 @@ void name_resolver::visit(std::shared_ptr<function_call> func_call) {
 			// DONT RESOLVE CANDIDATES YET - GENERIC CONSTRUCTORS HAVNT BEEN INSTANTIATED
 			// we can still set the constructor type with the generic definition for later use
 			func_call->is_constructor = true;
-			func_call->ctor_type = type.first()->as_type()->type->as_custom()->declaration;
+			func_call->ctor_type = type.first()->as_type()->declaration;
 			return;
 		}
 		

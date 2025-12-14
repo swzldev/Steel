@@ -24,5 +24,6 @@ public:
 	virtual bool is_constant() const = 0;
 
 	// the entity this expression refers to (variable, function, type, etc)
+	// this is dynamically resolved using the provided symbol table
 	virtual entity_ptr entity(const symbol_table& sym_table) { return nullptr; }
 };
