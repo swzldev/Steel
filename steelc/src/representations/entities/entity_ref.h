@@ -11,7 +11,14 @@ public:
 		: id(-1) {
 	}
 
-	entity_ptr get(const std::shared_ptr<symbol_table>& sym_table) const;
+	inline bool valid() const {
+		return id >= 0;
+	}
+	inline entity_id get_id() const {
+		return id;
+	}
+
+	entity_ptr resolve(const symbol_table& sym_table) const;
 
 private:
 	entity_id id;
