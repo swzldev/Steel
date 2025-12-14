@@ -120,13 +120,15 @@ public:
 
 private:
 	static entity_id next_entity_id;
-	std::unordered_map<entity_id, entity_ptr> entities;
+	std::unordered_map<entity_id, entity_ptr> id_to_entities;
 
 	std::vector<std::map<std::string, std::shared_ptr<variable_entity>>> variable_scopes;
 	std::vector<std::map<std::string, std::shared_ptr<generic_param_entity>>> generic_scopes;
 	std::unordered_map<std::string, std::vector<std::shared_ptr<function_entity>>> functions;
 	std::unordered_map<std::string, std::shared_ptr<type_entity>> types; // includes enum types
 	std::unordered_map<std::string, std::shared_ptr<module_entity>> modules;
+
+	void register_entity(entity_ptr entity, entity_id id);
 
 	lookup_result get_variable(const std::string& name) const;
 	lookup_result get_functions(const std::string& name) const;
