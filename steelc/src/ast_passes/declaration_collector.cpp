@@ -63,7 +63,7 @@ void declaration_collector::visit(std::shared_ptr<function_declaration> func) {
 	//if (true) {}
 
 	// add to symbol table
-	add_symbol_result res = sym_table->add_symbol(func, current_type ? current_type->entity() : nullptr);
+	add_symbol_result res = sym_table->add_symbol(func, current_type ? type_entity::get(current_type) : nullptr);
 	if (res.error != SYMBOL_OK) {
 		switch (res.error) {
 		case SYMBOL_CONFLICTS_WITH_FUNCTION: // in this case it means exact same signature

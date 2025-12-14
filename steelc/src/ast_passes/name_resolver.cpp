@@ -419,7 +419,7 @@ void name_resolver::visit(std::shared_ptr<while_loop> while_loop) {
 
 std::shared_ptr<type_entity> name_resolver::current_type_entity() const {
 	if (current_type) {
-		return current_type->entity();
+		return type_entity::get(current_type);
 	}
 	return nullptr;
 }
