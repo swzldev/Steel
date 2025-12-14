@@ -14,6 +14,20 @@
 
 struct module_info;
 
+struct add_symbol_result {
+	// defaults entityid to -1 (invalid)
+	add_symbol_result(symbol_error err)
+		: error(err), entityid(-1) {
+	}
+	// defaults error to SYMBOL_OK
+	add_symbol_result(entity_id id)
+		: error(SYMBOL_OK), entityid(id) {
+	}
+
+	symbol_error error;
+	entity_id entityid = -1;
+};
+
 class symbol_table {
 public:
 	symbol_table();
@@ -26,7 +40,7 @@ public:
 	void push_generic_scope();
 	void pop_generic_scope();
 
-	symbol_error add_symbol(entity_ptr entity, std::shared_ptr<type_entity> owner = nullptr);
+	add_symbol_result add_symbol(entity_ptr entity, std::shared_ptr<type_entity> owner = nullptr);
 	
 	// helper functions (automatically converts to entity)
 	

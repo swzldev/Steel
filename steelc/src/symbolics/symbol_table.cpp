@@ -44,7 +44,7 @@ void symbol_table::pop_generic_scope()
 	}
 }
 
-symbol_error symbol_table::add_symbol(entity_ptr entity, std::shared_ptr<type_entity> owner) {
+add_symbol_result symbol_table::add_symbol(entity_ptr entity, std::shared_ptr<type_entity> owner) {
 	symbol_error err = SYMBOL_OK;
 	switch (entity->kind()) {
 	case ENTITY_VARIABLE: {
@@ -77,9 +77,10 @@ symbol_error symbol_table::add_symbol(entity_ptr entity, std::shared_ptr<type_en
 	}
 	if (err == SYMBOL_OK) {
 		// add to entity list if successfully added
-		entities[next_entity_id++] = entity;
+		entities[next_entity_id] = entity;
+		return add_symbol_result(next_entity_id++);
 	}
-	return err;
+	return add_symbol_result(err);
 }
 symbol_error symbol_table::add_symbol(std::shared_ptr<variable_declaration> var, std::shared_ptr<type_entity> owner) {
 	if (!owner) {
