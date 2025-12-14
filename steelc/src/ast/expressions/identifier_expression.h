@@ -32,9 +32,6 @@ public:
 	}
 
 	type_ptr type() const override {
-		if (resolved_entity && resolved_entity->kind() == ENTITY_VARIABLE) {
-			return resolved_entity->as_variable()->var_type();
-		}
 		return data_type::UNKNOWN;
 	}
 	bool is_rvalue() const override {
@@ -51,5 +48,5 @@ public:
 	}
 
 	std::string identifier;
-	entity_ptr resolved_entity;
+	entity_ref resolved_entity;
 };
