@@ -19,7 +19,7 @@ public:
 	ENABLE_ACCEPT(identifier_expression)
 
 	identifier_expression(std::string identifier)
-		: identifier(identifier), entity_ref(nullptr) {
+		: identifier(identifier) {
 	}
 
 	std::string string(int indent) const override {
