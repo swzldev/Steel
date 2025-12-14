@@ -29,6 +29,7 @@ public:
 	// e.g. 3 + 3 -> nullptr entity (no entity) vs unknown_var -> UNRESOLVED entity
 	static entity_ptr UNRESOLVED;
 
+	inline entity_id get_id() const { return id; }
 	inline entity_kind kind() const { return e_kind; }
 	std::string kind_string() const;
 
@@ -43,4 +44,7 @@ public:
 
 private:
 	entity_kind e_kind;
+	entity_id id;
+
+	friend class symbol_table;
 };
