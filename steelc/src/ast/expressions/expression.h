@@ -6,6 +6,8 @@
 #include <representations/types/types_fwd.h>
 #include <representations/entities/entities_fwd.h>
 
+class symbol_table;
+
 class expression : public ast_node {
 public:
 	virtual ~expression() = default;
@@ -22,5 +24,5 @@ public:
 	virtual bool is_constant() const = 0;
 
 	// the entity this expression refers to (variable, function, type, etc)
-	virtual entity_ptr entity() const { return nullptr; }
+	virtual entity_ptr entity(const symbol_table& sym_table) const { return nullptr; }
 };
