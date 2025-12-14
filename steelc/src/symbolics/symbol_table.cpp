@@ -81,29 +81,23 @@ add_symbol_result symbol_table::add_symbol(entity_ptr entity, std::shared_ptr<ty
 	}
 	return add_symbol_result(err);
 }
-symbol_error symbol_table::add_symbol(std::shared_ptr<variable_declaration> var, std::shared_ptr<type_entity> owner) {
-	if (!owner) {
-		return add_variable(variable_entity::make(var));
-	}
-	return owner->symbols.add_field(var->identifier, variable_entity::make(var));
+add_symbol_result symbol_table::add_symbol(std::shared_ptr<variable_declaration> var, std::shared_ptr<type_entity> owner) {
+	return add_symbol(variable_entity::make(var), owner);
 }
-symbol_error symbol_table::add_symbol(std::shared_ptr<function_declaration> func, std::shared_ptr<type_entity> owner) {
-	if (!owner) {
-		return add_function(function_entity::make(func));
-	}
-	return owner->symbols.add_method(func->identifier, function_entity::make(func));
+add_symbol_result symbol_table::add_symbol(std::shared_ptr<function_declaration> func, std::shared_ptr<type_entity> owner) {
+	return add_symbol(function_entity::make(func), owner);
 }
-symbol_error symbol_table::add_symbol(std::shared_ptr<type_declaration> type) {
-	return add_type(type->entity());
+add_symbol_result symbol_table::add_symbol(std::shared_ptr<type_declaration> type) {
+	return add_symbol(type_entity::make(type->type()));
 }
-symbol_error symbol_table::add_symbol(std::shared_ptr<enum_declaration> type_enum) {
-	return add_type(type_entity::make(type_enum->type()));
+add_symbol_result symbol_table::add_symbol(std::shared_ptr<enum_declaration> type_enum) {
+	return add_symbol(type_entity::make(type_enum->type()));
 }
-symbol_error symbol_table::add_symbol(std::shared_ptr<generic_parameter> param) {
-	return add_generic(generic_param_entity::make(param));
+add_symbol_result symbol_table::add_symbol(std::shared_ptr<generic_parameter> param) {
+	return add_symbol(generic_param_entity::make(param));
 }
-symbol_error symbol_table::add_symbol(std::shared_ptr<module_declaration> module) {
-	return add_module(module->entity);
+add_symbol_result symbol_table::add_symbol(std::shared_ptr<module_declaration> module) {
+	return add_symbol(module->entity);
 }
 
 lookup_result symbol_table::lookup(const std::string& name) const {

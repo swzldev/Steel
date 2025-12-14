@@ -55,7 +55,7 @@ public:
 	// - SYMBOL_CONFLICTS_WITH_TYPE
 	// - SYMBOL_CONFLICTS_WITH_ENUM
 	// - SYMBOL_CONFLICTS_WITH_MODULE
-	symbol_error add_symbol(std::shared_ptr<variable_declaration> var, std::shared_ptr<type_entity> owner = nullptr);
+	add_symbol_result add_symbol(std::shared_ptr<variable_declaration> var, std::shared_ptr<type_entity> owner = nullptr);
 	// errors:
 	// - SYMBOL_CANNOT_OVERLOAD_BY_RETURN_TYPE
 	//    meaning: function with same name and parameter types but different return type exists
@@ -67,21 +67,21 @@ public:
 	// - SYMBOL_CONFLICTS_WITH_TYPE
 	// - SYMBOL_CONFLICTS_WITH_ENUM
 	// - SYMBOL_CONFLICTS_WITH_MODULE
-	symbol_error add_symbol(std::shared_ptr<function_declaration> func, std::shared_ptr<type_entity> owner = nullptr);
+	add_symbol_result add_symbol(std::shared_ptr<function_declaration> func, std::shared_ptr<type_entity> owner = nullptr);
 	// errors:
 	// - SYMBOL_CONFLICTS_WITH_VARIABLE
 	// - SYMBOL_CONFLICTS_WITH_FUNCTION
 	// - SYMBOL_CONFLICTS_WITH_TYPE
 	// - SYMBOL_CONFLICTS_WITH_ENUM
 	// - SYMBOL_CONFLICTS_WITH_MODULE
-	symbol_error add_symbol(std::shared_ptr<type_declaration> type);
+	add_symbol_result add_symbol(std::shared_ptr<type_declaration> type);
 	// errors:
 	// - SYMBOL_CONFLICTS_WITH_VARIABLE
 	// - SYMBOL_CONFLICTS_WITH_FUNCTION
 	// - SYMBOL_CONFLICTS_WITH_TYPE
 	// - SYMBOL_CONFLICTS_WITH_ENUM
 	// - SYMBOL_CONFLICTS_WITH_MODULE
-	symbol_error add_symbol(std::shared_ptr<enum_declaration> type_enum);
+	add_symbol_result add_symbol(std::shared_ptr<enum_declaration> type_enum);
 	// errors:
 	// - SYMBOL_CONFLICTS_WITH_VARIABLE
 	//    special meaning: generic parameter shadows a variable in the current or any parent scope
@@ -89,14 +89,14 @@ public:
 	//    special meaning: duplicate generic parameter in generic declaration
 	// 
 	// since generics are always scoped, no module-level conflict errors can occur
-	symbol_error add_symbol(std::shared_ptr<generic_parameter> param);
+	add_symbol_result add_symbol(std::shared_ptr<generic_parameter> param);
 	// errors:
 	// - SYMBOL_CONFLICTS_WITH_VARIABLE
 	// - SYMBOL_CONFLICTS_WITH_FUNCTION
 	// - SYMBOL_CONFLICTS_WITH_TYPE
 	// - SYMBOL_CONFLICTS_WITH_ENUM
 	// - SYMBOL_CONFLICTS_WITH_MODULE
-	symbol_error add_symbol(std::shared_ptr<module_declaration> module);
+	add_symbol_result add_symbol(std::shared_ptr<module_declaration> module);
 
 	inline bool has_variable(const std::string& name) const {
 		return get_variable(name).found();
