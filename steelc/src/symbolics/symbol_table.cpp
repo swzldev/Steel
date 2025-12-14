@@ -45,30 +45,41 @@ void symbol_table::pop_generic_scope()
 }
 
 symbol_error symbol_table::add_symbol(entity_ptr entity, std::shared_ptr<type_entity> owner) {
+	symbol_error err = SYMBOL_OK;
 	switch (entity->kind()) {
 	case ENTITY_VARIABLE: {
 		if (owner) {
-			return owner->symbols.add_field(entity->name(), entity->as_variable());
+			err = owner->symbols.add_field(entity->name(), entity->as_variable());
 		}
-		return add_variable(entity->as_variable());
+		else err = add_variable(entity->as_variable());
+		break;
 	}
 	case ENTITY_FUNCTION: {
 		if (owner) {
-			return owner->symbols.add_method(entity->name(), entity->as_function());
+			err = owner->symbols.add_method(entity->name(), entity->as_function());
 		}
-		return add_function(entity->as_function());
+		else err = add_function(entity->as_function());
+		break;
 	}
 	case ENTITY_TYPE: {
 		// TODO: add support for nested types later
-		return add_type(entity->as_type());
+		err = add_type(entity->as_type());
+		break;
 	}
 	case ENTITY_MODULE: {
-		return add_module(entity->as_module());
+		err = add_module(entity->as_module());
+		break;
 	}
 	case ENTITY_GENERIC_PARAM: {
-		return add_generic(entity->as_generic_param());
+		err = add_generic(entity->as_generic_param());
+		break;
 	}
 	}
+	if (err == SYMBOL_OK) {
+		// add to entity list if successfully added
+		entities[next_entity_id++] = entity;
+	}
+	return err;
 }
 symbol_error symbol_table::add_symbol(std::shared_ptr<variable_declaration> var, std::shared_ptr<type_entity> owner) {
 	if (!owner) {
@@ -114,6 +125,15 @@ lookup_result symbol_table::lookup(const std::string& name) const {
 	}
 	return final_result;
 }
+
+entity_ptr symbol_table::get_by_id(entity_id id) const {
+	if (entities.contains(id)) {
+		return entities.at(id);
+	}
+	return nullptr;
+}
+
+entity_id symbol_table::next_entity_id = 0;
 
 lookup_result symbol_table::get_variable(const std::string& name) const {
 	// search upwards from current scope

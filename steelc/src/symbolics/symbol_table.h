@@ -102,7 +102,12 @@ public:
 
 	lookup_result lookup(const std::string& name) const;
 
+	entity_ptr get_by_id(entity_id id) const;
+
 private:
+	static entity_id next_entity_id;
+	std::unordered_map<entity_id, entity_ptr> entities;
+
 	std::vector<std::map<std::string, std::shared_ptr<variable_entity>>> variable_scopes;
 	std::vector<std::map<std::string, std::shared_ptr<generic_param_entity>>> generic_scopes;
 	std::unordered_map<std::string, std::vector<std::shared_ptr<function_entity>>> functions;
