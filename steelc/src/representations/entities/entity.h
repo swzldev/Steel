@@ -14,6 +14,7 @@ enum entity_kind {
 	ENTITY_VARIABLE,
 	ENTITY_FUNCTION,
 	ENTITY_TYPE,
+	ENTITY_ENUM,
 	ENTITY_MODULE,
 	ENTITY_GENERIC_PARAM,
 };
@@ -42,6 +43,7 @@ public:
 	virtual std::shared_ptr<variable_entity> as_variable() { return nullptr; }
 	virtual std::shared_ptr<function_entity> as_function() { return nullptr; }
 	virtual std::shared_ptr<type_entity> as_type() { return nullptr; }
+	virtual std::shared_ptr<enum_entity> as_enum() { return nullptr; }
 	virtual std::shared_ptr<module_entity> as_module() { return nullptr; }
 	virtual std::shared_ptr<generic_param_entity> as_generic_param() { return nullptr; }
 
