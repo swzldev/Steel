@@ -64,6 +64,7 @@ public:
 
 	ast_ptr clone() const override {
 		auto cloned = std::make_shared<function_declaration>();
+		cloned->parent_module = parent_module;
 		cloned->position = position;
 		cloned->return_type = return_type;
 		cloned->identifier = identifier;
