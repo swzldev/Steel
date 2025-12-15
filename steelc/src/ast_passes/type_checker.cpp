@@ -336,7 +336,7 @@ void type_checker::visit(std::shared_ptr<assignment_expression> expr) {
 	auto right_type = expr->right->type();
 
 	// cannot assign to a const variable
-	auto entity = expr->left->entity();
+	auto entity = expr->left->entity(*active_symbols);
 	if (entity->kind() == ENTITY_VARIABLE) {
 		if (entity->as_variable()->is_const()) {
 			ERROR(ERR_CONST_ASSIGNMENT, expr->position, entity->name().c_str());
@@ -442,7 +442,7 @@ void type_checker::visit(std::shared_ptr<member_expression> expr) {
 	}
 
 	// instance access only allowed on variables
-	auto entity = expr->object->entity();
+	auto entity = expr->object->entity(*active_symbols);
 	if (entity->kind() != ENTITY_VARIABLE) {
 		ERROR(ERR_MEMBER_ACCESS_NOT_ON_VARIABLE, expr->position);
 		return;
