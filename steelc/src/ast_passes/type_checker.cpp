@@ -975,11 +975,6 @@ std::shared_ptr<function_declaration> type_checker::unbox_generic_func(std::shar
 	auto new_func = std::dynamic_pointer_cast<function_declaration>(func->clone());
 	new_func->is_generic_instance = true;
 
-	//// set parameters
-	//for (size_t i = 0; i < new_func->generics.size(); i++) {
-	//	new_func->generics[i]->substitution = types[i];
-	//}
-
 	// store instance
 	generic_function_instances[func][types] = new_func;
 
@@ -1022,11 +1017,6 @@ std::shared_ptr<type_declaration> type_checker::unbox_generic_type(std::shared_p
 	// clone the type
 	auto new_type = std::dynamic_pointer_cast<type_declaration>(type->clone());
 	new_type->is_generic_instance = true;
-
-	// set parameters
-	for (size_t i = 0; i < new_type->generics.size(); i++) {
-		new_type->generics[i]->substitution = types[i];
-	}
 
 	// store instance
 	generic_type_instances[type][types] = new_type;
