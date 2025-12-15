@@ -25,6 +25,8 @@
 #include <representations/entities/entities_fwd.h>
 #include <representations/entities/entity.h>
 #include <representations/entities/variable_entity.h>
+#include <symbolics/symbol_table.h>
+#include <symbolics/overlay_table.h>
 
 void type_checker::visit(std::shared_ptr<function_declaration> func) {
 	if (func->is_generic && !func->is_generic_instance) {
@@ -952,40 +954,41 @@ std::shared_ptr<function_declaration> type_checker::unbox_generic_func(std::shar
 		return nullptr;
 	}
 
-	// check if already unboxed
+	// check cache
 	if (generic_function_instances.find(func) != generic_function_instances.end()) {
 		for (const auto& [gen_types, decl] : generic_function_instances[func]) {
-			if (gen_types.size() != types.size()) {
-				continue;
-			}
+			if (gen_types.size() != types.size()) continue;
 			bool match = true;
 			for (size_t i = 0; i < gen_types.size(); i++) {
-				if (*gen_types[i] != types[i]) {
-					match = false;
-					break;
-				}
+				if (*gen_types[i] != types[i]) { match = false; break; }
 			}
-			if (match) {
-				return decl;
-			}
+			if (match) return decl;
 		}
 	}
 
-	// clone the function
+	// clone
 	auto new_func = std::dynamic_pointer_cast<function_declaration>(func->clone());
 	new_func->is_generic_instance = true;
 
-	// store instance
+	// cache instance
 	generic_function_instances[func][types] = new_func;
 
-	// substitute
+	// substitute concrete types in place
 	generic_substitutor substitutor(pass_unit, types);
 	new_func->accept(substitutor);
+
+	// overlay table
+	const symbol_table* old_table = active_symbols;
+	overlay_table overlay(*active_symbols);
+
+	active_symbols = &overlay;
 
 	// type check instance
 	std::shared_ptr<function_declaration> old_current = current_function;
 	new_func->accept(*this);
 	current_function = old_current;
+
+	active_symbols = old_table;
 
 	return new_func;
 }
@@ -998,19 +1001,12 @@ std::shared_ptr<type_declaration> type_checker::unbox_generic_type(std::shared_p
 	// check if already unboxed
 	if (generic_type_instances.find(type) != generic_type_instances.end()) {
 		for (const auto& [gen_types, decl] : generic_type_instances[type]) {
-			if (gen_types.size() != types.size()) {
-				continue;
-			}
+			if (gen_types.size() != types.size()) continue;
 			bool match = true;
 			for (size_t i = 0; i < gen_types.size(); i++) {
-				if (*gen_types[i] != types[i]) {
-					match = false;
-					break;
-				}
+				if (*gen_types[i] != types[i]) { match = false; break; }
 			}
-			if (match) {
-				return decl;
-			}
+			if (match) return decl;
 		}
 	}
 

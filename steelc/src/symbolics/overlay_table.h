@@ -8,7 +8,7 @@
 
 // allows for remapping entity_id's to different entities
 // falling back to the base symbol_table when no overlay exists
-class overlay_table : symbol_table {
+class overlay_table : public symbol_table {
 public:
 	overlay_table(const symbol_table& base_table)
 		: symbol_table(base_table) {
