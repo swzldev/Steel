@@ -84,6 +84,7 @@ public:
 		cloned->is_entry_point = false; // entry point status is not cloned
 		cloned->implicitly_returns = implicitly_returns;
 		// note: overridden_function is not cloned
+		// dont clone ref
 		return cloned;
 	}
 
@@ -101,4 +102,5 @@ public:
 	bool implicitly_returns = false;
 	std::shared_ptr<type_declaration> parent_type = nullptr;
 	std::shared_ptr<function_declaration> overridden_function = nullptr;
+	entity_ref func_ref;
 };
