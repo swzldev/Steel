@@ -78,7 +78,7 @@ add_symbol_result symbol_table::add_symbol(entity_ptr entity, std::shared_ptr<ty
 	}
 	if (err == SYMBOL_OK) {
 		// add to entity list if successfully added
-		register_entity(entity, next_entity_id++);
+		return add_symbol_result(register_entity(entity, next_entity_id++));
 	}
 	return add_symbol_result(err);
 }
@@ -130,9 +130,10 @@ entity_ptr symbol_table::get_by_id(entity_id id) const {
 
 entity_id symbol_table::next_entity_id = 0;
 
-void symbol_table::register_entity(entity_ptr entity, entity_id id) {
+entity_id symbol_table::register_entity(entity_ptr entity, entity_id id) {
 	id_to_entities[id] = entity;
 	entity->id = id; // allowed since symbol_table is a friend class
+	return id;
 }
 
 lookup_result symbol_table::get_variable(const std::string& name) const {

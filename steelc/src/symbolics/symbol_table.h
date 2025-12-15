@@ -132,7 +132,7 @@ private:
 	std::unordered_map<std::string, std::shared_ptr<enum_entity>> enums;
 	std::unordered_map<std::string, std::shared_ptr<module_entity>> modules;
 
-	void register_entity(entity_ptr entity, entity_id id);
+	entity_id register_entity(entity_ptr entity, entity_id id);
 
 	lookup_result get_variable(const std::string& name) const;
 	lookup_result get_functions(const std::string& name) const;
