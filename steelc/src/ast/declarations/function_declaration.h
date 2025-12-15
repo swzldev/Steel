@@ -8,6 +8,7 @@
 #include <ast/generics/generic_parameter.h>
 #include <representations/types/types_fwd.h>
 #include <representations/types/function_type.h>
+#include <representations/entities/entity_ref.h>
 
 class function_declaration : public declaration, public std::enable_shared_from_this<function_declaration> {
 public:

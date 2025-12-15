@@ -7,6 +7,7 @@
 #include <modules/module_manager.h>
 #include <symbolics/symbol_table.h>
 #include <representations/entities/module_entity.h>
+#include <representations/entities/entity_ref.h>
 
 void declaration_collector::visit(std::shared_ptr<function_declaration> func) {
 	// functions and constructors cannot be nested
@@ -88,6 +89,7 @@ void declaration_collector::visit(std::shared_ptr<function_declaration> func) {
 			break;
 		}
 	}
+	func->func_ref = entity_ref(res.eid);
 
 	// set parent module (even for methods, for now anyway)
 	func->parent_module = current_module;

@@ -17,15 +17,15 @@ struct module_info;
 struct add_symbol_result {
 	// defaults entityid to -1 (invalid)
 	add_symbol_result(symbol_error err)
-		: error(err), entityid(-1) {
+		: error(err), eid(-1) {
 	}
 	// defaults error to SYMBOL_OK
 	add_symbol_result(entity_id id)
-		: error(SYMBOL_OK), entityid(id) {
+		: error(SYMBOL_OK), eid(id) {
 	}
 
 	symbol_error error;
-	entity_id entityid = -1;
+	entity_id eid = -1;
 };
 
 class symbol_table {
