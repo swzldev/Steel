@@ -119,7 +119,7 @@ public:
 
 	lookup_result lookup(const std::string& name) const;
 
-	entity_ptr get_by_id(entity_id id) const;
+	virtual entity_ptr get_by_id(entity_id id) const;
 
 private:
 	static entity_id next_entity_id;
