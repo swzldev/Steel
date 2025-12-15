@@ -25,6 +25,7 @@
 #include <representations/entities/entities_fwd.h>
 #include <representations/entities/entity.h>
 #include <representations/entities/variable_entity.h>
+#include <representations/entities/function_entity.h>
 #include <symbolics/symbol_table.h>
 #include <symbolics/overlay_table.h>
 
@@ -980,6 +981,9 @@ std::shared_ptr<function_declaration> type_checker::unbox_generic_func(std::shar
 	// overlay table
 	const symbol_table* old_table = active_symbols;
 	overlay_table overlay(*active_symbols);
+
+	// remap
+	overlay.remap(func->func_ref.get_id(), function_entity::get(new_func));
 
 	active_symbols = &overlay;
 
