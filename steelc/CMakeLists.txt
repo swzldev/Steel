@@ -68,6 +68,8 @@ set(SOURCES
     "src/ast_passes/classes/computed_value.h"
     "src/ast_passes/helpers/function_filter.cpp"
     "src/ast_passes/helpers/function_filter.h"
+    "src/ast_passes/util/entity_refresher.cpp"
+    "src/ast_passes/util/entity_refresher.h"
 
     # building/
     "src/building/build_config.h"
