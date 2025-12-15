@@ -225,6 +225,8 @@ set(SOURCES
     "src/symbolics/import_table.h"
     "src/symbolics/lookup_result.cpp"
     "src/symbolics/lookup_result.h"
+    "src/symbolics/overlay_table.cpp"
+    "src/symbolics/overlay_table.h"
     "src/symbolics/symbol_error.h"
     "src/symbolics/symbol_resolver.cpp"
     "src/symbolics/symbol_resolver.h"
