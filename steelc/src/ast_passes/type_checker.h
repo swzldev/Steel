@@ -36,6 +36,7 @@ public:
 	void visit(std::shared_ptr<return_statement> ret_stmt) override;
 
 private:
+	const symbol_table* active_symbols;
 	module_manager& module_manager;
 	std::shared_ptr<function_declaration> current_function = nullptr;
 
