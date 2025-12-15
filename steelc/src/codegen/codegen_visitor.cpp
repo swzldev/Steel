@@ -24,6 +24,11 @@
 #include <representations/entities/entity.h>
 
 void codegen_visitor::visit(std::shared_ptr<function_declaration> func) { 
+	if (func->is_generic && !func->is_generic_instance) {
+		// dont generate code for generic templates
+		return;
+	}
+
 	llvm::Function* fn = function_builder.build(func);
 
 	// function entry block
