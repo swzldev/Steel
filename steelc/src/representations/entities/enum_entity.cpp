@@ -2,6 +2,7 @@
 
 #include <string>
 #include <memory>
+#include <unordered_map>
 
 #include <ast/declarations/enum_declaration.h>
 

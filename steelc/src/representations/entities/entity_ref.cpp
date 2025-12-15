@@ -2,6 +2,7 @@
 
 #include <representations/entities/entities_fwd.h>
 #include <representations/entities/entity.h>
+#include <symbolics/symbol_table.h>
 
 entity_ptr entity_ref::resolve(const symbol_table& sym_table) {
 	if (!valid()) {
