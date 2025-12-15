@@ -8,16 +8,19 @@
 #include <compiler/compilation_pass.h>
 #include <symbolics/symbol_table.h>
 #include <modules/module_manager.h>
+#include <representations/entities/module_entity.h>
 
 class type_checker : public ast_visitor, public compilation_pass {
 public:
 	type_checker(std::shared_ptr<compilation_unit> unit, module_manager& module_manager)
 		: compilation_pass(unit), module_manager(module_manager) {
+		active_symbols = &module_manager.get_global_module()->symbols();
 	}
 
 	void visit(std::shared_ptr<function_declaration> func) override;
 	void visit(std::shared_ptr<variable_declaration> var) override;
 	void visit(std::shared_ptr<type_declaration> decl) override;
+	void visit(std::shared_ptr<module_declaration> module) override;
 	void visit(std::shared_ptr<identifier_expression> expr) override;
 	void visit(std::shared_ptr<binary_expression> expr) override;
 	void visit(std::shared_ptr<assignment_expression> expr) override;

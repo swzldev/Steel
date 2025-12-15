@@ -272,6 +272,15 @@ void type_checker::visit(std::shared_ptr<type_declaration> decl) {
 		}
 	}
 }
+void type_checker::visit(std::shared_ptr<module_declaration> module) {
+	// mostly for updating the current symbol table
+	auto old_symbols = active_symbols;
+	active_symbols = &module->entity->symbols();
+	for (const auto& decl : module->declarations) {
+		decl->accept(*this);
+	}
+	active_symbols = old_symbols;
+}
 void type_checker::visit(std::shared_ptr<binary_expression> expr) {
 	expr->left->accept(*this);
 	expr->right->accept(*this);
@@ -982,8 +991,12 @@ std::shared_ptr<function_declaration> type_checker::unbox_generic_func(std::shar
 	const symbol_table* old_table = active_symbols;
 	overlay_table overlay(*active_symbols);
 
-	// remap
+	// remap func
 	overlay.remap(func->func_ref.get_id(), function_entity::get(new_func));
+	// remap params
+	for (size_t i = 0; i < func->parameters.size(); i++) {
+		overlay.remap(func->parameters[i]->var_ref.get_id(), variable_entity::get(new_func->parameters[i]));
+	}
 
 	active_symbols = &overlay;
 

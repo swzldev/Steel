@@ -143,6 +143,7 @@ void declaration_collector::visit(std::shared_ptr<variable_declaration> var) {
 					break;
 			}
 		}
+		var->var_ref = entity_ref(res.eid);
 	}
 
 	// set parent module

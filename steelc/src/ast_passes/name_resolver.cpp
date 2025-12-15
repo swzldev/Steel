@@ -75,6 +75,7 @@ void name_resolver::visit(std::shared_ptr<function_declaration> func) {
 					continue;
 				}
 			}
+			param->var_ref = entity_ref(res.eid);
 		}
 
 		func->body->accept(*this);
@@ -112,6 +113,7 @@ void name_resolver::visit(std::shared_ptr<variable_declaration> var) {
 				break;
 			}
 		}
+		var->var_ref = entity_ref(res.eid);
 	}
 	// still accept all initializers including global ones
 	if (var->initializer) {
