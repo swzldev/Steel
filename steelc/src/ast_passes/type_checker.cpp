@@ -455,6 +455,7 @@ void type_checker::visit(std::shared_ptr<unary_expression> expr) {
 	}
 }
 void type_checker::visit(std::shared_ptr<identifier_expression> expr) {
+	expr->entity_ref.resolve(*active_symbols);
 }
 void type_checker::visit(std::shared_ptr<index_expression> expr) {
 	expr->base->accept(*this);
