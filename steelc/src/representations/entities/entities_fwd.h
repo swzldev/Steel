@@ -9,6 +9,7 @@ class entity;
 class variable_entity;
 class function_entity;
 class type_entity;
+class enum_entity;
 class module_entity;
 class generic_param_entity;
 

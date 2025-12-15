@@ -15,6 +15,7 @@
 #include <representations/entities/variable_entity.h>
 #include <representations/entities/function_entity.h>
 #include <representations/entities/type_entity.h>
+#include <representations/entities/enum_entity.h>
 #include <representations/entities/module_entity.h>
 #include <representations/entities/generic_param_entity.h>
 
@@ -90,8 +91,8 @@ add_symbol_result symbol_table::add_symbol(std::shared_ptr<function_declaration>
 add_symbol_result symbol_table::add_symbol(std::shared_ptr<type_declaration> type) {
 	return add_symbol(type_entity::get(type));
 }
-add_symbol_result symbol_table::add_symbol(std::shared_ptr<enum_declaration> type_enum) {
-	return add_symbol(type_entity::get(type_enum));
+add_symbol_result symbol_table::add_symbol(std::shared_ptr<enum_declaration> enm) {
+	return add_symbol(enum_entity::get(enm));
 }
 add_symbol_result symbol_table::add_symbol(std::shared_ptr<generic_parameter> param) {
 	return add_symbol(generic_param_entity::get(param));
@@ -162,6 +163,9 @@ lookup_result symbol_table::get_type(const std::string& name) const {
 		return { it->second };
 	}
 	return {};
+}
+lookup_result symbol_table::get_enum(const std::string& name) const {
+	return lookup_result();
 }
 lookup_result symbol_table::get_module(const std::string& name) const {
 	// local lookup
@@ -250,6 +254,13 @@ symbol_error symbol_table::add_type(std::shared_ptr<type_entity> type) {
 	types[type->name()] = type;
 	return SYMBOL_OK;
 }
+symbol_error symbol_table::add_enum(std::shared_ptr<enum_entity> enm) {
+	if (symbol_error err = name_conflicts(enm->name()); err != SYMBOL_OK) {
+		return err;
+	}
+	enums[enm->name()] = enm;
+	return SYMBOL_OK;
+}
 symbol_error symbol_table::add_module(std::shared_ptr<module_entity> module) {
 	if (symbol_error err = name_conflicts(module->name()); err != SYMBOL_OK) {
 		return err;
@@ -270,10 +281,11 @@ symbol_error symbol_table::name_conflicts(const std::string& name) {
 	}
 	// check if conflicts with type
 	if (auto type_it = types.find(name); type_it != types.end()) {
-		if (type_it->second->type->is_enum()) {
-			return SYMBOL_CONFLICTS_WITH_ENUM;
-		}
 		return SYMBOL_CONFLICTS_WITH_TYPE;
+	}
+	// check if conflicts with enum
+	if (auto enum_it = enums.find(name); enum_it != enums.end()) {
+		return SYMBOL_CONFLICTS_WITH_ENUM;
 	}
 	// check if conflicts with module
 	if (modules.find(name) != modules.end()) {

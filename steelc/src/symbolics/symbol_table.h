@@ -81,7 +81,7 @@ public:
 	// - SYMBOL_CONFLICTS_WITH_TYPE
 	// - SYMBOL_CONFLICTS_WITH_ENUM
 	// - SYMBOL_CONFLICTS_WITH_MODULE
-	add_symbol_result add_symbol(std::shared_ptr<enum_declaration> type_enum);
+	add_symbol_result add_symbol(std::shared_ptr<enum_declaration> enm);
 	// errors:
 	// - SYMBOL_CONFLICTS_WITH_VARIABLE
 	//    special meaning: generic parameter shadows a variable in the current or any parent scope
@@ -107,6 +107,9 @@ public:
 	inline bool has_type(const std::string& name) const {
 		return types.find(name) != types.end();
 	}
+	inline bool has_type(const std::string& name) const {
+		return enums.find(name) != enums.end();
+	}
 	inline bool has_generic(const std::string& name) const {
 		return get_generic(name).found();
 	}
@@ -125,7 +128,8 @@ private:
 	std::vector<std::map<std::string, std::shared_ptr<variable_entity>>> variable_scopes;
 	std::vector<std::map<std::string, std::shared_ptr<generic_param_entity>>> generic_scopes;
 	std::unordered_map<std::string, std::vector<std::shared_ptr<function_entity>>> functions;
-	std::unordered_map<std::string, std::shared_ptr<type_entity>> types; // includes enum types
+	std::unordered_map<std::string, std::shared_ptr<type_entity>> types;
+	std::unordered_map<std::string, std::shared_ptr<enum_entity>> enums;
 	std::unordered_map<std::string, std::shared_ptr<module_entity>> modules;
 
 	void register_entity(entity_ptr entity, entity_id id);
@@ -133,6 +137,7 @@ private:
 	lookup_result get_variable(const std::string& name) const;
 	lookup_result get_functions(const std::string& name) const;
 	lookup_result get_type(const std::string& name) const;
+	lookup_result get_enum(const std::string& name) const;
 	lookup_result get_module(const std::string& name) const;
 	lookup_result get_generic(const std::string& name) const;
 
@@ -140,6 +145,7 @@ private:
 	symbol_error add_generic(std::shared_ptr<generic_param_entity> param);
 	symbol_error add_function(std::shared_ptr<function_entity> func);
 	symbol_error add_type(std::shared_ptr<type_entity> type);
+	symbol_error add_enum(std::shared_ptr<enum_entity> enm);
 	symbol_error add_module(std::shared_ptr<module_entity> module);
 
 	// detects unscoped variable, function, type, enum, and module conflicts
