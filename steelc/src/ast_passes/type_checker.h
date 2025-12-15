@@ -39,8 +39,8 @@ private:
 	module_manager& module_manager;
 	std::shared_ptr<function_declaration> current_function = nullptr;
 
-	std::map<std::shared_ptr<function_declaration>, std::vector<std::shared_ptr<function_declaration>>> generic_function_instances;
-	std::map<std::shared_ptr<type_declaration>, std::vector<std::shared_ptr<type_declaration>>> generic_type_instances;
+	std::unordered_map<std::shared_ptr<function_declaration>, std::unordered_map<std::vector<type_ptr>, std::shared_ptr<function_declaration>>> generic_function_instances;
+	std::unordered_map<std::shared_ptr<type_declaration>, std::unordered_map<std::vector<type_ptr>, std::shared_ptr<type_declaration>>> generic_type_instances;
 	std::vector<std::vector<type_ptr>> generic_substitution_stack;
 
 	struct candidate_score {

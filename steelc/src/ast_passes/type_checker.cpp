@@ -954,16 +954,19 @@ std::shared_ptr<function_declaration> type_checker::unbox_generic_func(std::shar
 
 	// check if already unboxed
 	if (generic_function_instances.find(func) != generic_function_instances.end()) {
-		for (const auto& unboxed : generic_function_instances[func]) {
-			bool matches = true;
-			for (size_t i = 0; i < unboxed->generics.size(); i++) {
-				if (*unboxed->generics[i]->substitution != types[i]) {
-					matches = false;
+		for (const auto& [gen_types, decl] : generic_function_instances[func]) {
+			if (gen_types.size() != types.size()) {
+				continue;
+			}
+			bool match = true;
+			for (size_t i = 0; i < gen_types.size(); i++) {
+				if (*gen_types[i] != types[i]) {
+					match = false;
 					break;
 				}
 			}
-			if (matches) {
-				return unboxed;
+			if (match) {
+				return decl;
 			}
 		}
 	}
@@ -972,13 +975,13 @@ std::shared_ptr<function_declaration> type_checker::unbox_generic_func(std::shar
 	auto new_func = std::dynamic_pointer_cast<function_declaration>(func->clone());
 	new_func->is_generic_instance = true;
 
-	// set parameters
-	for (size_t i = 0; i < new_func->generics.size(); i++) {
-		new_func->generics[i]->substitution = types[i];
-	}
+	//// set parameters
+	//for (size_t i = 0; i < new_func->generics.size(); i++) {
+	//	new_func->generics[i]->substitution = types[i];
+	//}
 
 	// store instance
-	generic_function_instances[func].push_back(new_func);
+	generic_function_instances[func][types] = new_func;
 
 	// substitute
 	generic_substitutor substitutor(pass_unit, types);
@@ -999,16 +1002,19 @@ std::shared_ptr<type_declaration> type_checker::unbox_generic_type(std::shared_p
 
 	// check if already unboxed
 	if (generic_type_instances.find(type) != generic_type_instances.end()) {
-		for (const auto& unboxed : generic_type_instances[type]) {
-			bool matches = true;
-			for (size_t i = 0; i < unboxed->generics.size(); i++) {
-				if (*unboxed->generics[i]->substitution != types[i]) {
-					matches = false;
+		for (const auto& [gen_types, decl] : generic_type_instances[type]) {
+			if (gen_types.size() != types.size()) {
+				continue;
+			}
+			bool match = true;
+			for (size_t i = 0; i < gen_types.size(); i++) {
+				if (*gen_types[i] != types[i]) {
+					match = false;
 					break;
 				}
 			}
-			if (matches) {
-				return unboxed;
+			if (match) {
+				return decl;
 			}
 		}
 	}
@@ -1023,7 +1029,7 @@ std::shared_ptr<type_declaration> type_checker::unbox_generic_type(std::shared_p
 	}
 
 	// store instance
-	generic_type_instances[type].push_back(new_type);
+	generic_type_instances[type][types] = new_type;
 
 	// ensure constructors point to the new type
 	for (const auto& ctor : new_type->constructors) {
