@@ -6,6 +6,7 @@
 #include <ast/expressions/expression.h>
 #include <representations/types/types_fwd.h>
 #include <representations/types/data_type.h>
+#include <representations/entities/entity_ref.h>
 
 class variable_declaration : public declaration, public std::enable_shared_from_this<variable_declaration> {
 public:
@@ -62,4 +63,5 @@ public:
 	bool is_parameter = false;
 	bool is_field = false;
 	size_t field_index = 0;
+	entity_ref var_ref;
 };
