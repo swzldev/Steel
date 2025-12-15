@@ -4,7 +4,8 @@
 
 #include <representations/entities/entities_fwd.h>
 #include <representations/entities/entity.h>
-#include <symbolics/symbol_table.h>
+
+class symbol_table;
 
 class entity_ref {
 public:
