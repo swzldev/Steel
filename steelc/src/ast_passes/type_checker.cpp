@@ -284,54 +284,90 @@ void type_checker::visit(std::shared_ptr<module_declaration> module) {
 void type_checker::visit(std::shared_ptr<binary_expression> expr) {
 	expr->left->accept(*this);
 	expr->right->accept(*this);
-	auto left_type = expr->left->type();
-	auto right_type = expr->right->type();
+
+	type_ptr lty = nullptr;
+	type_ptr rty = nullptr;
+
+	auto left_entity = expr->left->entity(*active_symbols);
+	auto right_entity = expr->right->entity(*active_symbols);
+	if (left_entity == entity::UNRESOLVED || right_entity == entity::UNRESOLVED) {
+		// cannot resolve one of the entities, skip further checks
+		return;
+	}
+
+	if (left_entity == nullptr) {
+		lty = expr->left->type();
+		if (!lty) {
+			ERROR(ERR_INTERNAL_ERROR, expr->left->position, "Type Checker", "LHS of binary expression has no type or entity");
+			return;
+		}
+	}
+	else {
+		if (left_entity->kind() != ENTITY_VARIABLE) {
+			throw;
+		}
+		lty = left_entity->as_variable()->var_type();
+	}
+
+	if (right_entity == nullptr) {
+		rty = expr->left->type();
+		if (!rty) {
+			ERROR(ERR_INTERNAL_ERROR, expr->left->position, "Type Checker", "RHS of binary expression has no type or entity");
+			return;
+		}
+	}
+	else {
+		if (right_entity->kind() != ENTITY_VARIABLE) {
+			throw;
+		}
+		rty = right_entity->as_variable()->var_type();
+	}
 
 	// if either type is UNKNOWN we can just ignore it, error flagged elsewhere
-	if (left_type == data_type::UNKNOWN || right_type == data_type::UNKNOWN) {
+	if (lty == data_type::UNKNOWN || rty == data_type::UNKNOWN) {
 		return;
 	}
 
 	const auto& builtin_operators = get_core_operators();
 	// if both sides are primitive types, check if a built in operator exists
-	if (left_type->is_primitive() && right_type->is_primitive()) {
+	if (lty->is_primitive() && rty->is_primitive()) {
 		for (const auto& op : builtin_operators) {
-			if (op.matches(left_type, expr->oparator, right_type)) {
+			if (op.matches(lty, expr->oparator, rty)) {
 				expr->result_type = op.result_type;
 				return;
 			}
 		}
-		ERROR(ERR_NO_MATCHING_OPERATOR, expr->position, left_type->name().c_str(), right_type->name().c_str());
+		ERROR(ERR_NO_MATCHING_OPERATOR, expr->position, lty->name().c_str(), rty->name().c_str());
 		return;
 	}
-	else if (left_type->is_enum() && right_type->is_enum()) {
+	else if (lty->is_enum() && rty->is_enum()) {
 		// we can compare enums if they are the same type
-		if (*left_type == right_type && expr->oparator == TT_EQUAL || expr->oparator == TT_NOT_EQUAL) {
+		if (*lty == rty && expr->oparator == TT_EQUAL || expr->oparator == TT_NOT_EQUAL) {
 			expr->result_type = to_data_type(DT_BOOL);
 			return;
 		}
 	}
 	else {
 		// if at least one side is custom, we can check user-defined operators
-		if (auto left_custom = left_type->as_custom()) {
+		if (auto left_custom = lty->as_custom()) {
 			if (!left_custom->declaration) {
 				ERROR(ERR_TYPE_NOT_DEFINED, expr->position, left_custom->name().c_str());
 				return;
 			}
 			for (const auto& op : left_custom->declaration->operators) {
-				if (op->matches(left_type, expr->oparator, right_type)) {
+				if (op->matches(lty, expr->oparator, rty)) {
 					expr->result_type = op->result_type;
 					return;
 				}
 			}
 		}
-		if (auto right_custom = right_type->as_custom()) {
+		if (auto right_custom = rty->as_custom()) {
 			if (!right_custom->declaration) {
 				ERROR(ERR_TYPE_NOT_DEFINED, expr->position, right_custom->name().c_str());
 				return;
 			}
 			for (const auto& op : right_custom->declaration->operators) {
-				if (op->matches(left_type, expr->oparator, right_type)) {
+				if (op->matches(lty, expr->oparator, rty)) {
 					expr->result_type = op->result_type;
 					return;
 				}
@@ -339,7 +375,7 @@ void type_checker::visit(std::shared_ptr<binary_expression> expr) {
 		}
 	}
 	// no built-in or user-defined operators available
-	ERROR(ERR_NO_MATCHING_OPERATOR_BUILTIN_USER, expr->position, left_type->name().c_str(), right_type->name().c_str());
+	ERROR(ERR_NO_MATCHING_OPERATOR_BUILTIN_USER, expr->position, lty->name().c_str(), rty->name().c_str());
 }
 void type_checker::visit(std::shared_ptr<assignment_expression> expr) {
 	expr->left->accept(*this);
