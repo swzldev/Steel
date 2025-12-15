@@ -107,7 +107,7 @@ public:
 	inline bool has_type(const std::string& name) const {
 		return types.find(name) != types.end();
 	}
-	inline bool has_type(const std::string& name) const {
+	inline bool has_enum(const std::string& name) const {
 		return enums.find(name) != enums.end();
 	}
 	inline bool has_generic(const std::string& name) const {
