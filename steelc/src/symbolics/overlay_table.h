@@ -16,6 +16,8 @@ public:
 
 	void remap(entity_id id, entity_ptr entity);
 
+	virtual entity_ptr get_by_id(entity_id id) const override;
+
 private:
 	std::unordered_map<entity_id, entity_ptr> overlay_entities;
 };
