@@ -45,6 +45,10 @@ set(SOURCES
     "src/ast/statements/control_flow/return_statement.h"
     "src/ast/statements/control_flow/while_loop.h"
 
+    # ast_lowering/
+    "src/ast_lowering/mir_lowerer.cpp"
+    "src/ast_lowering/mir_lowerer.h"
+
     # ast_passes/
     "src/ast_passes/compile_time_computator.cpp"
     "src/ast_passes/compile_time_computator.h"
@@ -155,6 +159,16 @@ set(SOURCES
     "src/lexer/token_type.h"
     "src/lexer/token_utils.cpp"
     "src/lexer/token_utils.h"
+
+    # mir/
+    "src/mir/mir_block.h"
+    "src/mir/mir_function.h"
+    "src/mir/mir_fwd.h"
+    "src/mir/mir_instr.h"
+    "src/mir/mir_module.h"
+    "src/mir/mir_operand.h"
+    "src/mir/mir_type.h"
+    "src/mir/mir_value.h"
 
     # modules/
     "src/modules/module_info.h"
