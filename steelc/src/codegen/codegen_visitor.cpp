@@ -234,6 +234,15 @@ void codegen_visitor::visit(std::shared_ptr<function_call> func_call) {
 
 		else {
 			if (func_call->declaration) {
+				if (func_call->declaration->is_generic && !func_call->declaration->is_generic_instance) {
+					throw codegen_exception("Cannot call generic function template without instantiation: " + func_call->identifier);
+				}
+				else if (func_call->declaration->is_generic) {
+					// accept here, as generic instantiations do
+					// not get added to the program declarations
+					func_call->declaration->accept(*this);
+				}
+
 				// get the full name
 				std::string mangled_name = mangler.mangle_function(func_call->declaration);
 
