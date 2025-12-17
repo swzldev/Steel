@@ -48,6 +48,8 @@ set(SOURCES
     # ast_lowering/
     "src/ast_lowering/mir_lowerer.cpp"
     "src/ast_lowering/mir_lowerer.h"
+    "src/ast_lowering/mir_lowering_visitor.cpp"
+    "src/ast_lowering/mir_lowering_visitor.h"
 
     # ast_passes/
     "src/ast_passes/compile_time_computator.cpp"
@@ -169,6 +171,8 @@ set(SOURCES
     "src/mir/mir_operand.h"
     "src/mir/mir_type.h"
     "src/mir/mir_value.h"
+    "src/mir/builders/mir_builder.cpp"
+    "src/mir/builders/mir_builder.h"
 
     # modules/
     "src/modules/module_info.h"

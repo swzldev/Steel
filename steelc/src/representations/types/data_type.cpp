@@ -9,7 +9,11 @@
 #include <representations/types/function_type.h>
 #include <representations/types/type_utils.h>
 
-std::shared_ptr<data_type> data_type::UNKNOWN = std::make_shared<data_type>(DT_UNKNOWN);
+type_ptr data_type::get(data_type_kind primitive) {
+	return std::make_shared<data_type>(primitive);
+}
+
+type_ptr data_type::UNKNOWN = std::make_shared<data_type>(DT_UNKNOWN);
 
 bool data_type::operator==(const type_ptr& other) const {
 	if (primitive != other->primitive) {

@@ -50,7 +50,10 @@ public:
 		: primitive(primitive), modifiers(DTM_NONE), position(0, 0) {
 	}
 
-	static std::shared_ptr<data_type> UNKNOWN;
+	// static method to get primitive data type as a type_ptr
+	static type_ptr get(data_type_kind primitive);
+
+	static type_ptr UNKNOWN;
 
 	virtual bool operator==(const type_ptr& other) const;
 	bool operator!=(const type_ptr& other) const;
@@ -61,24 +64,34 @@ public:
 	inline bool is_void() const {
 		return primitive == DT_VOID;
 	}
+	// i16, i32, i64 (unsigned types are not supported yet)
 	inline bool is_integer() const {
 		return primitive == DT_I16 || primitive == DT_I32 || primitive == DT_I64;
 	}
+	// integer, enum, char, bool
 	inline bool is_integral() const {
-		return is_integer() || is_enum();
+		return is_integer() || is_enum() || is_character() || is_bool();
 	}
+	// float, double
 	inline bool is_floating_point() const {
 		return primitive == DT_FLOAT || primitive == DT_DOUBLE;
 	}
+	// integer or floating point (NOT integral)
 	inline bool is_numeric() const {
-		return is_integral() || is_floating_point();
+		return is_integer() || is_floating_point();
 	}
+	// char, wchar
 	inline bool is_character() const {
 		return primitive == DT_CHAR || primitive == DT_WIDECHAR;
 	}
+	// string, wstring
 	inline bool is_text() const {
 		return primitive == DT_STRING || primitive == DT_WIDESTRING;
 	}
+	inline bool is_bool() const {
+		return primitive == DT_BOOL;
+	}
+
 	inline bool is_custom() const {
 		return primitive == DT_CUSTOM;
 	}

@@ -7,10 +7,10 @@
 //  - using declarations such as mir_operand
 
 struct mir_module;
-struct mir_function;
-struct mir_block;
+class mir_function;
+class mir_block;
 struct mir_instr;
-struct mir_value;
+class mir_value;
 struct mir_type;
 struct mir_const_int;
 struct mir_const_float;
