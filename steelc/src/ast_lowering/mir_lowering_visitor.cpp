@@ -11,6 +11,22 @@
 #include <representations/entities/entity.h>
 #include <representations/entities/module_entity.h>
 
+void mir_lowering_visitor::visit(std::shared_ptr<variable_declaration> var) {
+	// create a local mir_value for the variable
+	mir_operand value{};
+
+	if (var->has_initializer()) {
+		// use initializer value
+		value = accept(var->initializer);
+	}
+	else {
+		// default value
+		value = current_func.make_value({ var->type }, var->identifier);
+	}
+
+	// store it in the current scope
+	locals_stack.back()[var->identifier] = value;
+}
 void mir_lowering_visitor::visit(std::shared_ptr<function_declaration> func) {
 	// set the builder to the function's entry block
 	if (current_func.blocks.empty()) {
@@ -19,8 +35,34 @@ void mir_lowering_visitor::visit(std::shared_ptr<function_declaration> func) {
 	builder.set_function(&current_func);
 	builder.set_insert_block(current_func.get_entry_block());
 
+	push_scope();
+
+	for (auto& param : func->parameters) {
+		// create a local for each parameter
+		locals_stack.back()[param->identifier] = current_func.make_value({ param->type }, param->identifier);
+	}
+
 	// lower each statement in the function body
 	func->body->accept(*this);
+	pop_scope();
+}
+void mir_lowering_visitor::visit(std::shared_ptr<member_expression> expr) {
+	if (expr->is_static_access()) {
+		// static accesses purely semantic for now
+		return;
+	}
+
+	mir_operand obj = accept(expr->object);
+}
+void mir_lowering_visitor::visit(std::shared_ptr<identifier_expression> expr) {
+	if (expr->entity()->kind() == ENTITY_VARIABLE) {
+		// local variable
+		mir_operand local_op = get_local(expr->identifier);
+		result = local_op;
+	}
+	else {
+		throw std::runtime_error("Unsupported identifier entity kind in MIR lowering");
+	}
 }
 void mir_lowering_visitor::visit(std::shared_ptr<function_call> func_call) {
 	// lower each argument
@@ -78,9 +120,15 @@ void mir_lowering_visitor::visit(std::shared_ptr<literal> literal) {
 	}
 }
 void mir_lowering_visitor::visit(std::shared_ptr<code_block> block) {
+	if (!block->is_body) {
+		push_scope();
+	}
 	// TODO: handle alloc/dealloc if non-body block
 	for (auto& stmt : block->body) {
 		stmt->accept(*this);
+	}
+	if (!block->is_body) {
+		pop_scope();
 	}
 }
 void mir_lowering_visitor::visit(std::shared_ptr<return_statement> ret_stmt) {
@@ -93,4 +141,15 @@ void mir_lowering_visitor::visit(std::shared_ptr<return_statement> ret_stmt) {
 		// void return
 		builder.build_ret_void();
 	}
+}
+
+mir_operand mir_lowering_visitor::get_local(const std::string& name) {
+	for (auto it = locals_stack.rbegin(); it != locals_stack.rend(); ++it) {
+		auto& scope = *it;
+		auto found = scope.find(name);
+		if (found != scope.end()) {
+			return found->second;
+		}
+	}
+	throw std::runtime_error("Local variable '" + name + "' not found in any scope");
 }
