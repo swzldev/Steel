@@ -57,6 +57,7 @@ public:
 	}
 
 	type_ptr type() const override {
+		// returns the RETURN TYPE not the FUNCTION TYPE
 		if (!declaration) {
 			if (ctor_type) {
 				return ctor_type->type();

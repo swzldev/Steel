@@ -34,7 +34,7 @@ public:
 	//void visit(std::shared_ptr<this_expression> expr);
 	//void visit(std::shared_ptr<cast_expression> expr);
 	//void visit(std::shared_ptr<initializer_list> init);
-	//void visit(std::shared_ptr<function_call> func_call);
+	void visit(std::shared_ptr<function_call> func_call);
 	void visit(std::shared_ptr<literal> literal) override;
 	//void visit(std::shared_ptr<import_statement> import_stmt);
 	void visit(std::shared_ptr<code_block> block) override;

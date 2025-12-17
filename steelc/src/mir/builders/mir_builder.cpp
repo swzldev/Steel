@@ -3,6 +3,7 @@
 #include <stdexcept>
 
 #include <representations/types/data_type.h>
+#include <representations/types/function_type.h>
 #include <mir/mir_block.h>
 #include <mir/mir_function.h>
 #include <mir/mir_value.h>
@@ -56,6 +57,25 @@ mir_operand mir_builder::build_const_string(const std::string& value, mir_type t
 		.type = type,
 		.value = value
 	};
+}
+
+mir_operand mir_builder::build_call(const std::vector<std::string>& scopes, const std::string& name, std::vector<mir_operand> args, mir_type func_type) {
+	if (!func_type.ty->is_function()) {
+		throw std::runtime_error("Function type provided to build_call is not a function type");
+	}
+
+	// insert function as first operand
+	args.insert(args.begin(), mir_func_ref{ func_type, name, scopes });
+
+	// create call instruction
+	mir_value result = create_temp_value(mir_type{ func_type.ty->as_function()->get_return_type() });
+	insert_instr({
+		.kind = mir_instr_opcode::CALL,
+		.type = func_type,
+		.result = result,
+		.operands = args
+	});
+	return result;
 }
 
 void mir_builder::insert_instr(const mir_instr&& instr) {

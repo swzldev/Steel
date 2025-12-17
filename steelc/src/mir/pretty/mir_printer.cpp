@@ -85,11 +85,44 @@ std::string mir_printer::opcode_to_str(mir_instr_opcode opcode) {
 	}
 }
 std::string mir_printer::operand_to_str(const mir_operand& operand) {
-	return "";
+	return std::visit([this](auto&& arg) -> std::string {
+		using T = std::decay_t<decltype(arg)>;
+		if constexpr (std::is_same_v<T, mir_value>) {
+			return value_to_str(arg);
+		}
+		else if constexpr (std::is_same_v<T, mir_const_int>) {
+			return std::to_string(arg.value);
+		}
+		else if constexpr (std::is_same_v<T, mir_const_float>) {
+			return std::to_string(arg.value);
+		}
+		else if constexpr (std::is_same_v<T, mir_string_imm>) {
+			return "\"" + arg.value + "\"";
+		}
+		else if constexpr (std::is_same_v<T, mir_func_ref>) {
+			std::string result;
+			result += type_to_str(arg.type) + " ";
+			for (const auto& scope : arg.scopes) {
+				result += scope + "::";
+			}
+			result += arg.name;
+			return result;
+		}
+		else if constexpr (std::is_same_v<T, mir_field_ref>) {
+			return "field_ref(" + std::to_string(arg.index) + ")";
+		}
+		else {
+			return "unknown_operand";
+		}
+	}, operand);
 }
 std::string mir_printer::value_to_str(const mir_value& value) {
 	if (!value.get_name().empty()) {
 		return "%" + value.get_name(); // e.g. %var
 	}
 	return "%" + std::to_string(value.get_id()); // e.g. %2
+}
+std::string mir_printer::type_to_str(const mir_type& type) {
+	// for now since its just a wrapper
+	return type.ty->name();
 }

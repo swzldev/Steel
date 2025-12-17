@@ -8,6 +8,8 @@
 #include <mir/mir_function.h>
 #include <mir/mir_type.h>
 #include <mir/mir_operand.h>
+#include <representations/entities/entity.h>
+#include <representations/entities/module_entity.h>
 
 void mir_lowering_visitor::visit(std::shared_ptr<function_declaration> func) {
 	// set the builder to the function's entry block
@@ -19,6 +21,23 @@ void mir_lowering_visitor::visit(std::shared_ptr<function_declaration> func) {
 
 	// lower each statement in the function body
 	func->body->accept(*this);
+}
+void mir_lowering_visitor::visit(std::shared_ptr<function_call> func_call) {
+	// lower each argument
+	std::vector<mir_operand> arg_operands;
+	for (auto& arg_expr : func_call->args) {
+		mir_operand arg_op = accept(arg_expr);
+		arg_operands.push_back(arg_op);
+	}
+
+	// build the call instruction
+	mir_operand call_result = builder.build_call(
+		func_call->declaration->parent_module->name_path(),
+		func_call->identifier,
+		arg_operands,
+		mir_type{ func_call->declaration->type() } // declaration type for function type not return type
+	);
+	result = call_result;
 }
 void mir_lowering_visitor::visit(std::shared_ptr<literal> literal) {
 	auto ty = literal->type(); // note: always a primitive

@@ -1,5 +1,9 @@
 #pragma once
 
+#include <vector>
+#include <string>
+#include <cstdint>
+
 #include <mir/mir_fwd.h>
 #include <mir/mir_operand.h>
 #include <mir/mir_instr.h>
@@ -37,8 +41,11 @@ public:
 	mir_operand build_const_float(double value, mir_type type);
 	mir_operand build_const_string(const std::string& value, mir_type type);
 
+	// functions
+	mir_operand build_call(const std::vector<std::string>& scopes, const std::string& name, std::vector<mir_operand> args, mir_type func_type);
+
 private:
-	mir_function* func;
+	mir_function* func = nullptr;
 	mir_block* ins_block = nullptr;
 
 	void insert_instr(const mir_instr&& instr);

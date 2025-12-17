@@ -26,4 +26,5 @@ private:
 	std::string opcode_to_str(mir_instr_opcode opcode);
 	std::string operand_to_str(const mir_operand& operand);
 	std::string value_to_str(const mir_value& value);
+	std::string type_to_str(const mir_type& type);
 };
