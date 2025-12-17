@@ -173,6 +173,8 @@ set(SOURCES
     "src/mir/mir_value.h"
     "src/mir/builders/mir_builder.cpp"
     "src/mir/builders/mir_builder.h"
+    "src/mir/pretty/mir_printer.cpp"
+    "src/mir/pretty/mir_printer.h"
 
     # modules/
     "src/modules/module_info.h"
