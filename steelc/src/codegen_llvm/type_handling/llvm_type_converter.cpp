@@ -3,7 +3,6 @@
 #include <llvm/IR/Type.h>
 #include <llvm/IR/DerivedTypes.h>
 
-#include <codegen/codegen_visitor.h>
 #include <codegen/error/codegen_exception.h>
 #include <ast/declarations/type_declaration.h>
 #include <representations/types/types_fwd.h>
@@ -11,12 +10,13 @@
 #include <representations/types/custom_type.h>
 #include <representations/types/container_types.h>
 
-llvm::Type* llvm_type_converter::convert(type_ptr t) {
+llvm::Type* llvm_type_converter::convert(const mir_type& ty) {
+	auto& t = ty.ty;
 	if (t->is_unknown()) {
 		throw codegen_exception("Cannot convert unknown type");
 	}
 	else if (t->is_primitive()) {
-		return get_primitive_type(t);
+		return get_primitive_type(mir_type{ t });
 	}
 	else if (auto custom = t->as_custom()) {
 		std::string custom_name_full = custom->name(); // change this when scoped types are implemented
@@ -26,7 +26,7 @@ llvm::Type* llvm_type_converter::convert(type_ptr t) {
 
 		std::vector<llvm::Type*> member_types;
 		for (const auto& field : custom->declaration->fields) {
-			member_types.push_back(convert(field->type));
+			member_types.push_back(convert(mir_type{ field->type }));
 		}
 
 		llvm::StructType* strct = llvm::StructType::create(context, custom->name());
@@ -35,20 +35,21 @@ llvm::Type* llvm_type_converter::convert(type_ptr t) {
 		return strct;
 	}
 	else if (auto arr = t->as_array()) {
-		llvm::Type* element_type = convert(arr->base_type);
+		llvm::Type* element_type = convert(mir_type{ arr->base_type });
 
 		// TODO
 		//return llvm::ArrayType::get(element_type, arr->size);
 	}
 	else if (auto ptr = t->as_pointer()) {
-		auto base_type = convert(ptr->base_type);
+		auto base_type = convert(mir_type{ ptr->base_type });
 		return llvm::PointerType::getUnqual(base_type);
 	}
 
 	return nullptr;
 }
 
-llvm::Type* llvm_type_converter::get_primitive_type(type_ptr t) {
+llvm::Type* llvm_type_converter::get_primitive_type(const mir_type& ty) {
+	auto& t = ty.ty;
 	switch (t->primitive) {
 		case DT_I16:
 			return llvm::Type::getInt16Ty(context);
@@ -73,7 +74,8 @@ llvm::Type* llvm_type_converter::get_primitive_type(type_ptr t) {
 			return nullptr;
 	}
 }
-unsigned long long llvm_type_converter::get_array_size(type_ptr t) {
+unsigned long long llvm_type_converter::get_array_size(const mir_type& ty) {
+	auto& t = ty.ty;
 	auto arr = t->as_array();
 	if (!arr) {
 		throw codegen_exception("Non-array type passed to get_array_size");

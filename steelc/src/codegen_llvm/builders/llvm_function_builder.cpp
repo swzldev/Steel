@@ -14,16 +14,11 @@
 #include <ast/declarations/function_declaration.h>
 #include <ast/declarations/type_declaration.h>
 
-llvm::Function* llvm_function_builder::build(std::shared_ptr<function_declaration> func_ast) {
-	if (func_ast->is_generic && !func_ast->is_generic_instance) {
-		// cannot build generic function templates
-		throw codegen_exception("Attempted to build generic function: " + func_ast->identifier);
-	}
-
+llvm::Function* llvm_function_builder::build(const mir_function& fn_mir, llvm::Module* module) {
 	auto linkage = llvm::Function::ExternalLinkage;
-	auto fn_type = get_llvm_fn_type(func_ast);
+	auto fn_type = get_llvm_fn_type(fn_mir);
 
-	std::string name = mangler.mangle_function(func_ast);
+	std::string name = mangler.mangle_function(fn_mir);
 	llvm::Function* fn = llvm::Function::Create(
 		/* Function Type */ fn_type,
 		/* Linkage */ linkage,
@@ -32,41 +27,37 @@ llvm::Function* llvm_function_builder::build(std::shared_ptr<function_declaratio
 	);
 
 	// name the function arguments
-	auto arg_iter = fn->arg_begin();
+	/*auto arg_iter = fn->arg_begin();
 	if (func_ast->is_method) {
 		// name this pointer (if applicable)
 		arg_iter->setName(codegen_constants::THIS_PARAM_NAME);
 		++arg_iter;
 	}
-	for (const auto& param : func_ast->parameters) {
+	for (const auto& param : fn_mir.param_types) {
 		arg_iter->setName(param->identifier);
 		++arg_iter;
-	}
+	}*/ // temporarily disabled as mir_function does not store parameter names
 
 	return fn;
 }
-llvm::FunctionType* llvm_function_builder::get_llvm_fn_type(std::shared_ptr<function_declaration> func_ast) {
-	auto return_type = type_converter.convert(func_ast->return_type);
+llvm::FunctionType* llvm_function_builder::get_llvm_fn_type(const mir_function& fn_mir) {
+	auto return_type = type_converter.convert(fn_mir.return_type);
 
 	llvm::FunctionType* fn_type = nullptr;
-	if (func_ast->parameters.empty()) {
+	if (fn_mir.param_types.empty()) {
 		fn_type = llvm::FunctionType::get(
 			/* Return Type */ return_type,
 			/* isVarArg */ false
 		);
 	}
 	else {
-		std::vector<llvm::Type*> param_types;
-		if (func_ast->is_method) {
-			// add 'this' pointer
-			param_types.push_back(type_converter.convert(func_ast->parent_type->type()));
-		}
-		for (const auto& param : func_ast->parameters) {
-			param_types.push_back(type_converter.convert(param->type));
+		std::vector<llvm::Type*> llvm_param_types;
+		for (const auto& param : fn_mir.param_types) {
+			llvm_param_types.push_back(type_converter.convert(mir_type{ param.ty }));
 		}
 		fn_type = llvm::FunctionType::get(
 			/* Return Type */ return_type,
-			/* Param Types */ param_types,
+			/* Param Types */ llvm_param_types,
 			/* isVarArg */ false
 		);
 		// in the future, we can add support for variadic functions here

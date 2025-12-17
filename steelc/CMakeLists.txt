@@ -3,8 +3,10 @@
 # Sources are organized in alphabetical order within their respective folders
 
 set(SOURCES
+    # src/
     "src/main.cpp"
-    # ast/
+
+    # src/ast/
     "src/ast/ast.h"
     "src/ast/ast_fwd.h"
     "src/ast/ast_node.h"
@@ -45,13 +47,13 @@ set(SOURCES
     "src/ast/statements/control_flow/return_statement.h"
     "src/ast/statements/control_flow/while_loop.h"
 
-    # ast_lowering/
+    # src/ast_lowering/
     "src/ast_lowering/mir_lowerer.cpp"
     "src/ast_lowering/mir_lowerer.h"
     "src/ast_lowering/mir_lowering_visitor.cpp"
     "src/ast_lowering/mir_lowering_visitor.h"
 
-    # ast_passes/
+    # src/ast_passes/
     "src/ast_passes/compile_time_computator.cpp"
     "src/ast_passes/compile_time_computator.h"
     "src/ast_passes/declaration_collector.cpp"
@@ -77,7 +79,7 @@ set(SOURCES
     "src/ast_passes/util/entity_refresher.cpp"
     "src/ast_passes/util/entity_refresher.h"
 
-    # building/
+    # src/building/
     "src/building/build_config.h"
     "src/building/code_outputter.cpp"
     "src/building/code_outputter.h"
@@ -94,7 +96,7 @@ set(SOURCES
     "src/building/linking/project_linker.cpp"
     "src/building/linking/project_linker.h"
 
-    # codegen/
+    # src/codegen/
     "src/codegen/codegen.cpp"
     "src/codegen/codegen.h"
     "src/codegen/codegen_result.h"
@@ -111,9 +113,7 @@ set(SOURCES
     "src/codegen/naming/name_mangler.cpp"
     "src/codegen/naming/name_mangler.h"
 
-    # codegen_llvm/
-    "src/codegen_llvm/codegen_env.cpp"
-    "src/codegen_llvm/codegen_env.h"
+    # src/codegen_llvm/
     "src/codegen_llvm/llvm_code_generator.cpp"
     "src/codegen_llvm/llvm_code_generator.h"
     "src/codegen_llvm/builders/llvm_expression_builder.cpp"
@@ -125,25 +125,25 @@ set(SOURCES
     "src/codegen_llvm/type_handling/llvm_type_utils.cpp"
     "src/codegen_llvm/type_handling/llvm_type_utils.h"
 
-    # compiler/
+    # src/compiler/
     "src/compiler/compilation_pass.cpp"
     "src/compiler/compilation_pass.h"
     "src/compiler/compiler.cpp"
     "src/compiler/compiler.h"
 
-    # config/
+    # src/config/
     "src/config/bad_arg_exception.h"
     "src/config/compile_config.cpp"
     "src/config/compile_config.h"
 
-    # error/
+    # src/error/
     "src/error/advice.h"
     "src/error/error.h"
     "src/error/error_catalog.h"
     "src/error/error_printer.cpp"
     "src/error/error_printer.h"
 
-    # input/
+    # src/input/
     "src/input/console_args.cpp"
     "src/input/console_args.h"
     "src/input/commands/steelc_command.cpp"
@@ -157,7 +157,7 @@ set(SOURCES
     "src/input/commands/flags/flag_config.cpp"
     "src/input/commands/flags/flag_config.h"
 
-    # lexer/
+    # src/lexer/
     "src/lexer/lexer.cpp"
     "src/lexer/lexer.h"
     "src/lexer/token.h"
@@ -165,7 +165,7 @@ set(SOURCES
     "src/lexer/token_utils.cpp"
     "src/lexer/token_utils.h"
 
-    # mir/
+    # src/mir/
     "src/mir/mir_block.h"
     "src/mir/mir_function.h"
     "src/mir/mir_fwd.h"
@@ -179,24 +179,24 @@ set(SOURCES
     "src/mir/pretty/mir_printer.cpp"
     "src/mir/pretty/mir_printer.h"
 
-    # modules/
+    # src/modules/
     "src/modules/module_info.h"
     "src/modules/module_manager.cpp"
     "src/modules/module_manager.h"
 
-    # output/
+    # src/output/
     "src/output/log_file.cpp"
     "src/output/log_file.h"
     "src/output/output.cpp"
     "src/output/output.h"
 
-    # parser/
+    # src/parser/
     "src/parser/parser.cpp"
     "src/parser/parser.h"
     "src/parser/parser_utils.cpp"
     "src/parser/parser_utils.h"
 
-    # representations/
+    # src/representations/
     "src/representations/entities/entities_fwd.h"
     "src/representations/entities/entity.cpp"
     "src/representations/entities/entity.h"
@@ -230,11 +230,11 @@ set(SOURCES
     "src/representations/types/type_utils.cpp"
     "src/representations/types/type_utils.h"
 
-    # steelc/
+    # src/steelc/
     "src/steelc/language_constants.h"
     "src/steelc/steelc_definitions.h"
 
-    # stproj/
+    # src/stproj/
     "src/stproj/bad_stproj_exception.h"
     "src/stproj/source_file.cpp"
     "src/stproj/source_file.h"
@@ -243,7 +243,7 @@ set(SOURCES
     "src/stproj/stproj_generator.cpp"
     "src/stproj/stproj_generator.h"
 
-    # symbolics/
+    # src/symbolics/
     "src/symbolics/import_table.cpp"
     "src/symbolics/import_table.h"
     "src/symbolics/lookup_result.cpp"
@@ -258,7 +258,7 @@ set(SOURCES
     "src/symbolics/type_symbols.cpp"
     "src/symbolics/type_symbols.h"
 
-    # utils/
+    # src/utils/
     "src/utils/console_colors.cpp"
     "src/utils/console_colors.h"
     "src/utils/iclonable.h"

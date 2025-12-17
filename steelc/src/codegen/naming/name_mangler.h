@@ -4,7 +4,7 @@
 #include <memory>
 
 #include <representations/types/types_fwd.h>
-#include <ast/declarations/function_declaration.h>
+#include <mir/mir_fwd.h>
 
 // name mangler
 // the name mangler in steel follows the itanium c++ abi mangling scheme
@@ -13,9 +13,9 @@
 
 class name_mangler {
 public:
-	std::string mangle_function(std::shared_ptr<function_declaration> func_ast);
+	std::string mangle_function(const mir_function& fn_mir);
 
 private:
 	std::string mangle_text(const std::string& text);
-	std::string mangle_type(type_ptr t);
+	std::string mangle_type(const mir_type& ty);
 };

@@ -7,7 +7,7 @@
 #include <llvm/IR/DerivedTypes.h>
 #include <llvm/IR/LLVMContext.h>
 
-#include <representations/types/types_fwd.h>
+#include <mir/mir_type.h>
 
 class codegen_visitor;
 
@@ -17,12 +17,12 @@ public:
 		: context(context) {
 	}
 
-	llvm::Type* convert(type_ptr t);
+	llvm::Type* convert(const mir_type& ty);
 
 private:
 	llvm::LLVMContext& context;
 	std::unordered_map<std::string, llvm::StructType*> struct_type_cache;
 
-	llvm::Type* get_primitive_type(type_ptr t);
-	unsigned long long get_array_size(type_ptr t);
+	llvm::Type* get_primitive_type(const mir_type& ty);
+	unsigned long long get_array_size(const mir_type& ty);
 };

@@ -7,22 +7,20 @@
 #include <llvm/IR/DerivedTypes.h>
 
 #include <codegen/naming/name_mangler.h>
-#include <codegen/type_handling/llvm_type_converter.h>
-#include <ast/declarations/function_declaration.h>
+#include <codegen_llvm/type_handling/llvm_type_converter.h>
+#include <mir/mir_function.h>
 
 class llvm_function_builder {
 public:
-	llvm_function_builder(llvm::Module& module, llvm_type_converter& type_converter)
-		: module(module), type_converter(type_converter) {
+	llvm_function_builder(llvm_type_converter& type_converter)
+		: type_converter(type_converter) {
 	}
 
-	llvm::Function* build(std::shared_ptr<function_declaration> func_ast);
-	llvm::FunctionType* get_llvm_fn_type(std::shared_ptr<function_declaration> func_ast);
+	llvm::Function* build(const mir_function& fn_mir, llvm::Module* module);
+	llvm::FunctionType* get_llvm_fn_type(const mir_function& fn_mir);
 
 private:
 	static name_mangler mangler;
-
-	llvm::Module& module;
 
 	llvm_type_converter& type_converter;
 };
