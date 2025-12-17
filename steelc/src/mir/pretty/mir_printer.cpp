@@ -117,6 +117,9 @@ std::string mir_printer::operand_to_str(const mir_operand& operand) {
 	}, operand);
 }
 std::string mir_printer::value_to_str(const mir_value& value) {
+	if (!value.valid()) {
+		return "<invalid>";
+	}
 	if (!value.get_name().empty()) {
 		return "%" + value.get_name(); // e.g. %var
 	}
