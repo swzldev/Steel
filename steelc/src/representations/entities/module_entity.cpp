@@ -18,6 +18,9 @@ std::string module_entity::full_name() const {
 }
 
 std::vector<std::string> module_entity::name_path() const {
+	if (is_global()) {
+		return {};
+	}
 	if (parent_module && !parent_module->is_global()) {
 		auto path = parent_module->name_path();
 		path.push_back(mod_info->name);
