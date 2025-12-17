@@ -1,28 +1,16 @@
 #pragma once
 
 #include <memory>
+#include <vector>
 
-#include <llvm/IR/Module.h>
-#include <llvm/IR/LLVMContext.h>
+#include <codegen/code_artifact.h>
 
-#include <codegen/modules/module_holder.h>
+struct codegen_diag {
+	// TODO
+};
 
-class codegen_result {
-public:
-	// move only
-	codegen_result(const codegen_result&) = delete;
-	codegen_result& operator=(const codegen_result&) = delete;
-	codegen_result(codegen_result&&) = default;
-	codegen_result& operator=(codegen_result&&) = default;
-
-public:
-	codegen_result()
-		: context(nullptr) {
-	}
-	codegen_result(std::unique_ptr<llvm::LLVMContext> ctx)
-		: context(std::move(ctx)) {
-	}
-
-	std::unique_ptr<llvm::LLVMContext> context;
-	std::vector<module_holder> modules;
+struct codegen_result {
+	std::vector<code_artifact> artifacts;
+	std::vector<codegen_diag> diagnostics;
+	bool success = true;
 };
