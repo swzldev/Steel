@@ -105,7 +105,6 @@ set(SOURCES
     "src/codegen/cleanup/scope.h"
     "src/codegen/constants/codegen_constants.h"
     "src/codegen/error/codegen_exception.h"
-    "src/codegen/modules/module_holder.h"
     "src/codegen/memory/lvalue.cpp"
     "src/codegen/memory/lvalue.h"
     "src/codegen/memory/variable.h"
