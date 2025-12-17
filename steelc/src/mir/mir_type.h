@@ -1,6 +1,7 @@
 #pragma once
 
 #include <representations/types/types_fwd.h>
+#include <representations/types/data_type.h>
 
 // mir_type
 //

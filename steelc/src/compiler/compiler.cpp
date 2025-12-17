@@ -21,6 +21,10 @@
 #include <ast_passes/type_checker.h>
 #include <ast_passes/init_checker.h>
 #include <ast_passes/flow_analyzer.h>
+#include <ast_lowering/mir_lowerer.h>
+#include <mir/mir_fwd.h>
+#include <mir/mir_module.h>
+#include <mir/pretty/mir_printer.h>
 #include <codegen/codegen.h>
 #include <codegen/codegen_result.h>
 #include <output/output.h>
@@ -132,6 +136,23 @@ bool compiler::compile(compile_config cfg) {
 
 		if (errors.size() > 0) {
 			return false;
+		}
+	}
+
+	// lower ast to mir
+	std::vector<mir_module> mir_modules;
+	mir_modules.reserve(compilation_units.size());
+	for (auto& unit : compilation_units) {
+		mir_lowerer mir_lowerer;
+		mir_modules.push_back(mir_lowerer.lower_unit(unit));
+	}
+
+	if (PRINT_MIR) {
+		mir_printer printer;
+		for (const auto& mod : mir_modules) {
+			std::string mir_text = printer.print_module(mod);
+			output::print("Generated MIR:\n");
+			output::print("{}\n", "", mir_text);
 		}
 	}
 

@@ -20,6 +20,7 @@ mir_module mir_lowerer::lower_unit(std::shared_ptr<compilation_unit> unit) {
 			mm.functions.push_back(lower_func(fn));
 		}
 	}
+	return mm;
 }
 
 mir_function mir_lowerer::lower_func(std::shared_ptr<function_declaration> func) {

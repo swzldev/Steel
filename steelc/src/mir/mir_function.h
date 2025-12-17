@@ -7,6 +7,7 @@
 #include <mir/mir_fwd.h>
 #include <mir/mir_type.h>
 #include <mir/mir_value.h>
+#include <mir/mir_block.h>
 
 class mir_function{
 public:
