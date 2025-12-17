@@ -101,15 +101,14 @@ std::string mir_printer::operand_to_str(const mir_operand& operand) {
 		}
 		else if constexpr (std::is_same_v<T, mir_func_ref>) {
 			std::string result;
-			result += type_to_str(arg.type) + " ";
 			for (const auto& scope : arg.scopes) {
 				result += scope + "::";
 			}
 			result += arg.name;
-			return result;
+			return "func(" + result + ")";
 		}
 		else if constexpr (std::is_same_v<T, mir_field_ref>) {
-			return "field_ref(" + std::to_string(arg.index) + ")";
+			return "field(" + std::to_string(arg.index) + ")";
 		}
 		else {
 			return "unknown_operand";
