@@ -1,25 +1,34 @@
 #pragma once
 
-#include <memory>
 #include <vector>
 #include <string>
+#include <unordered_set>
+#include <memory>
 
 #include <codegen/codegen_result.h>
-#include <ast/ast_fwd.h>
-#include <modules/module_manager.h>
+#include <codegen/codegen_config.h>
+#include <codegen/icode_generator.h>
+#include <mir/mir_fwd.h>
+
+// codegen
+//
+// this code handles generating low level code from MIR
+// it does not produce or generate any code, this is provided
+// by the icode_generator passed (usually the llvm_code_generator)
 
 class codegen {
 public:
-	codegen(module_manager& module_manager, std::vector<std::shared_ptr<compilation_unit>> units)
-		: module_manager(module_manager), compilation_units(units) {
+	codegen(const std::vector<mir_module>& mir_modules, const codegen_config& cfg)
+		: mir_modules(mir_modules) {
 	}
 
-	std::unique_ptr<codegen_result> generate_modules();
+	codegen_result generate(size_t index);
+	codegen_result generate_all();
 
 private:
-	module_manager& module_manager;
-	std::vector<std::shared_ptr<compilation_unit>> compilation_units;
-	std::unordered_set<std::string> llvm_module_names;
+	std::vector<mir_module> mir_modules;
+	codegen_config cfg;
+	std::unique_ptr<icode_generator> generator = nullptr;
 
-	std::string get_module_name(std::shared_ptr<compilation_unit> unit);
+	icode_generator* get_generator();
 };

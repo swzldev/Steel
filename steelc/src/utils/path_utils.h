@@ -4,6 +4,6 @@
 #include <filesystem>
 
 namespace path_utils {
-	std::filesystem::path normalize_path(const std::string& path);
-	std::filesystem::path normalize_path(const std::filesystem::path& path);
+	std::filesystem::path normalize(const std::string& path);
+	std::filesystem::path normalize(const std::filesystem::path& path);
 }

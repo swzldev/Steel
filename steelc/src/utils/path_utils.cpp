@@ -2,7 +2,7 @@
 
 #include <filesystem>
 
-std::filesystem::path path_utils::normalize_path(const std::string& path) {
+std::filesystem::path path_utils::normalize(const std::string& path) {
 	std::filesystem::path p(path);
 
 	if (p.is_relative()) {
@@ -14,6 +14,6 @@ std::filesystem::path path_utils::normalize_path(const std::string& path) {
 
 	return p;
 }
-std::filesystem::path path_utils::normalize_path(const std::filesystem::path& path) {
-	return normalize_path(path.string());
+std::filesystem::path path_utils::normalize(const std::filesystem::path& path) {
+	return normalize(path.string());
 }

@@ -4,6 +4,16 @@
 #include <fstream>
 #include <string>
 
+code_output_error code_outputter::output_code(const std::vector<uint8_t>& code, const std::string& filename, code_output_location location, code_output_format) {
+	switch (location) {
+	case OUTPUT_LOCATION_OUTPUT:
+		return output_to(std::string(code.begin(), code.end()), output_dir / filename, true);
+	case OUTPUT_LOCATION_INTERMEDIATE:
+		return output_to(std::string(code.begin(), code.end()), intermediate_dir / filename, true);
+	}
+	return OUTPUT_SUCCESS;
+}
+
 code_output_error code_outputter::output_code(const std::string& code, const std::string& filename, code_output_location location, code_output_format format) {
 	switch (location) {
 	case OUTPUT_LOCATION_OUTPUT:

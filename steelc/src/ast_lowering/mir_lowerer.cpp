@@ -11,6 +11,7 @@
 
 mir_module mir_lowerer::lower_unit(std::shared_ptr<compilation_unit> unit) {
 	mir_module mm;
+	mm.meta.src_relpath = unit->source_file->relative_path;
 	for (auto& decl : unit->declarations) {
 		if (auto fn = std::dynamic_pointer_cast<function_declaration>(decl)) {
 			if (fn->is_generic && !fn->is_generic_instance) {

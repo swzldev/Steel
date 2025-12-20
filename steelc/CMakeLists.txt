@@ -90,8 +90,6 @@ set(SOURCES
     "src/building/cache/file_hasher.cpp"
     "src/building/cache/file_hasher.h"
     "src/building/cache/file_metadata.h"
-    "src/building/ir/ir_generator.cpp"
-    "src/building/ir/ir_generator.h"
     "src/building/linking/link_error.h"
     "src/building/linking/project_linker.cpp"
     "src/building/linking/project_linker.h"
@@ -99,6 +97,7 @@ set(SOURCES
     # src/codegen/
     "src/codegen/codegen.cpp"
     "src/codegen/codegen.h"
+    "src/codegen/codegen_config.h"
     "src/codegen/codegen_result.h"
     "src/codegen/code_artifact.h"
     "src/codegen/icode_generator.h"
@@ -124,6 +123,8 @@ set(SOURCES
     "src/codegen_llvm/type_handling/llvm_type_converter.h"
     "src/codegen_llvm/type_handling/llvm_type_utils.cpp"
     "src/codegen_llvm/type_handling/llvm_type_utils.h"
+    "src/codegen_llvm/writers/llvm_writer.cpp"
+    "src/codegen_llvm/writers/llvm_writer.h"
 
     # src/compiler/
     "src/compiler/compilation_pass.cpp"
@@ -164,6 +165,13 @@ set(SOURCES
     "src/lexer/token_type.h"
     "src/lexer/token_utils.cpp"
     "src/lexer/token_utils.h"
+
+    # src/linking/
+    "src/linking/icode_linker.h"
+
+    # src/linking_llvm/
+    "src/linking_llvm/llvm_code_linker.cpp"
+    "src/linking_llvm/llvm_code_linker.h"
 
     # src/mir/
     "src/mir/mir_block.h"

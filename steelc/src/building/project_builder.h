@@ -57,8 +57,13 @@ private:
 	// elapsed time (IN SECONDS) since compilation started
 	double get_compilation_time() const;
 
-	std::string get_ir_path(const source_file& src, bool relative = true) const;
+	// gets the path (relative/non-relative) for a given code artifact
+	// it uses the artifacts kind to determine the appropriate subdirectory
+	std::string get_artifact_path(const code_artifact& artifact, bool relative = true) const;
 
+	inline std::filesystem::path get_project_dir() const {
+		return project_file->parent_path();
+	}
 	inline std::filesystem::path get_output_dir() const {
 		return project_file->parent_path() / build_cfg.output_dir;
 	}

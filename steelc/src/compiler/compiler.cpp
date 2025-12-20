@@ -27,9 +27,11 @@
 #include <mir/pretty/mir_printer.h>
 #include <codegen/codegen.h>
 #include <codegen/codegen_result.h>
+#include <codegen/codegen_config.h>
+#include <codegen_llvm/llvm_code_generator.h>
 #include <output/output.h>
 
-bool compiler::compile(compile_config cfg) {
+bool compiler::compile(const compile_config& cl_cfg, const codegen_config& cg_cfg) {
 	for (auto& file : sources) {
 		auto unit = std::make_shared<compilation_unit>();
 		unit->source_file = std::make_shared<source_file>(file);
@@ -157,15 +159,10 @@ bool compiler::compile(compile_config cfg) {
 	}
 
 	// generate modules for all units
-	codegen codegen(module_manager, compilation_units);
-	codegen_result = codegen.generate_modules();
+	codegen codegen(mir_modules, cg_cfg);
+	codegen_result = codegen.generate_all();
 
-	// not all sources could be generated
-	if (codegen_result->modules.size() != compilation_units.size()) {
-		return false;
-	}
-
-	return true;
+	return codegen_result.success;
 }
 
 std::vector<std::string> compiler::read_source(std::string& path) {

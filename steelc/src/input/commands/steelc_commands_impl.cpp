@@ -27,13 +27,13 @@ bool steelc_commands_impl::version_command_handler(const command_flags& flags) {
 }
 bool steelc_commands_impl::build_command_handler(const command_flags& flags) {
 	std::string project_file_path = flags.get_first("<project-path>");
-	std::filesystem::path project_file_path_n = path_utils::normalize_path(project_file_path);
+	std::filesystem::path project_file_path_n = path_utils::normalize(project_file_path);
 	if (std::filesystem::is_directory(project_file_path_n)) {
 		// attempt to find a .stproj file in the directory
 		bool found = false;
 		for (const auto& entry : std::filesystem::directory_iterator(project_file_path_n)) {
 			if (entry.path().extension() == ".stproj") {
-				project_file_path_n = path_utils::normalize_path(entry.path().string());
+				project_file_path_n = path_utils::normalize(entry.path().string());
 				found = true;
 				break;
 			}

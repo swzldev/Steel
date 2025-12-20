@@ -27,11 +27,10 @@
 #include <building/code_outputter.h>
 #include <building/linking/link_error.h>
 #include <building/linking/project_linker.h>
-#include <building/ir/ir_generator.h>
 #include <compiler/compiler.h>
+#include <codegen/codegen_result.h>
 #include <stproj/source_file.h>
 #include <stproj/stproj_file.h>
-#include <codegen/modules/module_holder.h>
 
 bool project_builder::load_project(const std::string& project_path) {
 	// load stproj
@@ -52,7 +51,8 @@ bool project_builder::build_project() {
 	// load build cache
 	build_cache_file cache = load_cache();
 	std::vector<source_file> to_compile;
-	std::unique_ptr<codegen_result> codegen_result;
+	codegen_config codegen_cfg{}; // TODO: generate config based on project settings + cl args
+	codegen_result codegen_result{};
 
 	if (build_cfg.build_all) {
 		to_compile = project_file->sources;
@@ -76,7 +76,7 @@ bool project_builder::build_project() {
 
 		mark_compile_start();
 		output::print("Compiling {} source file(s)...\n", console_colors::BOLD, to_compile.size());
-		if (cmp.compile(compile_cfg)) {
+		if (cmp.compile(compile_cfg, codegen_cfg)) {
 			output::print("Compilation succeeded. ", console_colors::BOLD + console_colors::GREEN);
 			output::print("(Took {:.3f} seconds)\n", console_colors::DIM, get_compilation_time());
 		}
@@ -101,23 +101,22 @@ bool project_builder::build_project() {
 	bool generate_asm = build_cfg.generate_llvm_asm;
 
 	// output code (if any)
-	if (codegen_result->modules.size() > 0) {
+	if (codegen_result.artifacts.size() > 0) {
 		// clear all irs
 		outputter->clear_intermediate_files("IR");
 
-		for (const auto& mod_holder : codegen_result->modules) {
-			// automatically gets correct extension based on config (.ll / .bc)
-			std::string path = get_ir_path(*mod_holder.owning_unit->source_file);
-			
-			// default to outputting bitcode (may change later)
-			std::string code;
-			if (generate_asm) {
-				code = ir_generator::llvm_module_to_asm(*mod_holder.module);
+		for (const auto& artifact : codegen_result.artifacts) {
+			std::string path = get_artifact_path(artifact);
+
+			code_output_error err = OUTPUT_SUCCESS;
+
+			if (artifact.format == "LLVM-BC") {
+				err = outputter->output_code(artifact.bytes, path, OUTPUT_LOCATION_INTERMEDIATE, generate_asm ? OUTPUT_FORMAT_TEXT : OUTPUT_FORMAT_BINARY);
 			}
 			else {
-				code = ir_generator::llvm_module_to_bitcode(*mod_holder.module);
+				output::err("Unknown artifact format: \"{}\"\n", console_colors::BOLD + console_colors::RED, artifact.format);
+				return false;
 			}
-			auto err = outputter->output_code(code, path, OUTPUT_LOCATION_INTERMEDIATE, generate_asm ? OUTPUT_FORMAT_TEXT : OUTPUT_FORMAT_BINARY);
 
 			if (err != OUTPUT_SUCCESS) {
 				output::err("Failed to output IR file: {}\n", console_colors::BOLD + console_colors::RED, path);
@@ -128,7 +127,8 @@ bool project_builder::build_project() {
 
 	// gather all irs
 	for (auto& src : project_file->sources) {
-		all_irs.push_back(get_ir_path(src, false));
+		// BROKEN - IGNORES EXTENSION
+		all_irs.push_back(get_artifact_path(src.relative_path, false));
 	}
 
 	// link to one module
@@ -192,13 +192,30 @@ double project_builder::get_compilation_time() const {
 	return std::chrono::duration<double>(std::chrono::high_resolution_clock::now() - compile_start).count();
 }
 
-std::string project_builder::get_ir_path(const source_file& src, bool relative) const {
-	std::string extension = build_cfg.generate_llvm_asm ? ".ll" : ".bc";
-	std::string rel_path = "./IR/" + src.relative_path + extension;
-	if (!relative) {
-		return path_utils::normalize_path(get_intermediate_dir() / rel_path).string();
+std::string project_builder::get_artifact_path(const code_artifact& artifact, bool relative) const {
+	std::string path = "./";
+	switch (artifact.kind) {
+	case ARTIFACT_IR: {
+		path += build_cfg.intermediate_dir + "ir/";
+		path += artifact.src_relpath;
+		break;
 	}
-	return rel_path;
+	case ARTIFACT_BINARY: {
+		path += build_cfg.output_dir;
+		path += project_file->filename_no_extension().string();
+		break;
+	}
+
+	default:
+		throw std::runtime_error("Unsupported or input-only code artifact kind.");
+	}
+
+	path += artifact.extension;
+
+	if (!relative) {
+		return path_utils::normalize(get_project_dir() / path).string();
+	}
+	return path_utils::normalize(path).string();
 }
 
 build_cache_file project_builder::load_cache() {

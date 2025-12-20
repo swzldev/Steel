@@ -35,6 +35,7 @@ public:
 		return outputter;
 	}
 
+	code_output_error output_code(const std::vector<uint8_t>& code, const std::string& filename, code_output_location location, code_output_format = OUTPUT_FORMAT_TEXT);
 	code_output_error output_code(const std::string& code, const std::string& filename, code_output_location location, code_output_format = OUTPUT_FORMAT_TEXT);
 
 	void clear_intermediate_files(const std::string& subpath = "") const;
