@@ -4,20 +4,19 @@
 #include <memory>
 #include <string>
 
-#include <llvm/IR/Module.h>
-
+#include <codegen/code_artifact.h>
+#include <codegen/codegen_config.h>
+#include <linking/icode_linker.h>
 #include <building/linking/link_error.h>
 
 class project_linker {
 public:
 	project_linker() = default;
-	project_linker(std::vector<std::unique_ptr<llvm::Module>> modules)
-		: modules(std::move(modules)) {
+	project_linker(const std::vector<code_artifact>& link_artifacts, const codegen_config& cfg)
+		: link_artifacts(link_artifacts), cfg(cfg) {
 	}
 
-	bool load_modules_from_paths(const std::vector<std::string>& paths, bool is_bitcode = true);
-
-	std::unique_ptr<llvm::Module> link_all();
+	code_artifact link_all(icode_linker* linker) const;
 
 	inline bool has_error() const {
 		return last_error != LINK_OK;
@@ -30,8 +29,8 @@ public:
 	}
 
 private:
-	llvm::LLVMContext ctx;
-	std::vector<std::unique_ptr<llvm::Module>> modules;
+	std::vector<code_artifact> link_artifacts;
+	codegen_config cfg;
 
 	link_error last_error = LINK_OK;
 	std::string error_message;
