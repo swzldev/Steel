@@ -9,6 +9,7 @@
 #include <memory>
 #include <cstdint>
 #include <unordered_set>
+#include <optional>
 
 #include <llvm/IR/Module.h>
 #include <llvm/Bitcode/BitcodeWriter.h>
@@ -20,7 +21,8 @@
 #include <stproj/bad_stproj_exception.h>
 #include <output/output.h>
 #include <error/error_printer.h>
-#include <building/cache/file_metadata.h>
+#include <building/cache/source_metadata.h>
+#include <building/cache/artifact_metadata.h>
 #include <building/cache/build_cache_file.h>
 #include <building/cache/file_hasher.h>
 #include <building/build_config.h>
@@ -50,18 +52,22 @@ bool project_builder::build_project() {
 
 	// load build cache
 	build_cache_file cache = load_cache();
-	std::vector<source_file> to_compile;
+	std::unordered_set<source_file> to_compile;
 	codegen_config codegen_cfg{}; // TODO: generate config based on project settings + cl args
 	codegen_result codegen_result{};
 
 	if (build_cfg.build_all) {
-		to_compile = project_file->sources;
+		for (const auto& src : project_file->sources) {
+			to_compile.insert(src);
+		}
 	}
 	else {
 		// due to only compiling specific files, the symbol table does not
 		// receive all symbols (if theyre in files that arent being compiled)
 		// until i fix this, ill temporarily force full builds
-		to_compile = project_file->sources;
+		for (const auto& src : project_file->sources) {
+			to_compile.insert(src);
+		}
 		//to_compile = get_files_to_compile(cache);
 	}
 
@@ -126,9 +132,50 @@ bool project_builder::build_project() {
 	}
 
 	// gather all irs
-	for (auto& src : project_file->sources) {
-		// BROKEN - IGNORES EXTENSION
-		all_irs.push_back(get_artifact_path(src.relative_path, false));
+	std::unordered_set<std::string> compiled_srcs;
+	std::unordered_set<std::string> ir_set; // non-relative paths
+	std::vector<std::string> missing;
+
+	for (const auto& artifact : codegen_result.artifacts) {
+		if (artifact.kind == ARTIFACT_IR) {
+			const std::string rel_out_path = get_artifact_path(artifact, false);
+			const std::string out_path = get_artifact_path(artifact, false);
+
+			ir_set.insert(out_path);
+			// we need to keep track of which source files were compiled
+			// so we can ensure we dont miss any
+			compiled_srcs.insert(artifact.src_relpath);
+
+			artifact_metadata art_meta = generate_artifact_metadata(artifact);
+			cache.set_artifact_metadata(rel_out_path, art_meta);
+		}
+	}
+	for (const auto& src : project_file->sources) {
+		if (compiled_srcs.contains(src.relative_path)) continue; // already compiled
+
+		// lookup in cache
+		std::optional<artifact_metadata> art_meta_opt = std::nullopt;
+		for (const auto& [path, art_meta] : cache.get_artifact_metadata()) {
+			if (art_meta.src_relpath == src.relative_path && art_meta.kind == ARTIFACT_IR) {
+				art_meta_opt = art_meta;
+				break;
+			}
+		}
+		if (!art_meta_opt.has_value()) {
+			missing.push_back(src.relative_path);
+			continue;
+		}
+
+		const std::string abs = path_utils::normalize(get_project_dir() / art_meta_opt.value().path).string();
+		if (!std::filesystem::exists(abs)) {
+			// remove from cache - file is missing
+			cache.remove_artifact_metadata(art_meta_opt.value().src_relpath);
+			missing.push_back(src.relative_path);
+			continue;
+		}
+		else {
+			ir_set.insert(abs);
+		}
 	}
 
 	// link to one module
@@ -245,7 +292,7 @@ std::vector<source_file> project_builder::get_files_to_compile(build_cache_file&
 	std::vector<source_file> out_files;
 
 	// note: auto refreshes metadata in cache
-	auto should_compile = [](const source_file& src, file_metadata& meta) {
+	auto should_compile = [](const source_file& src, source_metadata& meta) {
 		uint64_t current_last_modified = src.get_last_modified_time();
 		uint64_t current_size = src.get_size();
 		if (current_last_modified == meta.last_modified &&
@@ -266,7 +313,7 @@ std::vector<source_file> project_builder::get_files_to_compile(build_cache_file&
 		return changed;
 	};
 
-	auto& metadata = cache.get_metadata();
+	auto& metadata = cache.get_src_metadata();
 	for (const auto& src : project_file->sources) {
 		// check cache
 		if (auto meta = metadata.find(src.full_path); meta != metadata.end()) {
@@ -283,7 +330,7 @@ std::vector<source_file> project_builder::get_files_to_compile(build_cache_file&
 
 		// not in cache - compile and add
 		out_files.push_back(src);
-		cache.set_metadata(src.full_path, generate_metadata(src));
+		cache.set_src_metadata(src.full_path, generate_src_metadata(src));
 	}
 
 	// cleanup cache - remove entries for files that no longer exist
@@ -299,19 +346,32 @@ std::vector<source_file> project_builder::get_files_to_compile(build_cache_file&
 		}
 	}
 	for (const auto& path : to_remove) {
-		cache.remove_metadata(path);
+		cache.remove_src_metadata(path);
 	}
 
 	return out_files;
 }
-file_metadata project_builder::generate_metadata(const source_file& src) {
-	file_metadata meta{};
+
+source_metadata project_builder::generate_src_metadata(const source_file& src) {
+	source_metadata meta{};
 
 	meta.path = src.full_path;
 	meta.last_modified = src.get_last_modified_time();
 
 	// use hasher for hash and size to avoid opening a new file handle
 	meta.hash = file_hasher::hash_file(src.full_path, &meta.size);
+
+	return meta;
+}
+artifact_metadata project_builder::generate_artifact_metadata(const code_artifact& art) {
+	artifact_metadata meta{};
+
+	meta.path = get_artifact_path(art, false);
+	meta.kind = art.kind;
+	meta.src_relpath = art.src_relpath;
+	meta.name = art.name;
+	meta.extension = art.extension;
+	meta.format = art.format;
 
 	return meta;
 }

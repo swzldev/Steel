@@ -1,5 +1,6 @@
 #pragma once
 
+#define STEELC_VERSION 50
 #define STEELC_VERSION_STR "0.5.0";
 
 #define STEELC_VERSION_MAJOR 0

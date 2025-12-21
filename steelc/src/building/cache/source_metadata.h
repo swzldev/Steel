@@ -3,12 +3,12 @@
 #include <filesystem>
 #include <cstdint>
 
-class file_metadata {
+class source_metadata {
 public:
-	file_metadata() = default;
+	source_metadata() = default;
 
 	// *RELATIVE* path
-	std::filesystem::path path;
+	std::string path;
 	uint64_t last_modified = 0;
 	uint64_t hash = 0;
 	uint64_t size = 0;

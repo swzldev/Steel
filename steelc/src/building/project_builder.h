@@ -9,7 +9,8 @@
 
 #include <llvm/IR/Module.h>
 
-#include <building/cache/file_metadata.h>
+#include <building/cache/source_metadata.h>
+#include <building/cache/artifact_metadata.h>
 #include <building/cache/build_cache_file.h>
 #include <building/build_config.h>
 #include <building/code_outputter.h>
@@ -75,7 +76,9 @@ private:
 	build_cache_file load_cache();
 	void save_cache(build_cache_file& cache) const;
 	std::vector<source_file> get_files_to_compile(build_cache_file& cache);
-	file_metadata generate_metadata(const source_file& src);
+
+	source_metadata generate_src_metadata(const source_file& src);
+	artifact_metadata generate_artifact_metadata(const code_artifact& art);
 
 	bool clang_build(const std::vector<std::string>& ir_files);
 
