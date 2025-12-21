@@ -80,6 +80,8 @@ private:
 	source_metadata generate_src_metadata(const source_file& src);
 	artifact_metadata generate_artifact_metadata(const code_artifact& art);
 
+	code_artifact load_artifact_from_metadata(const artifact_metadata& meta);
+
 	bool clang_build(const std::vector<std::string>& ir_files);
 
 	inline std::string get_platform_app_extension() const;

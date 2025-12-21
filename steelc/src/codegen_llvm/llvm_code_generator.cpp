@@ -85,21 +85,23 @@ void llvm_code_generator::emit_instr(const mir_instr& instr_mir) {
 
 code_artifact llvm_code_generator::generate_bitcode_artifact(const mir_module& mod_mir) {
 	return code_artifact{
-		.type = artifact_type::ARTIFACT_BITCODE,
+		.kind = ARTIFACT_IR,
 		.src_relpath = mod_mir.meta.src_relpath,
 		.name = mod_mir.name,
 		.extension = ".bc",
 		.format = "LLVM-BC",
+		.is_binary = true,
 		.bytes = writer->write_bitcode()
 	};
 }
 code_artifact llvm_code_generator::generate_asm_artifact(const mir_module& mod_mir) {
 	return code_artifact{
-		.type = artifact_type::ARTIFACT_ASM_IR,
+		.kind = ARTIFACT_IR,
 		.src_relpath = mod_mir.meta.src_relpath,
 		.name = mod_mir.name,
 		.extension = ".ll",
 		.format = "LLVM-IR",
+		.is_binary = false,
 		.text = writer->write_asm()
 	};
 }

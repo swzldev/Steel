@@ -132,6 +132,7 @@ bool project_builder::build_project() {
 	}
 
 	// gather all irs
+	std::vector<code_artifact> to_link;
 	std::unordered_set<std::string> compiled_srcs;
 	std::unordered_set<std::string> ir_set; // non-relative paths
 	std::vector<std::string> missing;
@@ -148,6 +149,8 @@ bool project_builder::build_project() {
 
 			artifact_metadata art_meta = generate_artifact_metadata(artifact);
 			cache.set_artifact_metadata(rel_out_path, art_meta);
+
+			to_link.push_back(artifact);
 		}
 	}
 	for (const auto& src : project_file->sources) {
@@ -175,39 +178,44 @@ bool project_builder::build_project() {
 		}
 		else {
 			ir_set.insert(abs);
+
+			// we need to load the artifact data from disk
+			// for linking
+			code_artifact art = load_artifact_from_metadata(art_meta_opt.value());
+			to_link.push_back(art);
 		}
+	}
+	// report missing files
+	if (!missing.empty()) {
+		output::err("Error: missing IR artifacts for the following source files:\n", console_colors::BOLD + console_colors::RED);
+		for (const auto& src : missing) {
+			output::err(" - {}\n", console_colors::BOLD + console_colors::RED, src);
+		}
+		output::err("This is likely an internal error, it is reccomended to run a clean and rebuild to regenerate missing files.\n", console_colors::BOLD + console_colors::RED);
+		return false;
 	}
 
 	// link to one module
-	project_linker linker;
-	linker.load_modules_from_paths(all_irs, /* is_bitcode */ !generate_asm);
+	project_linker linker(to_link, codegen_cfg);
 	if (linker.has_error()) {
 		output::err("Link error: {}\n", console_colors::BOLD + console_colors::RED, linker.get_error_message());
 		return false;
 	}
 
-	std::unique_ptr<llvm::Module> linked = linker.link_all();
-	if (linker.has_error()) {
-		output::err("Link error: {}\n", console_colors::BOLD + console_colors::RED, linker.get_error_message());
+	code_artifact linked = linker.link_all();
+	if (linked.kind != ARTIFACT_BINARY || !linked.is_binary) {
+		output::err("Linker produced invalid artifact kind.\n", console_colors::BOLD + console_colors::RED);
 		return false;
 	}
-	std::string linked_code;
-	if (generate_asm) {
-		linked_code = ir_generator::llvm_module_to_asm(*linked);
-	}
-	else {
-		linked_code = ir_generator::llvm_module_to_bitcode(*linked);
-	}
 
-	std::string linked_filename = project_filename() + (build_cfg.generate_llvm_asm ? ".ll" : ".bc");
-
-	outputter->output_code(linked_code, linked_filename, OUTPUT_LOCATION_INTERMEDIATE, generate_asm ? OUTPUT_FORMAT_TEXT : OUTPUT_FORMAT_BINARY);
+	std::string linked_filename = project_filename() + linked.extension;
+	outputter->output_code(linked.bytes, linked_filename, OUTPUT_LOCATION_INTERMEDIATE, OUTPUT_FORMAT_BINARY);
 
 	// build with clang
-	if (!clang_build({ (outputter->get_intermediate_dir() / linked_filename).string()})) {
+	/*if (!clang_build({ (outputter->get_intermediate_dir() / linked_filename).string()})) {
 		output::err("Clang: building failed.\n", console_colors::BOLD + console_colors::RED);
 		return false;
-	}
+	}*/
 
 	output::print("Building succeeded. ", console_colors::BOLD + console_colors::GREEN);
 	output::print("(Took {:.3f} seconds)\n", console_colors::DIM, get_build_time());
@@ -374,6 +382,45 @@ artifact_metadata project_builder::generate_artifact_metadata(const code_artifac
 	meta.format = art.format;
 
 	return meta;
+}
+
+code_artifact project_builder::load_artifact_from_metadata(const artifact_metadata& meta) {
+	code_artifact art{};
+	art.kind = meta.kind;
+	art.src_relpath = meta.src_relpath;
+	art.name = meta.name;
+	art.extension = meta.extension;
+	art.format = meta.format;
+	art.is_binary = meta.is_binary;
+	art.attributes = meta.attributes;
+
+	if (art.is_binary) {
+		// load binary data
+		std::string abs_path = path_utils::normalize(get_project_dir() / meta.path).string();
+		std::ifstream file(abs_path, std::ios::binary);
+		if (!file.is_open()) {
+			throw std::runtime_error("Failed to open artifact file: " + abs_path);
+		}
+		file.seekg(0, std::ios::end);
+		size_t size = static_cast<size_t>(file.tellg());
+		file.seekg(0, std::ios::beg);
+		art.bytes.resize(size);
+		file.read(reinterpret_cast<char*>(art.bytes.data()), size);
+		file.close();
+	}
+	else {
+		// load text data
+		std::string abs_path = path_utils::normalize(get_project_dir() / meta.path).string();
+		std::ifstream file(abs_path);
+		if (!file.is_open()) {
+			throw std::runtime_error("Failed to open artifact file: " + abs_path);
+		}
+		std::stringstream buffer;
+		buffer << file.rdbuf();
+		art.text = buffer.str();
+		file.close();
+	}
+	return art;
 }
 
 bool project_builder::clang_build(const std::vector<std::string>& ir_files) {

@@ -38,6 +38,7 @@ codegen_result codegen::generate_all() {
 
 icode_generator* codegen::get_generator() {
 	if (generator) return generator.get();
+
 	switch (cfg.backend) {
 	case codegen_backend::LLVM:
 		generator = std::make_unique<llvm_code_generator>();

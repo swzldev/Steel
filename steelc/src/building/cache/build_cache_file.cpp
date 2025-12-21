@@ -93,6 +93,9 @@ bool build_cache_file::deserialize(const std::filesystem::path& path) {
 				meta.attributes[key] = value;
 			}
 
+			// is_binary
+			file.read(reinterpret_cast<char*>(&meta.is_binary), sizeof(meta.is_binary));
+
 			art_metadata[meta.path] = meta;
 		}
 	}
@@ -151,6 +154,9 @@ bool build_cache_file::serialize(const std::filesystem::path& path) const {
 			write_string(file, key);
 			write_string(file, value);
 		}
+
+		// is_binary
+		file.write(reinterpret_cast<const char*>(&meta.is_binary), sizeof(meta.is_binary));
 	}
 
 	file.close();

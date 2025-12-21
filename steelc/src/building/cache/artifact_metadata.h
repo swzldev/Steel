@@ -24,4 +24,5 @@ public:
 	std::string extension;										// e.g., ".o", ".bc", ".ll", etc.
 	std::string format;											// e.g., "ELF", "COFF", "LLVM-IR", etc.
 	std::unordered_map<std::string, std::string> attributes;	// target triple, cpu, etc.
+	bool is_binary = true;										// true if binary data, false if text data
 };
