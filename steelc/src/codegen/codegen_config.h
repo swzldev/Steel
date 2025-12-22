@@ -8,20 +8,13 @@
 // configuration options for code generation
 // also includes choice of backend, e.g. LLVM
 
-enum class codegen_backend {
-	LLVM,
-	CUSTOM,
-};
-
 class codegen_config {
 public:
 	codegen_config() = default;
 
-	codegen_backend backend = codegen_backend::LLVM;
-
-	// emission options (backend-specific)
-	bool emit_llvm_bc = true;      // emit LLVM bitcode
-	bool emit_llvm_asm = false;    // emit LLVM assembly
+	// emission options
+	std::string backend = "llvm"; // intermediate representation format (e.g. llvm-bc, llvm-asm)
+	std::string ir_format = ""; // empty = backend default
 
 	// target options
 	std::string target_triple = "";								// target triple (e.g. x86_64-pc-linux-gnu)

@@ -15,4 +15,7 @@ public:
 
 	// generate a codegen result from a mir_module
 	virtual codegen_result emit(const mir_module& module, const codegen_config& cfg) = 0;
+
+	virtual std::string default_ir_format() const = 0;
+	virtual bool supports(const std::string& ir_format) const = 0;
 };

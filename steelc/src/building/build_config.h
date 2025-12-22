@@ -11,7 +11,8 @@ public:
 	std::string output_dir = "build/";
 	std::string intermediate_dir = "build/intermediate/";
 	std::string build_cache_file = "build/cache/build_cache.dat";
-	bool generate_llvm_asm = false; // generate (llvm) asm instead of bitcode
+	std::string backend = "llvm"; // backend used (empty = llvm, throws if doesnt exist)
+	std::string ir_format = ""; // ir format (empty = backend default, will throw error if unsupported)
 
 	// build options
 	bool build_all = false;

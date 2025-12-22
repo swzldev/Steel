@@ -31,7 +31,7 @@
 #include <codegen_llvm/llvm_code_generator.h>
 #include <output/output.h>
 
-bool compiler::compile(const compile_config& cl_cfg, const codegen_config& cg_cfg) {
+bool compiler::compile(const compile_config& cl_cfg, codegen_config& cg_cfg) {
 	for (auto& file : sources) {
 		auto unit = std::make_shared<compilation_unit>();
 		unit->source_file = std::make_shared<source_file>(file);
@@ -159,6 +159,7 @@ bool compiler::compile(const compile_config& cl_cfg, const codegen_config& cg_cf
 	}
 
 	// generate modules for all units
+	// its expected that backend and ir_format have been validated before this point
 	codegen codegen(mir_modules, cg_cfg);
 	codegen_result = codegen.generate_all();
 

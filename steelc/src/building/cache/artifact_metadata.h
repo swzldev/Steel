@@ -18,6 +18,7 @@ public:
 
 	// *RELATIVE* path (including output directory)
 	std::string path;
+	uint64_t timestamp = 0;		// time generated (unix ms)
 	artifact_kind kind = ARTIFACT_IR;
 	std::string src_relpath;									// relative path of source that generated this artifact
 	std::string name;											// logical name (no path)

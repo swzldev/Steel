@@ -22,13 +22,17 @@ public:
 		: mir_modules(mir_modules) {
 	}
 
+	static bool validate_backend(const std::string& backend);
+	static bool validate_ir_format(const std::string& backend, const std::string& format);
+
+	static std::string default_ir_format(const std::string& backend);
+
 	codegen_result generate(size_t index);
 	codegen_result generate_all();
 
 private:
 	std::vector<mir_module> mir_modules;
 	codegen_config cfg;
-	std::unique_ptr<icode_generator> generator = nullptr;
 
-	icode_generator* get_generator();
+	icode_generator* get_generator() const;
 };

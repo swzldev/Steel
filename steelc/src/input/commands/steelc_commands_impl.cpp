@@ -52,8 +52,11 @@ bool steelc_commands_impl::build_command_handler(const command_flags& flags) {
 	if (flags.has("--all")) {
 		cfg.build_all = true;
 	}
-	if (flags.has("--llvm-asm")) {
-		cfg.generate_llvm_asm = true;
+	if (flags.has("--backend")) {
+		cfg.backend = flags.get_first("--backend");
+	}
+	if (flags.has("--ir-format")) {
+		cfg.ir_format = flags.get_first("--ir-format");
 	}
 	if (flags.has("--out")) {
 		cfg.output_dir = flags.get_first("--out");

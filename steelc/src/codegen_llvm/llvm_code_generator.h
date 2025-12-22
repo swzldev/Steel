@@ -23,6 +23,10 @@ namespace llvm {
 // this is the built in and default LLVM based code generator for steelc
 
 class llvm_code_generator : public icode_generator {
+private:
+	static constexpr auto BITCODE_FORMAT = "llvm-bc";
+	static constexpr auto ASSEMBLY_FORMAT = "llvm-asm";
+
 public:
 	llvm_code_generator()
 		: builder(context),
@@ -32,6 +36,11 @@ public:
 	}
 
 	codegen_result emit(const mir_module& mod_mir, const codegen_config& cfg) override;
+
+	std::string default_ir_format() const override {
+		return BITCODE_FORMAT;
+	}
+	bool supports(const std::string& ir_format) const override;
 
 private:
 	llvm::LLVMContext context;

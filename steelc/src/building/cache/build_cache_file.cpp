@@ -71,6 +71,8 @@ bool build_cache_file::deserialize(const std::filesystem::path& path) {
 
 			// path
 			read_string(file, &meta.path);
+			// timestamp
+			file.read(reinterpret_cast<char*>(&meta.timestamp), sizeof(meta.timestamp));
 			// kind
 			file.read(reinterpret_cast<char*>(&meta.kind), sizeof(meta.kind));
 			// src_relpath
@@ -136,6 +138,8 @@ bool build_cache_file::serialize(const std::filesystem::path& path) const {
 	for (const auto& [path_str, meta] : art_metadata) {
 		// path
 		write_string(file, meta.path);
+		// timestamp
+		file.write(reinterpret_cast<const char*>(&meta.timestamp), sizeof(meta.timestamp));
 		// kind
 		file.write(reinterpret_cast<const char*>(&meta.kind), sizeof(meta.kind));
 		// src_relpath

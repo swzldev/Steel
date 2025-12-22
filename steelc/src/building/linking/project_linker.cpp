@@ -4,6 +4,7 @@
 #include <string>
 #include <memory>
 #include <stdexcept>
+#include <map>
 
 #include <codegen/code_artifact.h>
 #include <codegen/codegen_config.h>
@@ -12,22 +13,26 @@
 // -- linker backend implementations --
 #include <linking_llvm/llvm_code_linker.h>
 
-code_artifact project_linker::link_all(icode_linker* linker) {
-	if (linker) {
-		return linker->link(link_artifacts);
-	}
-	return get_linker()->link(link_artifacts);
+static std::map<std::string, std::shared_ptr<icode_linker>> get_linkers() {
+	static const std::map<std::string, std::shared_ptr<icode_linker>> linkers = {
+		{ "llvm", std::make_shared<llvm_code_linker>() }
+	};
+
+	return linkers;
 }
 
-icode_linker* project_linker::get_linker() {
-	if (linker) return linker.get();
-
-	switch (cfg.backend) {
-	case codegen_backend::LLVM:
-		linker = std::make_unique<llvm_code_linker>();
-		break;
-	default:
-		throw std::runtime_error("Unsupported codegen backend");
+code_artifact project_linker::link_all(icode_linker* linker) {
+	if (linker) {
+		return linker->link(link_artifacts, cfg);
 	}
-	return linker.get();
+	return get_linker()->link(link_artifacts, cfg);
+}
+
+icode_linker* project_linker::get_linker() const {
+	auto linkers = get_linkers();
+	auto it = linkers.find(cfg.backend);
+	if (it == linkers.end()) {
+		throw std::runtime_error("No linker found for backend: " + cfg.backend);
+	}
+	return it->second.get();
 }

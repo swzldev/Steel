@@ -1,7 +1,6 @@
 #pragma once
 
 #include <vector>
-#include <unordered_set>
 #include <string>
 #include <memory>
 
@@ -22,11 +21,11 @@ public:
 	static constexpr bool PRINT_MIR = false;
 
 public:
-	compiler(std::unordered_set<source_file> sources)
+	compiler(std::vector<source_file> sources)
 		: sources(sources) {
 	}
 
-	bool compile(const compile_config& cl_cfg, const codegen_config& cg_cfg);
+	bool compile(const compile_config& cl_cfg, codegen_config& cg_cfg);
 
 	inline bool has_errors() const {
 		return !errors.empty();
@@ -61,7 +60,7 @@ private:
 
 	module_manager module_manager;
 
-	std::unordered_set<source_file> sources;
+	std::vector<source_file> sources;
 	codegen_result codegen_result;
 
 	std::vector<std::string> read_source(std::string& path);

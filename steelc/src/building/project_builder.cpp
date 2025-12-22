@@ -30,9 +30,18 @@
 #include <building/linking/link_error.h>
 #include <building/linking/project_linker.h>
 #include <compiler/compiler.h>
+#include <codegen/codegen.h>
 #include <codegen/codegen_result.h>
 #include <stproj/source_file.h>
 #include <stproj/stproj_file.h>
+
+static inline uint64_t now_unix_ms() {
+	return static_cast<uint64_t>(
+		std::chrono::duration_cast<std::chrono::milliseconds>(
+			std::chrono::system_clock::now().time_since_epoch()
+		).count()
+	);
+}
 
 bool project_builder::load_project(const std::string& project_path) {
 	// load stproj
@@ -50,24 +59,39 @@ bool project_builder::build_project() {
 	mark_build_start();
 	output::print("Build started...\n");
 
+	std::string backend = build_cfg.backend;
+	std::string ir_format = build_cfg.ir_format;
+
+	// validate backend and format early (if specified)
+	if (!codegen::validate_backend(backend)) {
+		output::err("Unknown codegen backend specified: {}\n", console_colors::BOLD + console_colors::RED, backend);
+		return false;
+	}
+	if (ir_format.empty()) {
+		ir_format = codegen::default_ir_format(backend);
+		output::verbose("Using default backend format: \'{}\'\n", console_colors::DIM, ir_format);
+	}
+	if (!codegen::validate_ir_format(backend, ir_format)) {
+		output::err("IR format \'{}\' is not supported by backend \'{}\'\n", console_colors::BOLD + console_colors::RED, ir_format, backend);
+		return false;
+	}
+
 	// load build cache
 	build_cache_file cache = load_cache();
-	std::unordered_set<source_file> to_compile;
-	codegen_config codegen_cfg{}; // TODO: generate config based on project settings + cl args
+	std::vector<source_file> to_compile;
+	codegen_config codegen_cfg{};
+	codegen_cfg.backend = backend;
+	codegen_cfg.ir_format = ir_format;
 	codegen_result codegen_result{};
 
 	if (build_cfg.build_all) {
-		for (const auto& src : project_file->sources) {
-			to_compile.insert(src);
-		}
+		to_compile = project_file->sources;
 	}
 	else {
 		// due to only compiling specific files, the symbol table does not
 		// receive all symbols (if theyre in files that arent being compiled)
 		// until i fix this, ill temporarily force full builds
-		for (const auto& src : project_file->sources) {
-			to_compile.insert(src);
-		}
+		to_compile = project_file->sources;
 		//to_compile = get_files_to_compile(cache);
 	}
 
@@ -104,24 +128,18 @@ bool project_builder::build_project() {
 		return false;
 	}
 
-	bool generate_asm = build_cfg.generate_llvm_asm;
-
 	// output code (if any)
 	if (codegen_result.artifacts.size() > 0) {
-		// clear all irs
-		outputter->clear_intermediate_files("IR");
-
 		for (const auto& artifact : codegen_result.artifacts) {
 			std::string path = get_artifact_path(artifact);
 
 			code_output_error err = OUTPUT_SUCCESS;
 
-			if (artifact.format == "LLVM-BC") {
-				err = outputter->output_code(artifact.bytes, path, OUTPUT_LOCATION_INTERMEDIATE, generate_asm ? OUTPUT_FORMAT_TEXT : OUTPUT_FORMAT_BINARY);
+			if (artifact.is_binary) {
+				err = outputter->output_code(artifact.bytes, path, OUTPUT_LOCATION_OUTPUT, OUTPUT_FORMAT_BINARY);
 			}
 			else {
-				output::err("Unknown artifact format: \"{}\"\n", console_colors::BOLD + console_colors::RED, artifact.format);
-				return false;
+				err = outputter->output_code(artifact.text, path, OUTPUT_LOCATION_OUTPUT, OUTPUT_FORMAT_TEXT);
 			}
 
 			if (err != OUTPUT_SUCCESS) {
@@ -139,6 +157,10 @@ bool project_builder::build_project() {
 
 	for (const auto& artifact : codegen_result.artifacts) {
 		if (artifact.kind == ARTIFACT_IR) {
+			if (artifact.format != ir_format) {
+				continue; // ignore generated IRs that dont match desired format
+			}
+
 			const std::string rel_out_path = get_artifact_path(artifact, false);
 			const std::string out_path = get_artifact_path(artifact, false);
 
@@ -159,7 +181,7 @@ bool project_builder::build_project() {
 		// lookup in cache
 		std::optional<artifact_metadata> art_meta_opt = std::nullopt;
 		for (const auto& [path, art_meta] : cache.get_artifact_metadata()) {
-			if (art_meta.src_relpath == src.relative_path && art_meta.kind == ARTIFACT_IR) {
+			if (art_meta.src_relpath == src.relative_path && art_meta.kind == ARTIFACT_IR && art_meta.format == ir_format) {
 				art_meta_opt = art_meta;
 				break;
 			}
@@ -270,7 +292,8 @@ std::string project_builder::get_artifact_path(const code_artifact& artifact, bo
 	if (!relative) {
 		return path_utils::normalize(get_project_dir() / path).string();
 	}
-	return path_utils::normalize(path).string();
+	// DONT normalize relative paths
+	return path;
 }
 
 build_cache_file project_builder::load_cache() {
@@ -375,6 +398,7 @@ artifact_metadata project_builder::generate_artifact_metadata(const code_artifac
 	artifact_metadata meta{};
 
 	meta.path = get_artifact_path(art, false);
+	meta.timestamp = now_unix_ms();
 	meta.kind = art.kind;
 	meta.src_relpath = art.src_relpath;
 	meta.name = art.name;

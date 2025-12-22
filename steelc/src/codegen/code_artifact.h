@@ -11,7 +11,7 @@
 // e.g., object file, bitcode file, source file, etc.
 //
 // formats:
-// - "LLVM-IR": LLVM IR assembly representation (text)
+// - "LLVM-ASM": LLVM IR assembly representation (text)
 // - "LLVM-BC": LLVM IR bitcode representation (binary)
 
 enum artifact_kind {

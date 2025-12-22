@@ -31,7 +31,6 @@ public:
 private:
 	std::vector<code_artifact> link_artifacts;
 	codegen_config cfg;
-	std::unique_ptr<icode_linker> linker = nullptr;
 
 	link_error last_error = LINK_OK;
 	std::string error_message;
@@ -41,5 +40,5 @@ private:
 		error_message = msg;
 	}
 
-	icode_linker* get_linker();
+	icode_linker* get_linker() const;
 };

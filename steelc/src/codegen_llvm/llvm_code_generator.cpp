@@ -25,18 +25,26 @@ codegen_result llvm_code_generator::emit(const mir_module& mod_mir, const codege
 	for (const auto& fn : mod_mir.functions) {
 		emit_function(fn);
 	}
-	
-	// for now generate bitcode by default
-	
 
 	codegen_result result;
-	if (cfg.emit_llvm_asm) {
+	if (cfg.ir_format == "llvm-asm") {
 		result.artifacts.push_back(generate_asm_artifact(mod_mir));
 	}
-	if (cfg.emit_llvm_bc) {
+	else if (cfg.ir_format == "llvm-bc" || cfg.ir_format.empty()) {
 		result.artifacts.push_back(generate_bitcode_artifact(mod_mir));
 	}
+	else {
+		throw std::runtime_error("Emit called with invalid format!");
+	}
 	return result;
+}
+
+bool llvm_code_generator::supports(const std::string& ir_format) const {
+	if (ir_format == "llvm-bc" ||
+		ir_format == "llvm-asm") {
+		return true;
+	}
+	return false;
 }
 
 llvm::Function* llvm_code_generator::emit_function(const mir_function& fn_mir) {
@@ -78,9 +86,9 @@ void llvm_code_generator::emit_instr(const mir_instr& instr_mir) {
 		break;
 	}
 	default:
-		throw codegen_exception("Unimplemented MIR instruction opcode in LLVM code generator");
+		//throw codegen_exception("Unimplemented MIR instruction opcode in LLVM code generator");
+		break;
 	}
-
 }
 
 code_artifact llvm_code_generator::generate_bitcode_artifact(const mir_module& mod_mir) {
@@ -89,7 +97,7 @@ code_artifact llvm_code_generator::generate_bitcode_artifact(const mir_module& m
 		.src_relpath = mod_mir.meta.src_relpath,
 		.name = mod_mir.name,
 		.extension = ".bc",
-		.format = "LLVM-BC",
+		.format = BITCODE_FORMAT,
 		.is_binary = true,
 		.bytes = writer->write_bitcode()
 	};
@@ -100,7 +108,7 @@ code_artifact llvm_code_generator::generate_asm_artifact(const mir_module& mod_m
 		.src_relpath = mod_mir.meta.src_relpath,
 		.name = mod_mir.name,
 		.extension = ".ll",
-		.format = "LLVM-IR",
+		.format = ASSEMBLY_FORMAT,
 		.is_binary = false,
 		.text = writer->write_asm()
 	};

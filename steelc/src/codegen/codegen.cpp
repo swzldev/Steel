@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include <memory>
+#include <map>
 
 #include <ast/compilation_unit.h>
 #include <codegen/error/codegen_exception.h>
@@ -13,6 +14,30 @@
 // -- code generator backend implementations --
 #include <codegen_llvm/llvm_code_generator.h>
 
+static std::map<std::string, std::shared_ptr<icode_generator>> get_generators() {
+	static const std::map<std::string, std::shared_ptr<icode_generator>> generators = {
+		{ "llvm", std::make_shared<llvm_code_generator>() }
+	};
+
+	return generators;
+}
+
+bool codegen::validate_backend(const std::string& backend) {
+	auto gens = get_generators();
+	return gens.find(backend) != gens.end();
+}
+bool codegen::validate_ir_format(const std::string& backend, const std::string& format) {
+	if (!validate_backend(backend)) return false;
+
+	return get_generators()[backend]->supports(format);
+}
+
+std::string codegen::default_ir_format(const std::string& backend) {
+	if (!validate_backend(backend)) return "<unknown>";
+
+	return get_generators()[backend]->default_ir_format();
+}
+
 codegen_result codegen::generate(size_t index) {
 	auto& mod = mir_modules[index];
 	codegen_result result;
@@ -22,6 +47,7 @@ codegen_result codegen::generate(size_t index) {
 	}
 	catch (const codegen_exception& e) {
 		output::err("Codegen error in module {}: {}\n", console_colors::RED, mod.name, e.message());
+		result.success = false;
 	}
 	return result;
 }
@@ -36,15 +62,11 @@ codegen_result codegen::generate_all() {
 	return result;
 }
 
-icode_generator* codegen::get_generator() {
-	if (generator) return generator.get();
-
-	switch (cfg.backend) {
-	case codegen_backend::LLVM:
-		generator = std::make_unique<llvm_code_generator>();
-		break;
-	default:
-		throw codegen_exception("Unsupported codegen backend");
+icode_generator* codegen::get_generator() const {
+	auto gens = get_generators();
+	auto it = gens.find(cfg.backend);
+	if (it != gens.end()) {
+		return it->second.get();
 	}
-	return generator.get();
+	return nullptr;
 }
