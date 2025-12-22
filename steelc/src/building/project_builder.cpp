@@ -161,7 +161,7 @@ bool project_builder::build_project() {
 				continue; // ignore generated IRs that dont match desired format
 			}
 
-			const std::string rel_out_path = get_artifact_path(artifact, false);
+			const std::string rel_out_path = get_artifact_path(artifact, true);
 			const std::string out_path = get_artifact_path(artifact, false);
 
 			ir_set.insert(out_path);
