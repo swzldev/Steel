@@ -4,25 +4,12 @@
 #include <fstream>
 #include <string>
 
-code_output_error code_outputter::output_code(const std::vector<uint8_t>& code, const std::string& filename, code_output_location location, code_output_format) {
-	switch (location) {
-	case OUTPUT_LOCATION_OUTPUT:
-		return output_to(std::string(code.begin(), code.end()), output_dir / filename, true);
-	case OUTPUT_LOCATION_INTERMEDIATE:
-		return output_to(std::string(code.begin(), code.end()), intermediate_dir / filename, true);
-	}
-	return OUTPUT_SUCCESS;
+code_output_error code_outputter::output_code(const std::vector<uint8_t>& bytes, const std::string& filename) {
+	std::string data(bytes.begin(), bytes.end());
+	return output_to(data, project_dir / filename, true);
 }
-
-code_output_error code_outputter::output_code(const std::string& code, const std::string& filename, code_output_location location, code_output_format format) {
-	switch (location) {
-	case OUTPUT_LOCATION_OUTPUT:
-		return output_to(code, output_dir / filename, format == OUTPUT_FORMAT_BINARY);
-	case OUTPUT_LOCATION_INTERMEDIATE:
-		return output_to(code, intermediate_dir / filename, format == OUTPUT_FORMAT_BINARY);
-	}
-
-	return OUTPUT_SUCCESS;
+code_output_error code_outputter::output_code(const std::string& text, const std::string& filename) {
+	return output_to(text, project_dir / filename, false);
 }
 
 void code_outputter::clear_intermediate_files(const std::string& subpath) const {

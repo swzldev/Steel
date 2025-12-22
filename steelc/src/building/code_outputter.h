@@ -8,16 +8,6 @@
 
 #include <building/build_config.h>
 
-enum code_output_location {
-	OUTPUT_LOCATION_INTERMEDIATE,
-	OUTPUT_LOCATION_OUTPUT
-};
-
-enum code_output_format {
-	OUTPUT_FORMAT_BINARY,
-	OUTPUT_FORMAT_TEXT
-};
-
 enum code_output_error {
 	OUTPUT_SUCCESS = 0,
 	OUTPUT_FAIL_INIT,
@@ -35,8 +25,8 @@ public:
 		return outputter;
 	}
 
-	code_output_error output_code(const std::vector<uint8_t>& code, const std::string& filename, code_output_location location, code_output_format = OUTPUT_FORMAT_TEXT);
-	code_output_error output_code(const std::string& code, const std::string& filename, code_output_location location, code_output_format = OUTPUT_FORMAT_TEXT);
+	code_output_error output_code(const std::vector<uint8_t>& code, const std::string& filename);
+	code_output_error output_code(const std::string& code, const std::string& filename);
 
 	void clear_intermediate_files(const std::string& subpath = "") const;
 

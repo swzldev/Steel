@@ -136,10 +136,10 @@ bool project_builder::build_project() {
 			code_output_error err = OUTPUT_SUCCESS;
 
 			if (artifact.is_binary) {
-				err = outputter->output_code(artifact.bytes, path, OUTPUT_LOCATION_OUTPUT, OUTPUT_FORMAT_BINARY);
+				err = outputter->output_code(artifact.bytes, path);
 			}
 			else {
-				err = outputter->output_code(artifact.text, path, OUTPUT_LOCATION_OUTPUT, OUTPUT_FORMAT_TEXT);
+				err = outputter->output_code(artifact.text, path);
 			}
 
 			if (err != OUTPUT_SUCCESS) {
@@ -230,8 +230,8 @@ bool project_builder::build_project() {
 		return false;
 	}
 
-	std::string linked_filename = project_filename() + linked.extension;
-	outputter->output_code(linked.bytes, linked_filename, OUTPUT_LOCATION_INTERMEDIATE, OUTPUT_FORMAT_BINARY);
+	std::string linked_filename = build_cfg.output_dir + "/" + project_filename() + linked.extension;
+	outputter->output_code(linked.bytes, linked_filename);
 
 	// build with clang
 	/*if (!clang_build({ (outputter->get_intermediate_dir() / linked_filename).string()})) {
