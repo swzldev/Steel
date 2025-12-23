@@ -23,15 +23,15 @@
 #include <llvm/MC/TargetRegistry.h>
 
 code_artifact llvm_code_linker::link(const std::vector<code_artifact>& artifacts, const codegen_config& cfg) {
-	throw std::runtime_error("LLVM code linker is not yet implemented");
+	throw;
 }
 bool llvm_code_linker::supports(const code_artifact& artifact) {
 	return false;
 }
 
 std::unique_ptr<llvm::Module> llvm_code_linker::module_from_artifact(const code_artifact& a) {
-	if (a.format == "LLVM-ASM") {
-		if (a.is_binary) throw std::runtime_error("Expected text data for LLVM-ASM artifact");
+	if (a.format == "llvm-asm") {
+		if (a.is_binary) throw std::runtime_error("Expected text data for llvm-asm artifact");
 
 		llvm::SMDiagnostic err;
 		auto mod = llvm::parseAssemblyString(a.text, err, ctx);
@@ -44,7 +44,7 @@ std::unique_ptr<llvm::Module> llvm_code_linker::module_from_artifact(const code_
 		}
 		return mod;
 	}
-	else if (a.format == "LLVM-BC") {
+	else if (a.format == "llvm-bc") {
 		auto buf = llvm::MemoryBuffer::getMemBuffer(
 			llvm::StringRef(reinterpret_cast<const char*>(a.bytes.data()), a.bytes.size()),
 			"llvm_bc_artifact",

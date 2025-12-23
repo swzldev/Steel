@@ -19,7 +19,7 @@
 class codegen {
 public:
 	codegen(const std::vector<mir_module>& mir_modules, const codegen_config& cfg)
-		: mir_modules(mir_modules) {
+		: mir_modules(mir_modules), cfg(cfg) {
 	}
 
 	static bool validate_backend(const std::string& backend);
