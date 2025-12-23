@@ -7,33 +7,51 @@
 #include <representations/types/types_fwd.h>
 #include <representations/types/data_type.h>
 #include <representations/types/custom_type.h>
+#include <representations/types/function_type.h>
 #include <representations/types/container_types.h>
 #include <representations/entities/module_entity.h>
 #include <mir/mir_function.h>
 #include <codegen/error/codegen_exception.h>
 
 std::string name_mangler::mangle_function(const mir_function& fn_mir) {
+	return mangle_function(fn_mir.name, fn_mir.scopes, fn_mir.param_types);
+}
+std::string name_mangler::mangle_function(const mir_func_ref& fn_ref_mir) {
+	const auto& fn_type = fn_ref_mir.type.ty->as_function();
+	if (!fn_type) {
+		throw codegen_exception("Attempted to mangle non-function type as function");
+	}
+
+	std::vector<mir_type> param_types;
+	for (const auto& pty : fn_type->get_parameter_types()) {
+		param_types.push_back(mir_type{ pty });
+	}
+
+	return mangle_function(fn_ref_mir.name, fn_ref_mir.scopes, param_types);
+}
+
+std::string name_mangler::mangle_function(const std::string& name, const std::vector<std::string>& scopes, const std::vector<mir_type>& param_types) {
 	// no mangle for bare-bone functions
-	if (fn_mir.scopes.empty()) {
-		return fn_mir.name;
+	if (scopes.empty()) {
+		return name;
 	}
 
 	std::string mangled = "_Z";
 
 	// technically will always be true since empty scopes return the name immediately
 	// might change this later
-	if (fn_mir.scopes.size() > 0) {
+	if (scopes.size() > 0) {
 		mangled += "N"; // start of nested name
-		for (const auto& scope_name : fn_mir.scopes) {
+		for (const auto& scope_name : scopes) {
 			mangled += mangle_text(scope_name);
 		}
 	}
 
 	// mangle function name
-	mangled += mangle_text(fn_mir.name);
+	mangled += mangle_text(name);
 
 	// E for end of nested name
-	if (fn_mir.scopes.size() > 0) {
+	if (scopes.size() > 0) {
 		mangled += "E";
 	}
 
@@ -53,7 +71,7 @@ std::string name_mangler::mangle_function(const mir_function& fn_mir) {
 	//}
 
 	// mangle parameter types
-	for (const auto& pty : fn_mir.param_types) {
+	for (const auto& pty : param_types) {
 		mangled += mangle_type(pty);
 	}
 

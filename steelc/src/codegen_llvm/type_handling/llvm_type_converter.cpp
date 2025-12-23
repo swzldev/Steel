@@ -44,6 +44,14 @@ llvm::Type* llvm_type_converter::convert(const mir_type& ty) {
 		auto base_type = convert(mir_type{ ptr->base_type });
 		return llvm::PointerType::getUnqual(base_type);
 	}
+	else if (auto fn = t->as_function()) {
+		std::vector<llvm::Type*> param_types;
+		for (const auto& pty : fn->get_parameter_types()) {
+			param_types.push_back(convert(mir_type{ pty }));
+		}
+		llvm::Type* return_type = convert(mir_type{ fn->get_return_type() });
+		return llvm::FunctionType::get(return_type, param_types, false);
+	}
 
 	return nullptr;
 }

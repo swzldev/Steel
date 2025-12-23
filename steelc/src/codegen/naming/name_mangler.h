@@ -2,6 +2,7 @@
 
 #include <string>
 #include <memory>
+#include <vector>
 
 #include <representations/types/types_fwd.h>
 #include <mir/mir_fwd.h>
@@ -14,8 +15,11 @@
 class name_mangler {
 public:
 	std::string mangle_function(const mir_function& fn_mir);
+	std::string mangle_function(const mir_func_ref& fn_ref_mir);
 
 private:
+	std::string mangle_function(const std::string& name, const std::vector<std::string>& scopes, const std::vector<mir_type>& param_types);
+
 	std::string mangle_text(const std::string& text);
 	std::string mangle_type(const mir_type& ty);
 };

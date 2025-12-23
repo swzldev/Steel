@@ -11,16 +11,20 @@
 
 class mir_value {
 public:
+	using id_type = int64_t;
+
+public:
 	mir_value() = default;
-	mir_value(int64_t id, const mir_type& ty, const std::string& name = "")
+	mir_value(id_type id, const mir_type& ty, const std::string& name = "")
 		: id(id), type(ty), name(name) {
 	}
+
 
 	inline bool valid() const {
 		return id != -1;
 	}
 
-	inline int64_t get_id() const {
+	inline id_type get_id() const {
 		return id;
 	}
 	inline mir_type get_type() const {
@@ -31,7 +35,7 @@ public:
 	}
 
 private:
-	int64_t id = -1;
+	id_type id = -1;
 	mir_type type{};
 	std::string name; // for debugging
 };

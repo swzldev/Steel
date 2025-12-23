@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <unordered_map>
 
 #include <llvm/IR/LLVMContext.h>
 #include <llvm/IR/Module.h>
@@ -9,6 +10,7 @@
 #include <codegen/icode_generator.h>
 #include <codegen/codegen_result.h>
 #include <codegen/codegen_config.h>
+#include <codegen/naming/name_mangler.h>
 #include <codegen_llvm/type_handling/llvm_type_converter.h>
 #include <codegen_llvm/builders/llvm_function_builder.h>
 #include <codegen_llvm/builders/llvm_expression_builder.h>
@@ -17,6 +19,19 @@
 namespace llvm {
 	class Function;
 }
+
+struct ssa_scope {
+	std::unordered_map<mir_value::id_type, llvm::Value*> values;
+
+	inline llvm::Value* get(mir_value::id_type id) {
+		auto it = values.find(id);
+		return it != values.end() ? it->second : nullptr;
+	}
+
+	inline void set(mir_value::id_type id, llvm::Value* val) {
+		values[id] = val;
+	}
+};
 
 // llvm_code_generator
 //
@@ -49,6 +64,8 @@ private:
 
 	llvm::Function* current_func = nullptr;
 
+	ssa_scope current_ssa;
+	name_mangler mangler;
 	llvm_type_converter ty_converter;
 	llvm_function_builder fn_builder;
 	llvm_expression_builder expression_builder;
@@ -58,7 +75,12 @@ private:
 	llvm::BasicBlock* emit_block(const mir_block& block_mir);
 	void emit_instr(const mir_instr& instr_mir);
 
+	llvm::Value* lower_operand(const mir_operand& op_mir);
+
 	// artifact generators
 	code_artifact generate_bitcode_artifact(const mir_module& mod_mir);
 	code_artifact generate_asm_artifact(const mir_module& mod_mir);
+
+	template<typename T>
+	struct always_false : std::false_type {};
 };

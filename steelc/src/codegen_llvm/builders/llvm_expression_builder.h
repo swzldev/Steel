@@ -6,13 +6,29 @@
 
 #include <lexer/token_type.h>
 
+enum llvm_bin_op {
+	ADD,
+	SUB,
+	MUL,
+	DIV,
+	REM,
+	EQUAL,
+	NOT_EQUAL,
+	LESS,
+	LESS_EQ,
+	GREATER,
+	GREATER_EQ,
+	AND,
+	OR,
+};
+
 class llvm_expression_builder {
 public:
 	llvm_expression_builder(llvm::IRBuilder<>& builder)
 		: builder(builder), ctx(builder.getContext()) {
 	}
 
-	llvm::Value* build_binary_expr(llvm::Value* lhs, llvm::Value* rhs, token_type operation);
+	llvm::Value* build_binary_expr(llvm::Value* lhs, llvm::Value* rhs, llvm_bin_op operation);
 	llvm::Value* build_unary_expr(llvm::Type* expr_type, llvm::Value* operand, token_type operation);
 	// notes:
 	// elem_type is the type of the elements being indexed, e.g. int[] -> int
@@ -26,4 +42,7 @@ public:
 private:
 	llvm::IRBuilder<>& builder;
 	llvm::LLVMContext& ctx;
+
+	llvm::Value* build_integer_binary_expr(llvm::Value* lhs, llvm::Value* rhs, llvm_bin_op operation);
+	llvm::Value* build_float_binary_expr(llvm::Value* lhs, llvm::Value* rhs, llvm_bin_op operation);
 };
