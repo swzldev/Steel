@@ -1,9 +1,12 @@
 #pragma once
 
 #include <memory>
+#include <vector>
+#include <string>
 
 #include <llvm/IR/LLVMContext.h>
 #include <llvm/IR/Module.h>
+#include <llvm/Passes/OptimizationLevel.h>
 
 #include <codegen/codegen_config.h>
 #include <codegen/code_artifact.h>
@@ -12,6 +15,8 @@
 // llvm_code_linker
 //
 // this class implements an intermediate code linker for LLVM IR code
+
+using namespace llvm;
 
 enum llvm_artifact_format {
 	LLVM_ARTIFACT_FORMAT_UNKNOWN,
@@ -25,8 +30,13 @@ public:
 	virtual bool supports(const code_artifact& artifact) override;
 
 private:
-	llvm::LLVMContext ctx;
+	LLVMContext ctx;
 	llvm_artifact_format art_format = LLVM_ARTIFACT_FORMAT_UNKNOWN;
 
-	std::unique_ptr<llvm::Module> module_from_artifact(const code_artifact& a);
+	std::unique_ptr<Module> module_from_artifact(const code_artifact& a);
+
+	OptimizationLevel get_optimization_level(int level);
+
+	std::string get_object_format(Triple::OSType os);
+	std::string get_object_extension(Triple::OSType os);
 };

@@ -18,6 +18,7 @@ enum artifact_kind {
 	ARTIFACT_SOURCE,		// source file (e.g., .c, .cpp, .rs, etc.)
 	ARTIFACT_IR,			// intermediate representation (e.g., .ll, .bc, .obj)
 	ARTIFACT_LIBRARY,		// static or dynamic library (e.g., .lib, .a, .dll, .so)
+	ARTIFACT_OBJECT,		// object file (e.g., .o, .obj)
 	ARTIFACT_BINARY,		// final executable binary (e.g., .exe, no extension, etc.)
 	ARTIFACT_META,			// metadata file (e.g., .json, .xml, etc.)
 };

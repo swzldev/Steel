@@ -299,6 +299,26 @@ llvm_map_components_to_libnames(LLVM_LIBS
     irreader
     linker
     bitwriter
+
+    # passes + transformations
+    passes
+    analysis
+    transformutils
+    scalaropts
+    ipo
+
+    mc
+    mcparser
+    mcdisassembler
+    targetparser
+
+    # codegen
+    codegen
+    selectiondag
+    target
+    asmprinter
+    native
+    nativecodegen
 )
 target_link_libraries(steelc PRIVATE ${LLVM_LIBS})
 
