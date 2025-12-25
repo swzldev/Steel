@@ -5,6 +5,7 @@
 #include <memory>
 #include <stdexcept>
 #include <optional>
+#include <cstdint>
 
 #include <llvm/IR/LLVMContext.h>
 #include <llvm/IR/Module.h>
@@ -24,10 +25,16 @@
 #include <llvm/Target/TargetOptions.h>
 #include <llvm/MC/TargetRegistry.h>
 
-code_artifact llvm_code_linker::link(const std::vector<code_artifact>& artifacts, const codegen_config& cfg) {
+#include <codegen/code_artifact.h>
+#include <codegen/codegen_config.h>
+#include <linking/link_result.h>
+
+link_result llvm_code_linker::link(const std::vector<code_artifact>& artifacts, const codegen_config& cfg) {
 	if (artifacts.empty()) {
 		throw std::runtime_error("No artifacts provided for linking");
 	}
+
+	initialize_llvm_once();
 
 	// load all artifacts as LLVM modules
 	// (we can also check formats here)
@@ -128,19 +135,37 @@ code_artifact llvm_code_linker::link(const std::vector<code_artifact>& artifacts
 	}
 	codegen_pm.run(*composite);
 
+	link_result result;
+
 	// prepare output artifact
-	code_artifact out{};
-	out.kind = ARTIFACT_OBJECT;
-	out.src_relpath = ""; // n/a
-	out.name = "linked";
-	out.extension = get_object_extension(target_triple.getOS());
-	out.format = get_object_format(target_triple.getOS());
-	out.is_binary = true;
-	out.bytes.assign(buffer.begin(), buffer.end());
-	return out;
+	code_artifact linked_object{
+		.kind = ARTIFACT_OBJECT,
+		.src_relpath = "", // n/a
+		.name = "linked",
+		.extension = get_object_extension(target_triple.getOS()),
+		.format = get_object_format(target_triple.getOS()),
+		.is_binary = true,
+		.bytes = std::vector<uint8_t>(buffer.begin(), buffer.end()),
+	};
+	
+	result.final_intermediate = linked_object;
+
+	return result;
 }
 bool llvm_code_linker::supports(const code_artifact& artifact) {
 	return false;
+}
+
+void llvm_code_linker::initialize_llvm_once() {
+	static bool llvm_initialized = false;
+
+	if (llvm_initialized) return;
+
+	InitializeAllTargets();
+	InitializeAllTargetMCs();
+	InitializeAllAsmParsers();
+	InitializeAllAsmPrinters();
+	llvm_initialized = true;
 }
 
 std::unique_ptr<Module> llvm_code_linker::module_from_artifact(const code_artifact& a) {

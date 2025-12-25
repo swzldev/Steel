@@ -301,7 +301,7 @@ llvm::Value* llvm_code_generator::lower_operand(const mir_operand& op_mir) {
 
 		if constexpr (std::is_same_v<T, mir_value>) {
 			llvm::Value* v = current_ssa.get(arg.get_id());
-			return nullptr;
+			return v;
 		}
 		else if constexpr (std::is_same_v<T, mir_const_int>) {
 			llvm::Type* ty = ty_converter.convert(arg.type);
@@ -316,7 +316,6 @@ llvm::Value* llvm_code_generator::lower_operand(const mir_operand& op_mir) {
 				ty,
 				arg.value
 			);
-			return nullptr;
 		}
 		else if constexpr (std::is_same_v<T, mir_string_imm>) {
 			// create an LLVM constant string

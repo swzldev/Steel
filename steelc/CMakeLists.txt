@@ -169,6 +169,7 @@ set(SOURCES
 
     # src/linking/
     "src/linking/icode_linker.h"
+    "src/linking/link_result.h"
 
     # src/linking_llvm/
     "src/linking_llvm/llvm_code_linker.cpp"

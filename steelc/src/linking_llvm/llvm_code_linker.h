@@ -9,7 +9,7 @@
 #include <llvm/Passes/OptimizationLevel.h>
 
 #include <codegen/codegen_config.h>
-#include <codegen/code_artifact.h>
+#include <linking/link_result.h>
 #include <linking/icode_linker.h>
 
 // llvm_code_linker
@@ -26,12 +26,14 @@ enum llvm_artifact_format {
 
 class llvm_code_linker : public icode_linker {
 public:
-	virtual code_artifact link(const std::vector<code_artifact>& artifacts, const codegen_config& cfg) override;
+	virtual link_result link(const std::vector<code_artifact>& artifacts, const codegen_config& cfg) override;
 	virtual bool supports(const code_artifact& artifact) override;
 
 private:
 	LLVMContext ctx;
 	llvm_artifact_format art_format = LLVM_ARTIFACT_FORMAT_UNKNOWN;
+
+	static void initialize_llvm_once();
 
 	std::unique_ptr<Module> module_from_artifact(const code_artifact& a);
 
