@@ -8,11 +8,9 @@
 // configuration options for code generation
 // also includes choice of backend, e.g. LLVM
 
-class codegen_config {
-public:
-	codegen_config() = default;
-
+struct codegen_config {
 	// emission options
+	std::string output_dir = "";
 	std::string backend = "llvm"; // intermediate representation format (e.g. llvm-bc, llvm-asm)
 	std::string ir_format = ""; // empty = backend default
 

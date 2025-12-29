@@ -169,7 +169,10 @@ set(SOURCES
 
     # src/linking/
     "src/linking/icode_linker.h"
+    "src/linking/link_options.h"
     "src/linking/link_result.h"
+    "src/linking/sys/system_linker.cpp"
+    "src/linking/sys/system_linker.h"
 
     # src/linking_llvm/
     "src/linking_llvm/llvm_code_linker.cpp"
@@ -242,6 +245,7 @@ set(SOURCES
 
     # src/steelc/
     "src/steelc/language_constants.h"
+    "src/steelc/platform_constants.h"
     "src/steelc/steelc_definitions.h"
 
     # src/stproj/

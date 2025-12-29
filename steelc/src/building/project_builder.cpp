@@ -79,9 +79,21 @@ bool project_builder::build_project() {
 	// load build cache
 	build_cache_file cache = load_cache();
 	std::vector<source_file> to_compile;
-	codegen_config codegen_cfg{};
-	codegen_cfg.backend = backend;
-	codegen_cfg.ir_format = ir_format;
+
+	codegen_config codegen_cfg{
+		.output_dir = get_output_dir().string(),
+		.backend = backend,
+		.ir_format = ir_format,
+
+		.target_triple = "", // default (in future may add overrides)
+		.cpu = "",
+		.features = {},
+
+		.optimization_level = 2, // default optimization level
+
+		.generate_debug_info = false,
+	};
+
 	codegen_result codegen_result{};
 
 	if (build_cfg.build_all) {

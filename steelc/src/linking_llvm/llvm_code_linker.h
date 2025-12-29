@@ -26,7 +26,12 @@ enum llvm_artifact_format {
 
 class llvm_code_linker : public icode_linker {
 public:
+	virtual bool can_emit_executable() override { return true; }
+	virtual bool can_emit_static_lib() override { return true; }
+	virtual bool can_emit_shared_lib() override { return true; }
+
 	virtual link_result link(const std::vector<code_artifact>& artifacts, const codegen_config& cfg) override;
+
 	virtual bool supports(const code_artifact& artifact) override;
 
 private:

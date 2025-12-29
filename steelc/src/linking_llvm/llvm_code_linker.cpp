@@ -152,8 +152,11 @@ link_result llvm_code_linker::link(const std::vector<code_artifact>& artifacts, 
 
 	return result;
 }
+
 bool llvm_code_linker::supports(const code_artifact& artifact) {
-	return false;
+	if (artifact.kind != ARTIFACT_IR) return false;
+	if (artifact.format != "llvm-asm" && artifact.format != "llvm-bc") return false;
+	return true;
 }
 
 void llvm_code_linker::initialize_llvm_once() {
