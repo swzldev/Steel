@@ -1,6 +1,6 @@
 # STEELC CHANGELOG
 
-## [Unreleased]
+## [0.6.0]
 - Added support for bitcode output in addition to assembly output (bitcode will now be default).
 - Changed some of the default output directories:
     - Build output directory: `/build/`
