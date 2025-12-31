@@ -22,6 +22,7 @@ const flag_config* flag_config::from_command(steelc_command_id cmd_id) {
 				{ "--all", 0 },
 				{ "--backend", 1 },
 				{ "--ir-format", 1 },
+				{ "--target", 1 },
 				{ "--out", 1 },
 				{ "--int", 1 },
 			}

@@ -82,7 +82,7 @@ bool project_builder::build_project() {
 		.backend = backend,
 		.ir_format = ir_format,
 
-		.target_triple = "", // default (in future may add overrides)
+		.target_triple = build_cfg.target_triple,
 		.cpu = "",
 		.features = {},
 

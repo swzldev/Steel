@@ -58,6 +58,9 @@ bool steelc_commands_impl::build_command_handler(const command_flags& flags) {
 	if (flags.has("--ir-format")) {
 		cfg.ir_format = flags.get_first("--ir-format");
 	}
+	if (flags.has("--target")) {
+		cfg.target_triple = flags.get_first("--target");
+	}
 	if (flags.has("--out")) {
 		cfg.output_dir = flags.get_first("--out");
 	}
