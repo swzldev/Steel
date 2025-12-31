@@ -2,7 +2,7 @@
 
 #include <string>
 
-#include <steelc/platform_constants.h>
+#include <sys/host_defs.h>
 
 static inline operating_system get_host_os() {
 #if defined(STEELC_PLATFORM_LINUX)

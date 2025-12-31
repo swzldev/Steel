@@ -248,7 +248,6 @@ set(SOURCES
 
     # src/steelc/
     "src/steelc/language_constants.h"
-    "src/steelc/platform_constants.h"
     "src/steelc/steelc_definitions.h"
 
     # src/stproj/
@@ -275,6 +274,11 @@ set(SOURCES
     "src/symbolics/type_symbols.cpp"
     "src/symbolics/type_symbols.h"
 
+    # src/sys/
+    "src/sys/host_defs.h"
+    "src/sys/shell.cpp"
+    "src/sys/shell.h"
+
     # src/utils/
     "src/utils/console_colors.cpp"
     "src/utils/console_colors.h"
@@ -282,8 +286,6 @@ set(SOURCES
     "src/utils/maybe.h"
     "src/utils/path_utils.cpp"
     "src/utils/path_utils.h"
-    "src/utils/shell.cpp"
-    "src/utils/shell.h"
     "src/utils/string_utils.h"
     "src/utils/string_utils.cpp"
 

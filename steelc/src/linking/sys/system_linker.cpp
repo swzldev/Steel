@@ -8,7 +8,7 @@
 #include <numeric>
 #include <vector>
 
-#include <steelc/platform_constants.h>
+#include <sys/host_defs.h>
 
 #if defined(STEELC_PLATFORM_WINDOWS)
 #include <Windows.h>

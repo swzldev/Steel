@@ -10,9 +10,9 @@
 #include <codegen/target/target_triple.h>
 #include <linking/link_result.h>
 #include <linking/sys/system_linker.h>
-#include <steelc/platform_constants.h>
 #include <utils/path_utils.h>
-#include <utils/shell.h>
+#include <sys/host_defs.h>
+#include <sys/shell.h>
 
 namespace fs = std::filesystem;
 

@@ -6,7 +6,7 @@
 #include <cstdlib>
 #include <cstdio>
 
-#include <steelc/platform_constants.h>
+#include <sys/host_defs.h>
 
 int shell::exec(const std::string& command) {
 	return std::system(command.c_str());
