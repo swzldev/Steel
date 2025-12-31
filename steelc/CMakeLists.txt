@@ -276,6 +276,8 @@ set(SOURCES
 
     # src/sys/
     "src/sys/host_defs.h"
+    "src/sys/platform.cpp"
+    "src/sys/platform.h"
     "src/sys/shell.cpp"
     "src/sys/shell.h"
 

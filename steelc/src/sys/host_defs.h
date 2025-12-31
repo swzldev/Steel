@@ -1,6 +1,12 @@
 #pragma once
 
 // this file defines platform constants useful throughout the codebase
+//
+// for invalid/unsupported platforms, this file will always generate an error.
+// to avoid error spam, most files that include this file will and should
+// assume at least one of the platform macros is defined. therefore
+// you should not ignore/bypass the error produced as it will just lead
+// to crashes and undefined behaviour.
 
 #if defined(_WIN32) || defined(_WIN64)
 #define STEELC_PLATFORM_WINDOWS 1
