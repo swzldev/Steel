@@ -53,11 +53,12 @@ link_result coff_linker::link(const std::vector<std::string>& to_link, const cod
 
 	// output file
 	fs::path out_path = fs::path(cfg.output_dir) / (cfg.output_name + ".exe");
-	args.push_back("/OUT:\"" + fs::weakly_canonical(out_path).string() + "\"");
+	out_path = path_utils::normalize(fs::weakly_canonical(out_path));
+	args.push_back("/OUT:" + out_path.string());
 
 	// add inputs
 	for (const auto& obj_path : to_link) {
-		args.push_back("\"" + obj_path + "\"");
+		args.push_back(obj_path);
 	}
 
 	// machine
@@ -85,7 +86,7 @@ link_result coff_linker::link(const std::vector<std::string>& to_link, const cod
 		if (it != vc_env.end()) {
 			found_lib_paths = true;
 			for (const auto& lib_path : it->second) {
-				args.push_back("/LIBPATH:\"" + lib_path + "\"");
+				args.push_back("/LIBPATH:" + lib_path);
 			}
 		}
 	}
@@ -96,18 +97,28 @@ link_result coff_linker::link(const std::vector<std::string>& to_link, const cod
 	// subsystem (always console for now)
 	args.push_back("/SUBSYSTEM:CONSOLE");
 
-	// for now link in release using dynamic crt
-	args.push_back("ucrt.lib");
-	args.push_back("vcruntime.lib");
+	// for now link in release using static crt
+	args.push_back("libcmt.lib");
+	args.push_back("libvcruntime.lib");
+	args.push_back("libucrt.lib");
+	args.push_back("kernel32.lib");
 
 	// suppress logo
 	args.push_back("/NOLOGO");
 
+	std::string command = "\"" + sys_linker->executable_path + "\"";
+	for (const auto& arg : args) {
+		if (arg.find(' ') != std::string::npos) {
+			command += " \"" + arg + "\"";
+		}
+		else command += " " + arg;
+	}
+
 	// execute linker
-	int exit_code = sys_linker->execute(args);
-	if (exit_code != 0) {
+	int ec = shell::exec("\"" + command + "\"");
+	if (ec != 0) {
 		return link_error{
-			.message = "Linker failed with exit code: " + std::to_string(exit_code)
+			.message = "Linker failed with exit code: " + std::to_string(ec)
 		};
 	}
 

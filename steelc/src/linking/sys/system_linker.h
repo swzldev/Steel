@@ -6,16 +6,11 @@
 
 // system_linker
 //
-// wraps a system linker (like ld, link.exe, etc) and provides
-// an interface to interact with it easily
+// mostly used to locate system linkers on PATH
 
 class system_linker {
 public:
 	static std::unique_ptr<system_linker> probe(const std::vector<std::string>& candidates);
-
-	// note:
-	// args should be escaped if necessary already
-	int execute(const std::vector<std::string>& args) const;
 
 	std::string executable_path;
 
