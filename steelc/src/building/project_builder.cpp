@@ -224,16 +224,22 @@ bool project_builder::build_project() {
 		output::err("This is likely an internal error, it is reccomended to run a clean and rebuild to regenerate missing files.\n", console_colors::BOLD + console_colors::RED);
 		return false;
 	}
+	
+	output::print("Linking {} object file(s)...\n", console_colors::BOLD, to_link_paths.size());
 
-	// link to one module
+	// link to executable
 	linker linker(to_link_paths, codegen_cfg, obj_format);
+	if (!linker.linker_available()) {
+		output::err("No suitable linker available for object format: {}\n", console_colors::BOLD + console_colors::RED, obj_format);
+		return false;
+	}
 
 	link_result lnk_res = linker.link_all();
 	if (!lnk_res.success) {
 		output::err("Linking failed: {}\n", console_colors::BOLD + console_colors::RED, lnk_res.error.message);
 		return false;
 	}
-	output::print("Linking succeeded. Path: {}\n", console_colors::BOLD + console_colors::GREEN, lnk_res.final_executable_path);
+	output::print("Linking succeeded.\n", console_colors::BOLD + console_colors::GREEN);
 
 	// build with clang
 	/*if (!clang_build({ (outputter->get_intermediate_dir() / linked_filename).string()})) {
