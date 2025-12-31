@@ -13,12 +13,14 @@ class system_linker {
 public:
 	static std::unique_ptr<system_linker> probe(const std::vector<std::string>& candidates);
 
+	// note:
+	// args should be escaped if necessary already
 	int execute(const std::vector<std::string>& args) const;
 
-private:
-	system_linker(const std::string linker_path)
-		: linker_path(linker_path) {
-	}
+	std::string executable_path;
 
-	std::string linker_path;
+private:
+	system_linker(const std::string executable_path)
+		: executable_path(executable_path) {
+	}
 };

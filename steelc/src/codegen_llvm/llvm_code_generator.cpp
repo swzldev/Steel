@@ -10,10 +10,12 @@
 #include <codegen/codegen_result.h>
 #include <codegen/codegen_config.h>
 #include <codegen/error/codegen_exception.h>
+#include <codegen/sys/system_formats.h>
 #include <codegen_llvm/type_handling/llvm_type_converter.h>
 #include <codegen_llvm/builders/llvm_function_builder.h>
 #include <codegen_llvm/builders/llvm_expression_builder.h>
 #include <codegen_llvm/writers/llvm_writer.h>
+#include <codegen_llvm/writers/llvm_native_writer.h>
 #include <mir/mir_module.h>
 #include <mir/mir_function.h>
 #include <mir/mir_block.h>
@@ -22,12 +24,14 @@
 codegen_result llvm_code_generator::emit(const mir_module& mod_mir, const codegen_config& cfg) {
 	module = std::make_unique<llvm::Module>(mod_mir.name, context);
 	writer = std::make_unique<llvm_writer>(module.get());
+	nwriter = std::make_unique<llvm_native_writer>(module.get(), cfg.target_triple, cfg.cpu);
 
 	for (const auto& fn : mod_mir.functions) {
 		emit_function(fn);
 	}
 
 	codegen_result result;
+	// IR files (optional, but we produce them anyway)
 	if (cfg.ir_format == "llvm-asm") {
 		result.artifacts.push_back(generate_asm_artifact(mod_mir));
 	}
@@ -37,6 +41,10 @@ codegen_result llvm_code_generator::emit(const mir_module& mod_mir, const codege
 	else {
 		throw std::runtime_error("Emit called with invalid format!");
 	}
+
+	// native object file
+	result.artifacts.push_back(generate_native_object_artifact(mod_mir));
+
 	return result;
 }
 
@@ -369,5 +377,18 @@ code_artifact llvm_code_generator::generate_asm_artifact(const mir_module& mod_m
 		.format = ASSEMBLY_FORMAT,
 		.is_binary = false,
 		.text = writer->write_asm()
+	};
+}
+code_artifact llvm_code_generator::generate_native_object_artifact(const mir_module& mod_mir) {
+	std::string fmt = system_formats::get_object_format();
+	std::string ext = system_formats::get_object_extension();
+	return code_artifact{
+		.kind = ARTIFACT_OBJECT,
+		.src_relpath = mod_mir.meta.src_relpath,
+		.name = mod_mir.name,
+		.extension = ext,
+		.format = fmt,
+		.is_binary = true,
+		.bytes = nwriter->write_object()
 	};
 }

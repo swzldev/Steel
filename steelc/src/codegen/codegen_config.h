@@ -10,6 +10,7 @@
 
 struct codegen_config {
 	// emission options
+	std::string output_name = ""; // usually for the produced binary (i.e. executable/lib)
 	std::string output_dir = "";
 	std::string backend = "llvm"; // intermediate representation format (e.g. llvm-bc, llvm-asm)
 	std::string ir_format = ""; // empty = backend default

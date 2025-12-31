@@ -6,6 +6,8 @@
 
 #include <llvm/IR/Module.h>
 
+#include <codegen/code_artifact.h>
+
 // llvm_writer
 //
 // utility class responsible for converting llvm modules to

@@ -11,10 +11,6 @@
 #include <unordered_set>
 #include <optional>
 
-#include <llvm/IR/Module.h>
-#include <llvm/Bitcode/BitcodeWriter.h>
-#include <llvm/Support/raw_ostream.h>
-
 #include <config/compile_config.h>
 #include <utils/console_colors.h>
 #include <utils/path_utils.h>
@@ -27,11 +23,11 @@
 #include <building/cache/file_hasher.h>
 #include <building/build_config.h>
 #include <building/code_outputter.h>
-#include <building/linking/link_error.h>
-#include <building/linking/project_linker.h>
 #include <compiler/compiler.h>
 #include <codegen/codegen.h>
 #include <codegen/codegen_result.h>
+#include <codegen/sys/system_formats.h>
+#include <linking/linker.h>
 #include <stproj/source_file.h>
 #include <stproj/stproj_file.h>
 
@@ -81,6 +77,7 @@ bool project_builder::build_project() {
 	std::vector<source_file> to_compile;
 
 	codegen_config codegen_cfg{
+		.output_name = project_filename(),
 		.output_dir = get_output_dir().string(),
 		.backend = backend,
 		.ir_format = ir_format,
@@ -161,30 +158,31 @@ bool project_builder::build_project() {
 		}
 	}
 
+	std::string obj_format = system_formats::get_object_format();
+
 	// gather all irs
-	std::vector<code_artifact> to_link;
+	std::vector<std::string> to_link_paths;
 	std::unordered_set<std::string> compiled_srcs;
-	std::unordered_set<std::string> ir_set; // non-relative paths
 	std::vector<std::string> missing;
 
 	for (const auto& artifact : codegen_result.artifacts) {
-		if (artifact.kind == ARTIFACT_IR) {
-			if (artifact.format != ir_format) {
-				continue; // ignore generated IRs that dont match desired format
+		if (artifact.kind == ARTIFACT_OBJECT) {
+			if (artifact.format != obj_format) {
+				output::err("Error: generated object file has invalid format: {} (expected {})\n", console_colors::BOLD + console_colors::RED, artifact.format, obj_format);
+				return false;
 			}
 
-			const std::string rel_out_path = get_artifact_path(artifact, true);
-			const std::string out_path = get_artifact_path(artifact, false);
+			const std::string rel_art_path = get_artifact_path(artifact, true);
+			const std::string art_path = get_artifact_path(artifact, false);
 
-			ir_set.insert(out_path);
 			// we need to keep track of which source files were compiled
 			// so we can ensure we dont miss any
 			compiled_srcs.insert(artifact.src_relpath);
 
 			artifact_metadata art_meta = generate_artifact_metadata(artifact);
-			cache.set_artifact_metadata(rel_out_path, art_meta);
+			cache.set_artifact_metadata(rel_art_path, art_meta);
 
-			to_link.push_back(artifact);
+			to_link_paths.push_back(art_path);
 		}
 	}
 	for (const auto& src : project_file->sources) {
@@ -193,7 +191,10 @@ bool project_builder::build_project() {
 		// lookup in cache
 		std::optional<artifact_metadata> art_meta_opt = std::nullopt;
 		for (const auto& [path, art_meta] : cache.get_artifact_metadata()) {
-			if (art_meta.src_relpath == src.relative_path && art_meta.kind == ARTIFACT_IR && art_meta.format == ir_format) {
+			if (art_meta.src_relpath == src.relative_path &&
+				art_meta.kind == ARTIFACT_OBJECT &&
+				art_meta.format == obj_format
+			){
 				art_meta_opt = art_meta;
 				break;
 			}
@@ -211,12 +212,7 @@ bool project_builder::build_project() {
 			continue;
 		}
 		else {
-			ir_set.insert(abs);
-
-			// we need to load the artifact data from disk
-			// for linking
-			code_artifact art = load_artifact_from_metadata(art_meta_opt.value());
-			to_link.push_back(art);
+			to_link_paths.push_back(abs);
 		}
 	}
 	// report missing files
@@ -230,20 +226,14 @@ bool project_builder::build_project() {
 	}
 
 	// link to one module
-	project_linker linker(to_link, codegen_cfg);
-	if (linker.has_error()) {
-		output::err("Link error: {}\n", console_colors::BOLD + console_colors::RED, linker.get_error_message());
+	linker linker(to_link_paths, codegen_cfg, obj_format);
+
+	link_result lnk_res = linker.link_all();
+	if (!lnk_res.success) {
+		output::err("Linking failed: {}\n", console_colors::BOLD + console_colors::RED, lnk_res.error.message);
 		return false;
 	}
-
-	code_artifact linked = linker.link_all();
-	if (linked.kind != ARTIFACT_BINARY || !linked.is_binary) {
-		output::err("Linker produced invalid artifact kind.\n", console_colors::BOLD + console_colors::RED);
-		return false;
-	}
-
-	std::string linked_filename = build_cfg.output_dir + "/" + project_filename() + linked.extension;
-	outputter->output_code(linked.bytes, linked_filename);
+	output::print("Linking succeeded. Path: {}\n", console_colors::BOLD + console_colors::GREEN, lnk_res.final_executable_path);
 
 	// build with clang
 	/*if (!clang_build({ (outputter->get_intermediate_dir() / linked_filename).string()})) {
@@ -286,6 +276,11 @@ std::string project_builder::get_artifact_path(const code_artifact& artifact, bo
 	switch (artifact.kind) {
 	case ARTIFACT_IR: {
 		path += build_cfg.intermediate_dir + "ir/";
+		path += artifact.src_relpath;
+		break;
+	}
+	case ARTIFACT_OBJECT: {
+		path += build_cfg.intermediate_dir + "obj/";
 		path += artifact.src_relpath;
 		break;
 	}

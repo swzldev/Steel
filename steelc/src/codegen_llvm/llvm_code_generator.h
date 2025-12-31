@@ -15,6 +15,7 @@
 #include <codegen_llvm/builders/llvm_function_builder.h>
 #include <codegen_llvm/builders/llvm_expression_builder.h>
 #include <codegen_llvm/writers/llvm_writer.h>
+#include <codegen_llvm/writers/llvm_native_writer.h>
 
 namespace llvm {
 	class Function;
@@ -70,6 +71,7 @@ private:
 	llvm_function_builder fn_builder;
 	llvm_expression_builder expression_builder;
 	std::unique_ptr<llvm_writer> writer = nullptr;
+	std::unique_ptr<llvm_native_writer> nwriter = nullptr;
 
 	llvm::Function* emit_function(const mir_function& fn_mir);
 	llvm::BasicBlock* emit_block(const mir_block& block_mir);
@@ -80,6 +82,7 @@ private:
 	// artifact generators
 	code_artifact generate_bitcode_artifact(const mir_module& mod_mir);
 	code_artifact generate_asm_artifact(const mir_module& mod_mir);
+	code_artifact generate_native_object_artifact(const mir_module& mod_mir);
 
 	template<typename T>
 	struct always_false : std::false_type {};

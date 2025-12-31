@@ -5,7 +5,19 @@
 
 #include <codegen/code_artifact.h>
 
+struct link_error {
+	std::string message;
+};
+
 struct link_result {
-	code_artifact final_intermediate; // must be an object file
-	std::vector<code_artifact> extras;
+	link_result() = default;
+	link_result(link_error err)
+		: success(false), error(err) {
+	}
+
+	bool success = true;
+	link_error error;
+
+	std::string final_executable_path;
+	//std::vector<code_artifact> additional; // for now unused
 };

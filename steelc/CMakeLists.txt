@@ -91,9 +91,6 @@ set(SOURCES
     "src/building/cache/file_hasher.cpp"
     "src/building/cache/file_hasher.h"
     "src/building/cache/source_metadata.h"
-    "src/building/linking/link_error.h"
-    "src/building/linking/project_linker.cpp"
-    "src/building/linking/project_linker.h"
 
     # src/codegen/
     "src/codegen/codegen.cpp"
@@ -112,6 +109,10 @@ set(SOURCES
     "src/codegen/memory/variable.h"
     "src/codegen/naming/name_mangler.cpp"
     "src/codegen/naming/name_mangler.h"
+    "src/codegen/sys/system_formats.cpp"
+    "src/codegen/sys/system_formats.h"
+    "src/codegen/target/target_triple.cpp"
+    "src/codegen/target/target_triple.h"
 
     # src/codegen_llvm/
     "src/codegen_llvm/llvm_code_generator.cpp"
@@ -124,6 +125,8 @@ set(SOURCES
     "src/codegen_llvm/type_handling/llvm_type_converter.h"
     "src/codegen_llvm/type_handling/llvm_type_utils.cpp"
     "src/codegen_llvm/type_handling/llvm_type_utils.h"
+    "src/codegen_llvm/writers/llvm_native_writer.cpp"
+    "src/codegen_llvm/writers/llvm_native_writer.h"
     "src/codegen_llvm/writers/llvm_writer.cpp"
     "src/codegen_llvm/writers/llvm_writer.h"
 
@@ -169,14 +172,14 @@ set(SOURCES
 
     # src/linking/
     "src/linking/icode_linker.h"
+    "src/linking/linker.cpp"
+    "src/linking/linker.h"
     "src/linking/link_options.h"
     "src/linking/link_result.h"
+    "src/linking/impl/coff_linker.cpp"
+    "src/linking/impl/coff_linker.h"
     "src/linking/sys/system_linker.cpp"
     "src/linking/sys/system_linker.h"
-
-    # src/linking_llvm/
-    "src/linking_llvm/llvm_code_linker.cpp"
-    "src/linking_llvm/llvm_code_linker.h"
 
     # src/mir/
     "src/mir/mir_block.h"
@@ -279,6 +282,8 @@ set(SOURCES
     "src/utils/maybe.h"
     "src/utils/path_utils.cpp"
     "src/utils/path_utils.h"
+    "src/utils/shell.cpp"
+    "src/utils/shell.h"
     "src/utils/string_utils.h"
     "src/utils/string_utils.cpp"
 

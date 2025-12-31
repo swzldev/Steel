@@ -5,9 +5,12 @@
 #include <cstdint>
 
 #include <llvm/IR/Module.h>
-#include <llvm/Support/FileSystem.h>
+#include <llvm/IR/LLVMContext.h>
 #include <llvm/Support/raw_ostream.h>
 #include <llvm/Bitcode/BitcodeWriter.h>
+#include <llvm/Support/FileSystem.h>
+
+#include <codegen/sys/system_formats.h>
 
 std::vector<uint8_t> llvm_writer::write_bitcode() const {
 	std::string buffer;
