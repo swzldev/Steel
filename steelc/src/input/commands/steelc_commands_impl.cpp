@@ -92,7 +92,7 @@ bool steelc_commands_impl::project_command_handler(const command_flags& flags) {
 }
 bool steelc_commands_impl::test_command_handler(const command_flags& flags) {
 #if defined(STEELC_ENABLE_TESTS)
-	std::string command = "\"tests/steelc_tests\"";
+	std::string command = "\"\"tests/steelc_tests\"\"";
 
 	int ec = std::system(command.c_str());
 	return ec == 0;
