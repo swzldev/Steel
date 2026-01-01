@@ -61,12 +61,12 @@ bool project_builder::build_project() {
 		return false;
 	}
 
-	// load build cache
+	// load cache files
 	build_cache_file cache = load_cache();
+	load_vars_file();
+
 	std::vector<source_file> to_compile;
-
 	codegen_config codegen_cfg = generate_codegen_config();
-
 	codegen_result codegen_result{};
 
 	if (build_cfg.build_all) {
@@ -208,7 +208,7 @@ bool project_builder::build_project() {
 		.object_files = to_link_paths,
 		.object_format = obj_format,
 		.cfg = generate_link_config(),
-		.cached_vars = {} // TODO: use vars_file
+		.cached_vars = cached_vars
 	};
 	linker linker(link_data);
 	if (!linker.linker_available()) {
@@ -226,6 +226,10 @@ bool project_builder::build_project() {
 	output::print("Building succeeded. ", console_colors::BOLD + console_colors::GREEN);
 	output::print("(Took {:.3f} seconds)\n", console_colors::DIM, get_build_time());
 
+	// save cache(s)
+	save_cache(cache);
+	save_vars_file();
+
 	// run post-build commands
 	for (const auto& cmd : post_build_commands) {
 		output::print("Running post-build command: {}\n", console_colors::BOLD + console_colors::CYAN, cmd);
@@ -234,9 +238,6 @@ bool project_builder::build_project() {
 			return false;
 		}
 	}
-
-	// save build cache
-	save_cache(cache);
 
 	return true;
 }
@@ -369,6 +370,16 @@ std::vector<source_file> project_builder::get_files_to_compile(build_cache_file&
 	}
 
 	return out_files;
+}
+
+void project_builder::load_vars_file() {
+	auto p = project_file->parent_path() / build_cfg.vars_file;
+	output::verbose("Loading vars file at: \'{}\'\n", console_colors::DIM, p.string());
+
+	cached_vars.load_from_file(p.string());
+}
+void project_builder::save_vars_file() const {
+	cached_vars.save_to_file((project_file->parent_path() / build_cfg.vars_file).string());
 }
 
 source_metadata project_builder::generate_src_metadata(const source_file& src) {

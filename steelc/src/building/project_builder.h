@@ -39,6 +39,7 @@ private:
 	std::unique_ptr<stproj_file> project_file;
 	std::unique_ptr<code_outputter> outputter;
 	std::filesystem::path cache_path;
+	vars_file cached_vars;
 
 	std::chrono::high_resolution_clock::time_point build_start;
 	std::chrono::high_resolution_clock::time_point compile_start;
@@ -78,6 +79,10 @@ private:
 	build_cache_file load_cache();
 	void save_cache(build_cache_file& cache) const;
 	std::vector<source_file> get_files_to_compile(build_cache_file& cache);
+
+	// vars file
+	void load_vars_file();
+	void save_vars_file() const;
 
 	// metadata generation/loading
 	source_metadata generate_src_metadata(const source_file& src);
