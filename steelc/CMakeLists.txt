@@ -3,6 +3,8 @@
 # Sources are organized in alphabetical order within their respective folders
 
 set(SOURCES
+    # MAIN SOURCE FILES
+
     # src/
     "src/main.cpp"
 
@@ -291,9 +293,12 @@ set(SOURCES
     "src/utils/string_utils.h"
     "src/utils/string_utils.cpp"
 
+    # TEST FILES
+
     # tests/
     "tests/test.cpp"
     "tests/test.h"
+    "tests/tests_main.cpp"
 
     # tests/lexer_tests/
     "tests/lexer_tests/lexer_tests.cpp"
