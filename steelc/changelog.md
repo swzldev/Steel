@@ -1,5 +1,9 @@
 # STEELC CHANGELOG
 
+## [Unreleased]
+- Seperated the project into steelc_core (the core library), steelc (the executable), and steelc_tests (the test suite).
+- Added a new command `steelc test` that runs the test suite (not available on non development builds).
+
 ## [0.6.0]
 - Added support for bitcode output in addition to assembly output (bitcode will now be default).
 - Changed some of the default output directories:

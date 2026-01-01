@@ -37,4 +37,9 @@ void steelc_command_manager::register_all() {
 		steelc_commands_impl::project_command_handler,
 		flag_config::from_command(STEELC_CMD_PROJECT)
 	});
+	register_command({
+		"test",
+		steelc_commands_impl::test_command_handler,
+		flag_config::from_command(STEELC_CMD_TEST)
+	});
 }

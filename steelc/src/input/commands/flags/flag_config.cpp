@@ -13,6 +13,9 @@ const flag_config* flag_config::from_command(steelc_command_id cmd_id) {
 	else if (cmd_id == STEELC_CMD_VERSION) {
 		return &default_config;
 	}
+	else if (cmd_id == STEELC_CMD_TEST) {
+		return &default_config;
+	}
 
 	else if (cmd_id == STEELC_CMD_BUILD) {
 		static const flag_config cfg{

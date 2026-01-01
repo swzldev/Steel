@@ -2,6 +2,7 @@
 
 #include <string>
 #include <filesystem>
+#include <cstdlib>
 
 #include <input/commands/flags/command_flags.h>
 #include <steelc/steelc_definitions.h>
@@ -86,4 +87,15 @@ bool steelc_commands_impl::project_command_handler(const command_flags& flags) {
 	else {
 		output::err("Unknown project option: {}\n", console_colors::RED, command);
 	}
+
+	return false;
+}
+bool steelc_commands_impl::test_command_handler(const command_flags& flags) {
+#if defined(STEELC_ENABLE_TESTS)
+	int ec = std::system("tests/steelc_tests");
+	return ec == 0;
+#else
+	output::err("Tests are not enabled in this build of steelc.\n", console_colors::RED);
+	return false;
+#endif
 }
