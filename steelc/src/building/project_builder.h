@@ -17,6 +17,9 @@
 #include <compiler/compiler.h>
 #include <stproj/source_file.h>
 #include <stproj/stproj_file.h>
+#include <codegen/code_artifact.h>
+#include <codegen/codegen_config.h>
+#include <linking/link_config.h>
 
 class project_builder {
 public:
@@ -28,11 +31,6 @@ public:
 	bool build_project();
 	
 	int run_build_command(const std::string& command);
-
-	// returns filename of the project (WITHOUT .stproj)
-	inline std::string project_filename() {
-		return project_file->filename_no_extension().string();
-	}
 
 	std::vector<std::string> post_build_commands;
 
@@ -62,6 +60,10 @@ private:
 	// it uses the artifacts kind to determine the appropriate subdirectory
 	std::string get_artifact_path(const code_artifact& artifact, bool relative = true) const;
 
+	// returns filename of the project (WITHOUT .stproj)
+	inline std::string project_filename() const {
+		return project_file->filename_no_extension().string();
+	}
 	inline std::filesystem::path get_project_dir() const {
 		return project_file->parent_path();
 	}
@@ -77,14 +79,14 @@ private:
 	void save_cache(build_cache_file& cache) const;
 	std::vector<source_file> get_files_to_compile(build_cache_file& cache);
 
+	// metadata generation/loading
 	source_metadata generate_src_metadata(const source_file& src);
 	artifact_metadata generate_artifact_metadata(const code_artifact& art);
 
 	code_artifact load_artifact_from_metadata(const artifact_metadata& meta);
 
-	bool clang_build(const std::vector<std::string>& ir_files);
-
-	inline std::string get_platform_app_extension() const;
-
-	std::string replace_vars(const std::string& str);
+	// config
+	bool validate_config();
+	codegen_config generate_codegen_config() const;
+	link_config generate_link_config() const;
 };

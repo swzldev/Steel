@@ -21,6 +21,7 @@
 #include <building/cache/artifact_metadata.h>
 #include <building/cache/build_cache_file.h>
 #include <building/cache/file_hasher.h>
+#include <building/cache/vars_file.h>
 #include <building/build_config.h>
 #include <building/code_outputter.h>
 #include <compiler/compiler.h>
@@ -55,20 +56,8 @@ bool project_builder::build_project() {
 	mark_build_start();
 	output::print("Build started...\n");
 
-	std::string backend = build_cfg.backend;
-	std::string ir_format = build_cfg.ir_format;
-
-	// validate backend and format early (if specified)
-	if (!codegen::validate_backend(backend)) {
-		output::err("Unknown codegen backend specified: {}\n", console_colors::BOLD + console_colors::RED, backend);
-		return false;
-	}
-	if (ir_format.empty()) {
-		ir_format = codegen::default_ir_format(backend);
-		output::verbose("Using default backend format: \'{}\'\n", console_colors::DIM, ir_format);
-	}
-	if (!codegen::validate_ir_format(backend, ir_format)) {
-		output::err("IR format \'{}\' is not supported by backend \'{}\'\n", console_colors::BOLD + console_colors::RED, ir_format, backend);
+	// validate config
+	if (!validate_config()) {
 		return false;
 	}
 
@@ -76,20 +65,7 @@ bool project_builder::build_project() {
 	build_cache_file cache = load_cache();
 	std::vector<source_file> to_compile;
 
-	codegen_config codegen_cfg{
-		.output_name = project_filename(),
-		.output_dir = get_output_dir().string(),
-		.backend = backend,
-		.ir_format = ir_format,
-
-		.target_triple = build_cfg.target_triple,
-		.cpu = "",
-		.features = {},
-
-		.optimization_level = 2, // default optimization level
-
-		.generate_debug_info = false,
-	};
+	codegen_config codegen_cfg = generate_codegen_config();
 
 	codegen_result codegen_result{};
 
@@ -241,12 +217,6 @@ bool project_builder::build_project() {
 	}
 	output::print("Linking succeeded.\n", console_colors::BOLD + console_colors::GREEN);
 
-	// build with clang
-	/*if (!clang_build({ (outputter->get_intermediate_dir() / linked_filename).string()})) {
-		output::err("Clang: building failed.\n", console_colors::BOLD + console_colors::RED);
-		return false;
-	}*/
-
 	output::print("Building succeeded. ", console_colors::BOLD + console_colors::GREEN);
 	output::print("(Took {:.3f} seconds)\n", console_colors::DIM, get_build_time());
 
@@ -266,8 +236,7 @@ bool project_builder::build_project() {
 }
 
 int project_builder::run_build_command(const std::string& command) {
-	std::string replaced = replace_vars(command);
-	return system(replaced.c_str());
+	return system(command.c_str());
 }
 
 double project_builder::get_build_time() const {
@@ -460,48 +429,52 @@ code_artifact project_builder::load_artifact_from_metadata(const artifact_metada
 	return art;
 }
 
-bool project_builder::clang_build(const std::vector<std::string>& ir_files) {
-	std::string cmd = "clang ";
-	for (const auto& ir : ir_files) {
-		cmd += "\"" + ir + "\" ";
-	}
-	cmd += "-o \"" + (get_output_dir() / (project_filename() + get_platform_app_extension())).string() + "\"";
-	return system(cmd.c_str()) == 0;
-}
+bool project_builder::validate_config() {
+	// validate backend and format
+	{
+		std::string& backend = build_cfg.backend;
+		std::string& ir_format = build_cfg.ir_format;
 
-inline std::string project_builder::get_platform_app_extension() const {
-#if defined(_WIN32) || defined(_WIN64)
-	return ".exe";
-#elif defined(__APPLE__) || defined(__linux__)
-	return ".out";
-#else
-	return "";
-#endif
-}
-
-std::string project_builder::replace_vars(const std::string& str) {
-	std::string remaining = str;
-	std::string out;
-	std::regex var_re(R"(\$\{([^}]+)\})");
-	std::smatch m;
-
-	while (std::regex_search(remaining, m, var_re)) {
-		out += m.prefix().str();
-
-		std::string key = m[1].str();
-		if (key == "IRS") {
-			for (size_t i = 0; i < all_irs.size(); ++i) {
-				if (i) out.push_back(' ');
-				out += "\"" + all_irs[i] + "\"";
-			}
+		if (!codegen::validate_backend(backend)) {
+			output::err("Unknown codegen backend specified: {}\n", console_colors::BOLD + console_colors::RED, backend);
+			return false;
 		}
-		else if (key == "OUTPUT_DIR") {
-			out += get_output_dir().string();
+		if (ir_format.empty()) {
+			ir_format = codegen::default_ir_format(backend);
+			output::verbose("Using default backend format: \'{}\'\n", console_colors::DIM, ir_format);
 		}
-		
-		remaining = m.suffix().str();
+		if (!codegen::validate_ir_format(backend, ir_format)) {
+			output::err("IR format \'{}\' is not supported by backend \'{}\'\n", console_colors::BOLD + console_colors::RED, ir_format, backend);
+			return false;
+		}
 	}
 
-	out += remaining;
-	return out;
+	// validate target
+	{
+
+	}
+
+	return true;
+}
+
+codegen_config project_builder::generate_codegen_config() const {
+	return codegen_config{
+		.backend = build_cfg.backend,
+		.ir_format = build_cfg.ir_format,
+
+		.target_triple = build_cfg.target_triple,
+		.cpu = "",
+		.features = {},
+
+		.optimization_level = 2, // default optimization level
+
+		.generate_debug_info = false,
+	};
+}
+link_config project_builder::generate_link_config() const {
+	return link_config{
+		.output_dir = path_utils::normalize(get_output_dir()).string(),
+		.output_name = project_filename(),
+		.target = target_triple(build_cfg.target_triple),
+	};
 }

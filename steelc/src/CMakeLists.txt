@@ -88,6 +88,8 @@ target_sources(steelc_core PRIVATE
     "building/cache/file_hasher.cpp"
     "building/cache/file_hasher.h"
     "building/cache/source_metadata.h"
+    "building/cache/vars_file.cpp"
+    "building/cache/vars_file.h"
 
     # codegen/
     "codegen/codegen.cpp"
@@ -108,8 +110,6 @@ target_sources(steelc_core PRIVATE
     "codegen/naming/name_mangler.h"
     "codegen/sys/system_formats.cpp"
     "codegen/sys/system_formats.h"
-    "codegen/target/target_triple.cpp"
-    "codegen/target/target_triple.h"
 
     # codegen_llvm/
     "codegen_llvm/llvm_code_generator.cpp"
@@ -171,6 +171,8 @@ target_sources(steelc_core PRIVATE
     "linking/icode_linker.h"
     "linking/linker.cpp"
     "linking/linker.h"
+    "linking/link_config.h"
+    "linking/link_data.h"
     "linking/link_options.h"
     "linking/link_result.h"
     "linking/impl/coff_linker.cpp"
@@ -277,6 +279,8 @@ target_sources(steelc_core PRIVATE
     "sys/platform.h"
     "sys/shell.cpp"
     "sys/shell.h"
+    "sys/target_triple.cpp"
+    "sys/target_triple.h"
 
     # utils/
     "utils/console_colors.cpp"
