@@ -1,3 +1,5 @@
+#include <harness/test_manager.h>
+
 int main() {
-	return 0;
+	test_manager::run_all_tests(true);
 }

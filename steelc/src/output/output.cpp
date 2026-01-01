@@ -23,15 +23,24 @@ void output::set_log_verbosity(log_verbosity verbosity) {
 }
 
 void output::init() {
+	if (initialized) {
+		return;
+	}
 	console_colors::enable();
+	initialized = true;
 }
 void output::shutdown() {
+	if (!initialized) {
+		return;
+	}
 	if (log != nullptr) {
 		delete log;
 		log = nullptr;
 	}
+	initialized = false;
 }
 
+bool output::initialized = false;
 log_file* output::log = nullptr;
 
 #if defined(_DEBUG) || defined(DEBUG) || !defined(NDEBUG)

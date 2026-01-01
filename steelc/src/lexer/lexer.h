@@ -15,7 +15,7 @@ typedef unsigned int lexer_flags;
 
 class lexer : public compilation_pass {
 public:
-	lexer(const std::string& source, std::shared_ptr<class compilation_unit > unit)
+	lexer(const std::string& source, std::shared_ptr<class compilation_unit> unit)
 		: source(source), compilation_pass(unit) {
 	}
 

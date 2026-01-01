@@ -44,6 +44,7 @@ private:
 	output(const output&) = delete;
 	output& operator=(const output&) = delete;
 
+	static bool initialized;
 	static log_file* log;
 	static log_verbosity current_verbosity;
 
