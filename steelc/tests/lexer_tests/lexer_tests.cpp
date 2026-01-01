@@ -18,7 +18,7 @@ TEST(lexer_basic_tokens) {
 	if (tokens[1].type != TT_CONST || tokens[1].value != "const") {
 		return 3;
 	}
-	if (tokens[2].type != TT_IDENTIFIER || tokens[2].value != "int") {
+	if (tokens[2].type != TT_I32 || tokens[2].value != "int") {
 		return 4;
 	}
 	if (tokens[3].type != TT_ASSIGN || tokens[3].value != "=") {
