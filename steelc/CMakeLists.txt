@@ -55,4 +55,7 @@ target_link_libraries(steelc PRIVATE
 option(ENABLE_TESTS "Build steelc tests" ON)
 if (ENABLE_TESTS)
 	add_subdirectory("tests")
+
+    # add as macro
+    target_compile_definitions(steelc_core PUBLIC STEELC_ENABLE_TESTS)
 endif()
