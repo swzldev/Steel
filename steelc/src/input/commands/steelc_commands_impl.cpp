@@ -92,7 +92,9 @@ bool steelc_commands_impl::project_command_handler(const command_flags& flags) {
 }
 bool steelc_commands_impl::test_command_handler(const command_flags& flags) {
 #if defined(STEELC_ENABLE_TESTS)
-	int ec = std::system("tests/steelc_tests");
+	std::string command = "\"tests/steelc_tests\"";
+
+	int ec = std::system(command.c_str());
 	return ec == 0;
 #else
 	output::err("Tests are not enabled in this build of steelc.\n", console_colors::RED);
