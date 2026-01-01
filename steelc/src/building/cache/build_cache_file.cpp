@@ -111,6 +111,9 @@ bool build_cache_file::serialize(const std::filesystem::path& path) const {
 		return false;
 	}
 
+	// create directory if it doesnt exist
+	std::filesystem::create_directories(path.parent_path());
+
 	std::ofstream file(path, std::ios::binary);
 	if (!file.is_open()) {
 		return false;
@@ -134,6 +137,10 @@ bool build_cache_file::serialize(const std::filesystem::path& path) const {
 		file.write(reinterpret_cast<const char*>(&meta.hash), sizeof(meta.hash));
 		file.write(reinterpret_cast<const char*>(&meta.size), sizeof(meta.size));
 	}
+
+	// number of artifact entries
+	uint32_t num_art_entries = static_cast<uint32_t>(art_metadata.size());
+	file.write(reinterpret_cast<const char*>(&num_art_entries), sizeof(num_art_entries));
 
 	for (const auto& [path_str, meta] : art_metadata) {
 		// path

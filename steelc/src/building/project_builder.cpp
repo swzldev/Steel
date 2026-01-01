@@ -286,7 +286,7 @@ std::string project_builder::get_artifact_path(const code_artifact& artifact, bo
 }
 
 build_cache_file project_builder::load_cache() {
-	cache_path = project_file->parent_path() / build_cfg.build_cache_file;
+	cache_path = path_utils::normalize(project_file->parent_path() / build_cfg.build_cache_file);
 	output::verbose("Loading build cache at: \'{}\'\n", console_colors::DIM, cache_path.string());
 	// load existing cache
 	if (std::filesystem::exists(cache_path)) {
@@ -373,13 +373,16 @@ std::vector<source_file> project_builder::get_files_to_compile(build_cache_file&
 }
 
 void project_builder::load_vars_file() {
-	auto p = project_file->parent_path() / build_cfg.vars_file;
+	auto p = path_utils::normalize(project_file->parent_path() / build_cfg.vars_file);
 	output::verbose("Loading vars file at: \'{}\'\n", console_colors::DIM, p.string());
 
-	cached_vars.load_from_file(p.string());
+	cached_vars.load_from_file(p);
 }
 void project_builder::save_vars_file() const {
-	cached_vars.save_to_file((project_file->parent_path() / build_cfg.vars_file).string());
+	auto p = path_utils::normalize(project_file->parent_path() / build_cfg.vars_file);
+	if (!cached_vars.save_to_file(p)) {
+		output::print("Warn: Failed to save vars file.\n", console_colors::YELLOW);
+	}
 }
 
 source_metadata project_builder::generate_src_metadata(const source_file& src) {

@@ -11,6 +11,7 @@
 #include <linking/icode_linker.h>
 #include <linking/link_result.h>
 #include <linking/link_data.h>
+#include <building/cache/vars_file.h>
 
 class coff_linker : public icode_linker {
 public:
@@ -21,6 +22,8 @@ public:
 	virtual link_result link(const link_data& data) override;
 
 private:
+	std::vector<std::string> get_stdlib_paths(const std::string& target_arch, vars_file& vf);
+
 	std::filesystem::path find_vcvarsall();
 	std::string get_host_target_string(const std::string& target_arch);
 	std::unordered_map<std::string, std::vector<std::string>> capture_vcvarsall(const std::string& target_arch);

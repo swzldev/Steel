@@ -3,6 +3,8 @@
 #include <string>
 #include <unordered_map>
 #include <memory>
+#include <vector>
+#include <filesystem>
 
 // vars_file
 //
@@ -14,14 +16,19 @@
 
 class vars_file {
 public:
-	bool load_from_file(const std::string& filepath);
-	bool save_to_file(const std::string& filepath) const;
+	vars_file() = default;
 
+	bool load_from_file(const std::filesystem::path& filepath);
+	bool save_to_file(const std::filesystem::path& filepath) const;
+
+	// KEY=VALUE
 	void set_var(const std::string& key, const std::string& value);
 	bool get_var(const std::string& key, std::string& out_value) const;
 
-private:
-	vars_file() = default;
+	// KEY=VALUE1;VALUE2;VALUE3
+	void set_var(const std::string& key, const std::vector<std::string>& values);
+	bool get_var(const std::string& key, std::vector<std::string>& out_values) const;
 
+private:
 	std::unordered_map<std::string, std::string> vars;
 };

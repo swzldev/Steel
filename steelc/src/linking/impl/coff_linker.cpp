@@ -81,18 +81,13 @@ link_result coff_linker::link(const link_data& data) {
 	}
 
 	// lib paths
-	bool found_lib_paths = false;
-	auto vc_env = capture_vcvarsall(arch);
-	if (!vc_env.empty()) {
-		auto it = vc_env.find("LIB");
-		if (it != vc_env.end()) {
-			found_lib_paths = true;
-			for (const auto& lib_path : it->second) {
-				args.push_back("/LIBPATH:" + lib_path);
-			}
+	auto lib_paths = get_stdlib_paths(arch, data.cached_vars);
+	if (!lib_paths.empty()) {
+		for (const auto& lp : lib_paths) {
+			args.push_back("/LIBPATH:" + lp);
 		}
 	}
-	if (!found_lib_paths) {
+	else {
 		output::print("Warn: Could not capture standard library paths, linking will likely fail.\n");
 	}
 
@@ -135,6 +130,41 @@ link_result coff_linker::link(const link_data& data) {
 	return result;
 
 #endif // STEELC_PLATFORM_WINDOWS
+}
+
+std::vector<std::string> coff_linker::get_stdlib_paths(const std::string& target_arch, vars_file& vf) {
+	std::string key = "coff_stdlib_dirs_" + target_arch;
+	std::vector<std::string> paths;
+
+	// check if cached
+	if (vf.get_var(key, paths)) {
+		// verify paths are still valid
+		bool all_exist = true;
+		for (const auto& p : paths) {
+			if (!fs::exists(p) || !fs::is_directory(p)) {
+				all_exist = false;
+				break;
+			}
+		}
+
+		if (all_exist) return paths;
+		// not all exist, we need to recapture
+	}
+
+	// load using vcvarsall
+	auto vc_env = capture_vcvarsall(target_arch);
+	if (!vc_env.empty()) {
+		auto it = vc_env.find("LIB");
+		if (it != vc_env.end()) {
+			for (const auto& lib_path : it->second) {
+				paths.push_back(lib_path);
+			}
+		}
+	}
+	// cache
+	vf.set_var(key, paths);
+
+	return paths;
 }
 
 std::filesystem::path coff_linker::find_vcvarsall() {

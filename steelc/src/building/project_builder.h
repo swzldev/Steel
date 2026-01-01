@@ -12,6 +12,7 @@
 #include <building/cache/source_metadata.h>
 #include <building/cache/artifact_metadata.h>
 #include <building/cache/build_cache_file.h>
+#include <building/cache/vars_file.h>
 #include <building/build_config.h>
 #include <building/code_outputter.h>
 #include <compiler/compiler.h>
