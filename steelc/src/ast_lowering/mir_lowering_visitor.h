@@ -28,10 +28,8 @@ public:
 
 	void visit(std::shared_ptr<variable_declaration> var) override;
 	void visit(std::shared_ptr<function_declaration> func) override;
-	//void visit(std::shared_ptr<enum_option> option);
-	//void visit(std::shared_ptr<expression_statement> expr);
-	//void visit(std::shared_ptr<binary_expression> expr);
-	//void visit(std::shared_ptr<assignment_expression> expr);
+	void visit(std::shared_ptr<binary_expression> expr);
+	void visit(std::shared_ptr<assignment_expression> expr);
 	void visit(std::shared_ptr<member_expression> expr);
 	//void visit(std::shared_ptr<address_of_expression> expr);
 	//void visit(std::shared_ptr<deref_expression> expr);
@@ -39,11 +37,10 @@ public:
 	//void visit(std::shared_ptr<index_expression> expr);
 	void visit(std::shared_ptr<identifier_expression> id) override;
 	//void visit(std::shared_ptr<this_expression> expr);
-	//void visit(std::shared_ptr<cast_expression> expr);
+	void visit(std::shared_ptr<cast_expression> expr);
 	//void visit(std::shared_ptr<initializer_list> init);
 	void visit(std::shared_ptr<function_call> func_call);
 	void visit(std::shared_ptr<literal> literal) override;
-	//void visit(std::shared_ptr<import_statement> import_stmt);
 	void visit(std::shared_ptr<code_block> block) override;
 	//void visit(std::shared_ptr<if_statement> if_stmt) override;
 	//void visit(std::shared_ptr<inline_if> inline_if);
@@ -77,4 +74,7 @@ private:
 		}
 	}
 	mir_operand get_local(const std::string& name);
+	void update_local(const std::string& name, mir_operand value);
+
+	mir_instr_opcode get_operator_opcode(token_type op);
 };

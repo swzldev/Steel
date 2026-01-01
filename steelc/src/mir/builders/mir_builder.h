@@ -35,6 +35,7 @@ public:
 	mir_value build_mul(mir_operand lhs, mir_operand rhs);
 	mir_value build_div(mir_operand lhs, mir_operand rhs);
 	mir_value build_mod(mir_operand lhs, mir_operand rhs);
+	mir_value build_binary_op(mir_instr_opcode opcode, mir_operand lhs, mir_operand rhs);
 
 	// literals/immediates/constants
 	mir_operand build_const_int(int64_t value, mir_type type);
@@ -44,16 +45,16 @@ public:
 	// functions
 	mir_operand build_call(const std::vector<std::string>& scopes, const std::string& name, std::vector<mir_operand> args, mir_type func_type);
 
+	// type handling
+	mir_value build_cast(mir_operand value, mir_type target_type);
+
 private:
 	mir_function* func = nullptr;
 	mir_block* ins_block = nullptr;
 
 	void insert_instr(const mir_instr&& instr);
-	mir_value create_temp_value(mir_type type);
+	mir_value create_ssa_value(mir_type type);
 
 	// helpers
 	bool check_type_match(mir_operand lhs, mir_operand rhs);
-
-	// helper builders
-	mir_value build_binary_op(mir_instr_opcode opcode, mir_operand lhs, mir_operand rhs);
 };

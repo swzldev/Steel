@@ -69,6 +69,9 @@ std::string mir_printer::opcode_to_str(mir_instr_opcode opcode) {
 	case mir_instr_opcode::CMP_LTE: return "cmp_lte";
 	case mir_instr_opcode::CMP_GT: return "cmp_gt";
 	case mir_instr_opcode::CMP_GTE: return "cmp_gte";
+	case mir_instr_opcode::AND: return "and";
+	case mir_instr_opcode::OR: return "or";
+	case mir_instr_opcode::NOT: return "not";
 	case mir_instr_opcode::LOAD: return "load";
 	case mir_instr_opcode::STORE: return "store";
 	case mir_instr_opcode::ADDR_OF: return "addr_of";

@@ -18,7 +18,7 @@ public:
 	// these flags are mostly meant for debugging purposes
 	static constexpr bool PRINT_SRC = false;
 	static constexpr bool PRINT_TOKENS = false;
-	static constexpr bool PRINT_MIR = false;
+	static constexpr bool PRINT_MIR = true;
 
 public:
 	compiler(std::vector<source_file> sources)

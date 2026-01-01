@@ -16,6 +16,7 @@ enum class mir_instr_opcode {
 	NOP,													// no operation
 	ADD, SUB, MUL, DIV, MOD,								// arithmetic
 	CMP_EQ, CMP_NEQ, CMP_LT, CMP_LTE, CMP_GT, CMP_GTE,		// comparison
+	AND, OR, NOT,											// logical
 	LOAD, STORE,											// memory operations
 	ADDR_OF, DEREF,											// pointer operations
 	INDEX, FIELD, CAST,										// data access and conversion

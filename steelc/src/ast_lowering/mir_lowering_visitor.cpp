@@ -46,6 +46,31 @@ void mir_lowering_visitor::visit(std::shared_ptr<function_declaration> func) {
 	func->body->accept(*this);
 	pop_scope();
 }
+void mir_lowering_visitor::visit(std::shared_ptr<binary_expression> expr) {
+	// lower left and right operands
+	mir_operand left_op = accept(expr->left);
+	mir_operand right_op = accept(expr->right);
+
+	// build the binary instruction
+	mir_operand bin_result = builder.build_binary_op(
+		get_operator_opcode(expr->oparator),
+		left_op,
+		right_op
+	);
+	result = bin_result;
+}
+void mir_lowering_visitor::visit(std::shared_ptr<assignment_expression> expr) {
+	mir_operand value = accept(expr->right);
+
+	// for now, only support identifier expressions on the left side
+	if (auto id_expr = std::dynamic_pointer_cast<identifier_expression>(expr->left)) {
+		update_local(id_expr->identifier, value);
+		result = value;
+	}
+	else {
+		throw std::runtime_error("Unsupported left-hand side in assignment expression in MIR lowering");
+	}
+}
 void mir_lowering_visitor::visit(std::shared_ptr<member_expression> expr) {
 	if (expr->is_static_access()) {
 		// static accesses purely semantic for now
@@ -63,6 +88,16 @@ void mir_lowering_visitor::visit(std::shared_ptr<identifier_expression> expr) {
 	else {
 		throw std::runtime_error("Unsupported identifier entity kind in MIR lowering");
 	}
+}
+void mir_lowering_visitor::visit(std::shared_ptr<cast_expression> expr) {
+	// lower the inner expression
+	mir_operand inner_op = accept(expr->expr);
+	// build the cast instruction
+	mir_operand cast_result = builder.build_cast(
+		inner_op,
+		mir_type{ expr->cast_type }
+	);
+	result = cast_result;
 }
 void mir_lowering_visitor::visit(std::shared_ptr<function_call> func_call) {
 	// lower each argument
@@ -152,4 +187,51 @@ mir_operand mir_lowering_visitor::get_local(const std::string& name) {
 		}
 	}
 	throw std::runtime_error("Local variable '" + name + "' not found in any scope");
+}
+void mir_lowering_visitor::update_local(const std::string& name, mir_operand value) {
+	for (auto it = locals_stack.rbegin(); it != locals_stack.rend(); ++it) {
+		auto& scope = *it;
+		auto found = scope.find(name);
+		if (found != scope.end()) {
+			found->second = value;
+			return;
+		}
+	}
+	throw std::runtime_error("Local variable '" + name + "' not found in any scope");
+}
+
+mir_instr_opcode mir_lowering_visitor::get_operator_opcode(token_type op) {
+	switch (op) {
+	case TT_EQUAL:
+		return mir_instr_opcode::CMP_EQ;
+	case TT_NOT_EQUAL:
+		return mir_instr_opcode::CMP_NEQ;
+	case TT_ADD:
+		return mir_instr_opcode::ADD;
+	case TT_SUBTRACT:
+		return mir_instr_opcode::SUB;
+	case TT_MULTIPLY:
+		return mir_instr_opcode::MUL;
+	case TT_DIVIDE:
+		return mir_instr_opcode::DIV;
+	case TT_MODULO:
+		return mir_instr_opcode::MOD;
+	case TT_AND:
+		return mir_instr_opcode::AND;
+	case TT_OR:
+		return mir_instr_opcode::OR;
+	case TT_NOT:
+		return mir_instr_opcode::NOT;
+	case TT_LESS:
+		return mir_instr_opcode::CMP_LT;
+	case TT_LESS_EQ:
+		return mir_instr_opcode::CMP_LTE;
+	case TT_GREATER:
+		return mir_instr_opcode::CMP_GT;
+	case TT_GREATER_EQ:
+		return mir_instr_opcode::CMP_GTE;
+
+	default:
+		throw std::runtime_error("Unsupported binary operator in MIR lowering");
+	}
 }
