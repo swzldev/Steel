@@ -24,28 +24,28 @@ void mir_builder::build_ret(mir_operand value) {
 	});
 }
 
-mir_value mir_builder::build_add(mir_operand lhs, mir_operand rhs) {
-	return build_binary_op(mir_instr_opcode::ADD, lhs, rhs);
+mir_value mir_builder::build_add(mir_operand lhs, mir_operand rhs, const std::string& result_name) {
+	return build_binary_op(mir_instr_opcode::ADD, lhs, rhs, result_name);
 }
-mir_value mir_builder::build_sub(mir_operand lhs, mir_operand rhs) {
-	return build_binary_op(mir_instr_opcode::SUB, lhs, rhs);
+mir_value mir_builder::build_sub(mir_operand lhs, mir_operand rhs, const std::string& result_name) {
+	return build_binary_op(mir_instr_opcode::SUB, lhs, rhs, result_name);
 }
-mir_value mir_builder::build_mul(mir_operand lhs, mir_operand rhs) {
-	return build_binary_op(mir_instr_opcode::MUL, lhs, rhs);
+mir_value mir_builder::build_mul(mir_operand lhs, mir_operand rhs, const std::string& result_name) {
+	return build_binary_op(mir_instr_opcode::MUL, lhs, rhs, result_name);
 }
-mir_value mir_builder::build_div(mir_operand lhs, mir_operand rhs) {
-	return build_binary_op(mir_instr_opcode::DIV, lhs, rhs);
+mir_value mir_builder::build_div(mir_operand lhs, mir_operand rhs, const std::string& result_name) {
+	return build_binary_op(mir_instr_opcode::DIV, lhs, rhs, result_name);
 }
-mir_value mir_builder::build_mod(mir_operand lhs, mir_operand rhs) {
-	return build_binary_op(mir_instr_opcode::MOD, lhs, rhs);
+mir_value mir_builder::build_mod(mir_operand lhs, mir_operand rhs, const std::string& result_name) {
+	return build_binary_op(mir_instr_opcode::MOD, lhs, rhs, result_name);
 }
-mir_value mir_builder::build_binary_op(mir_instr_opcode opcode, mir_operand lhs, mir_operand rhs) {
+mir_value mir_builder::build_binary_op(mir_instr_opcode opcode, mir_operand lhs, mir_operand rhs, const std::string& result_name) {
 	if (!check_type_match(lhs, rhs)) {
 		throw std::runtime_error("Type mismatch in binary operation instruction");
 	}
 
 	// both same - just use lhs
-	mir_value result = create_ssa_value(operand_type(lhs));
+	mir_value result = create_ssa_value(operand_type(lhs), result_name);
 	insert_instr({
 		.kind = opcode,
 		.type = operand_type(lhs),
@@ -77,7 +77,7 @@ mir_operand mir_builder::build_const_string(const std::string& value, mir_type t
 	};
 }
 
-mir_operand mir_builder::build_call(const std::vector<std::string>& scopes, const std::string& name, std::vector<mir_operand> args, mir_type func_type) {
+mir_operand mir_builder::build_call(const std::vector<std::string>& scopes, const std::string& name, std::vector<mir_operand> args, mir_type func_type, const std::string& result_name) {
 	if (!func_type.ty->is_function()) {
 		throw std::runtime_error("Function type provided to build_call is not a function type");
 	}
@@ -86,7 +86,7 @@ mir_operand mir_builder::build_call(const std::vector<std::string>& scopes, cons
 	args.insert(args.begin(), mir_func_ref{ func_type, name, scopes });
 
 	// create call instruction
-	mir_value result = create_ssa_value(mir_type{ func_type.ty->as_function()->get_return_type() });
+	mir_value result = create_ssa_value(mir_type{ func_type.ty->as_function()->get_return_type() }, result_name);
 	insert_instr({
 		.kind = mir_instr_opcode::CALL,
 		.type = func_type,
@@ -96,9 +96,9 @@ mir_operand mir_builder::build_call(const std::vector<std::string>& scopes, cons
 	return result;
 }
 
-mir_value mir_builder::build_cast(mir_operand value, mir_type target_type) {
+mir_value mir_builder::build_cast(mir_operand value, mir_type target_type, const std::string& result_name) {
 	// shouldnt need to verify casting validity here - that should be done earlier
-	mir_value result = create_ssa_value(target_type);
+	mir_value result = create_ssa_value(target_type, result_name);
 	insert_instr({
 		.kind = mir_instr_opcode::CAST,
 		.type = target_type,
@@ -116,7 +116,7 @@ void mir_builder::insert_instr(const mir_instr&& instr) {
 	}
 	ins_block->push_instr(instr);
 }
-mir_value mir_builder::create_ssa_value(mir_type type) {
+mir_value mir_builder::create_ssa_value(mir_type type, const std::string& name) {
 	if (!func) {
 		throw std::runtime_error("Cannot create a temporary value when function is null");
 	}

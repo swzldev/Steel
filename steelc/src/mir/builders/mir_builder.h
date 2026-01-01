@@ -30,12 +30,12 @@ public:
 	void build_ret(mir_operand value);
 
 	// arithmetic expressions
-	mir_value build_add(mir_operand lhs, mir_operand rhs);
-	mir_value build_sub(mir_operand lhs, mir_operand rhs);
-	mir_value build_mul(mir_operand lhs, mir_operand rhs);
-	mir_value build_div(mir_operand lhs, mir_operand rhs);
-	mir_value build_mod(mir_operand lhs, mir_operand rhs);
-	mir_value build_binary_op(mir_instr_opcode opcode, mir_operand lhs, mir_operand rhs);
+	mir_value build_add(mir_operand lhs, mir_operand rhs, const std::string& result_name = "");
+	mir_value build_sub(mir_operand lhs, mir_operand rhs, const std::string& result_name = "");
+	mir_value build_mul(mir_operand lhs, mir_operand rhs, const std::string& result_name = "");
+	mir_value build_div(mir_operand lhs, mir_operand rhs, const std::string& result_name = "");
+	mir_value build_mod(mir_operand lhs, mir_operand rhs, const std::string& result_name = "");
+	mir_value build_binary_op(mir_instr_opcode opcode, mir_operand lhs, mir_operand rhs, const std::string& result_name = "");
 
 	// literals/immediates/constants
 	mir_operand build_const_int(int64_t value, mir_type type);
@@ -43,17 +43,17 @@ public:
 	mir_operand build_const_string(const std::string& value, mir_type type);
 
 	// functions
-	mir_operand build_call(const std::vector<std::string>& scopes, const std::string& name, std::vector<mir_operand> args, mir_type func_type);
+	mir_operand build_call(const std::vector<std::string>& scopes, const std::string& name, std::vector<mir_operand> args, mir_type func_type, const std::string& result_name = "");
 
 	// type handling
-	mir_value build_cast(mir_operand value, mir_type target_type);
+	mir_value build_cast(mir_operand value, mir_type target_type, const std::string& result_name = "");
 
 private:
 	mir_function* func = nullptr;
 	mir_block* ins_block = nullptr;
 
 	void insert_instr(const mir_instr&& instr);
-	mir_value create_ssa_value(mir_type type);
+	mir_value create_ssa_value(mir_type type, const std::string& name);
 
 	// helpers
 	bool check_type_match(mir_operand lhs, mir_operand rhs);
