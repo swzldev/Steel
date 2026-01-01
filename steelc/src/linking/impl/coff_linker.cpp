@@ -7,23 +7,25 @@
 #include <output/output.h>
 #include <codegen/code_artifact.h>
 #include <codegen/codegen_config.h>
-#include <codegen/target/target_triple.h>
 #include <linking/link_result.h>
 #include <linking/sys/system_linker.h>
+#include <linking/link_data.h>
+#include <linking/link_config.h>
 #include <utils/path_utils.h>
+#include <sys/target_triple.h>
 #include <sys/host_defs.h>
 #include <sys/shell.h>
 
 namespace fs = std::filesystem;
 
-link_result coff_linker::link(const std::vector<std::string>& to_link, const codegen_config& cfg) {
+link_result coff_linker::link(const link_data& data) {
 #if !defined(STEELC_PLATFORM_WINDOWS)
 	return link_error{
 		.message = "The COFF linker is only supported on Windows hosts"
 	};
-#endif
+#else
 
-	target_triple tri(cfg.target_triple);
+	const target_triple& tri = data.cfg.target;
 
 	std::string abi = tri.abi;
 	if (abi.empty()) {
@@ -52,12 +54,12 @@ link_result coff_linker::link(const std::vector<std::string>& to_link, const cod
 	std::vector<std::string> args;
 
 	// output file
-	fs::path out_path = fs::path(cfg.output_dir) / (cfg.output_name + ".exe");
+	fs::path out_path = fs::path(data.cfg.output_dir) / (data.cfg.output_name + ".exe");
 	out_path = path_utils::normalize(fs::weakly_canonical(out_path));
 	args.push_back("/OUT:" + out_path.string());
 
 	// add inputs
-	for (const auto& obj_path : to_link) {
+	for (const auto& obj_path : data.object_files) {
 		args.push_back(obj_path);
 	}
 
@@ -131,6 +133,8 @@ link_result coff_linker::link(const std::vector<std::string>& to_link, const cod
 	link_result result;
 	result.final_executable_path = out_path.string();
 	return result;
+
+#endif // STEELC_PLATFORM_WINDOWS
 }
 
 std::filesystem::path coff_linker::find_vcvarsall() {

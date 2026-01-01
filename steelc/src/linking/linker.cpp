@@ -11,6 +11,7 @@
 #include <codegen/sys/system_formats.h>
 #include <linking/icode_linker.h>
 #include <linking/link_result.h>
+#include <linking/link_data.h>
 
 // -- linker implementations --
 #include <linking/impl/coff_linker.h>
@@ -25,9 +26,9 @@ static std::map<std::string, std::shared_ptr<icode_linker>> get_linkers() {
 
 link_result linker::link_all(icode_linker* linker) {
 	if (linker) {
-		return linker->link(to_link_paths, cfg);
+		return linker->link(data);
 	}
-	return get_linker()->link(to_link_paths, cfg);
+	return get_linker()->link(data);
 }
 
 bool linker::linker_available() const {
@@ -37,7 +38,7 @@ bool linker::linker_available() const {
 icode_linker* linker::get_linker() const {
 	auto linkers = get_linkers();
 
-	auto it = linkers.find(obj_format);
+	auto it = linkers.find(data.object_format);
 	if (it == linkers.end()) {
 		return nullptr;
 	}

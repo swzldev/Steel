@@ -204,7 +204,13 @@ bool project_builder::build_project() {
 	output::print("Linking {} object file(s)...\n", console_colors::BOLD, to_link_paths.size());
 
 	// link to executable
-	linker linker(to_link_paths, codegen_cfg, obj_format);
+	link_data link_data{
+		.object_files = to_link_paths,
+		.object_format = obj_format,
+		.cfg = generate_link_config(),
+		.cached_vars = {} // TODO: use vars_file
+	};
+	linker linker(link_data);
 	if (!linker.linker_available()) {
 		output::err("No suitable linker available for object format: {}\n", console_colors::BOLD + console_colors::RED, obj_format);
 		return false;

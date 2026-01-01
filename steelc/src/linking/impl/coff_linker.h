@@ -9,7 +9,8 @@
 #include <codegen/code_artifact.h>
 #include <codegen/codegen_config.h>
 #include <linking/icode_linker.h>
-#include <linking/sys/system_linker.h>
+#include <linking/link_result.h>
+#include <linking/link_data.h>
 
 class coff_linker : public icode_linker {
 public:
@@ -17,7 +18,7 @@ public:
 	virtual bool can_emit_static_lib() override { return true; }
 	virtual bool can_emit_shared_lib() override { return true; }
 
-	virtual link_result link(const std::vector<std::string>& to_link, const codegen_config& cfg);
+	virtual link_result link(const link_data& data) override;
 
 private:
 	std::filesystem::path find_vcvarsall();

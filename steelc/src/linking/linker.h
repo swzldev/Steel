@@ -9,11 +9,12 @@
 #include <codegen/codegen_config.h>
 #include <linking/icode_linker.h>
 #include <linking/link_result.h>
+#include <linking/link_data.h>
 
 class linker {
 public:
-	linker(const std::vector<std::string>& to_link_paths, const codegen_config& cfg, const std::string& obj_format)
-		: to_link_paths(to_link_paths), cfg(cfg), obj_format(obj_format) {
+	linker(const link_data& data)
+		: data(data) {
 	}
 
 	// nullptr for default linker (based on cfg)
@@ -23,9 +24,7 @@ public:
 	bool linker_available() const;
 
 private:
-	std::vector<std::string> to_link_paths;
-	codegen_config cfg;
-	std::string obj_format;
+	link_data data;
 
 	icode_linker* get_linker() const;
 };

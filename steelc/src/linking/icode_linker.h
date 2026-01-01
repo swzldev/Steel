@@ -5,6 +5,7 @@
 
 #include <codegen/codegen_config.h>
 #include <linking/link_result.h>
+#include <linking/link_data.h>
 
 // icode_linker
 //
@@ -18,5 +19,5 @@ public:
 	virtual bool can_emit_static_lib() = 0;
 	virtual bool can_emit_shared_lib() = 0;
 
-	virtual link_result link(const std::vector<std::string>& to_link, const codegen_config& cfg) = 0;
+	virtual link_result link(const link_data& data) = 0;
 };

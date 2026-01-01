@@ -173,7 +173,7 @@ target_sources(steelc_core PRIVATE
     "linking/linker.h"
     "linking/link_config.h"
     "linking/link_data.h"
-    "linking/link_options.h"
+    
     "linking/link_result.h"
     "linking/impl/coff_linker.cpp"
     "linking/impl/coff_linker.h"
