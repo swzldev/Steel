@@ -4,6 +4,7 @@
 - Seperated the project into steelc_core (the core library), steelc (the executable), and steelc_tests (the test suite).
 - Added a new command `steelc test` that runs the test suite (not available on non development builds).
 - Added a new vars file system that allows caching of frequently used variables between builds. Currently it caches standard library paths to avoid having to search for them every build.
+- Fixed a bug where the name resolver wouldnt emit an error when resolving function calls with incorrect number of arguments (since it checked before filtering by argument count).
 
 ## [0.6.0]
 - Added support for bitcode output in addition to assembly output (bitcode will now be default).

@@ -241,6 +241,11 @@ void name_resolver::visit(std::shared_ptr<this_expression> expr) {
 	expr->parent_type = current_type->type();
 }
 void name_resolver::visit(std::shared_ptr<function_call> func_call) {
+	// resolve args
+	for (auto& arg : func_call->args) {
+		arg->accept(*this);
+	}
+
 	if (func_call->is_scoped_function()) {
 		// resolve scope (statically)
 		func_call->scope->accept(*this);
@@ -283,7 +288,7 @@ void name_resolver::visit(std::shared_ptr<function_call> func_call) {
 		case ENTITY_MODULE: {
 			const auto& symbols = entity->as_module()->symbols();
 			auto result = symbols.lookup(func_call->identifier);
-
+			// no matches AT ALL
 			if (result.no_match()) {
 				ERROR(ERR_UNKNOWN_FUNCTION, func_call->position, func_call->identifier.c_str());
 				return;
@@ -306,6 +311,12 @@ void name_resolver::visit(std::shared_ptr<function_call> func_call) {
 				func_call->args.size(),
 				func_call->generic_args.size()
 			);
+
+			// matches - but none with correct param/generic count
+			if (candidates.empty()) {
+				ERROR(ERR_NO_MATCHING_FUNCTION, func_call->position, func_call->identifier.c_str());
+				return;
+			}
 
 			for (const auto& candidate : candidates) {
 				func_call->declaration_candidates.push_back(candidate->declaration);
@@ -341,7 +352,7 @@ void name_resolver::visit(std::shared_ptr<function_call> func_call) {
 		
 		// lookup function as normal
 		lookup_result result = resolver.lookup(func_call->identifier);
-
+		// no matches AT ALL
 		if (result.no_match()) {
 			ERROR(ERR_UNKNOWN_FUNCTION, func_call->position, func_call->identifier.c_str());
 			return;
@@ -365,14 +376,15 @@ void name_resolver::visit(std::shared_ptr<function_call> func_call) {
 			func_call->generic_args.size()
 		);
 
+		// matches - but none with correct param/generic count
+		if (candidates.empty()) {
+			ERROR(ERR_NO_MATCHING_FUNCTION, func_call->position, func_call->identifier.c_str());
+			return;
+		}
+
 		for (const auto& candidate : candidates) {
 			func_call->declaration_candidates.push_back(candidate->declaration);
 		}
-	}
-
-	// resolve args as normal
-	for (auto& arg : func_call->args) {
-		arg->accept(*this);
 	}
 }
 void name_resolver::visit(std::shared_ptr<code_block> block) {
