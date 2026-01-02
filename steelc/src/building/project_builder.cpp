@@ -11,7 +11,6 @@
 #include <unordered_set>
 #include <optional>
 
-#include <config/compile_config.h>
 #include <utils/console_colors.h>
 #include <utils/path_utils.h>
 #include <stproj/bad_stproj_exception.h>
@@ -24,6 +23,7 @@
 #include <building/cache/vars_file.h>
 #include <building/build_config.h>
 #include <building/code_outputter.h>
+#include <compiler/compile_config.h>
 #include <compiler/compiler.h>
 #include <codegen/codegen.h>
 #include <codegen/codegen_result.h>
@@ -87,7 +87,10 @@ bool project_builder::build_project() {
 	else {
 		// compile sources
 		compiler cmp = compiler(to_compile);
-		compile_config compile_cfg{}; // TODO: generate config based on project settings + cl args
+		compile_config compile_cfg{
+			.print_tokens = build_cfg.print_tokens,
+			.print_mir = build_cfg.print_mir
+		};
 
 		mark_compile_start();
 		output::print("Compiling {} source file(s)...\n", console_colors::BOLD, to_compile.size());

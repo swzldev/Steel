@@ -2,6 +2,9 @@
 
 add_library(steelc_core)
 
+# just to keep things tidy, we separate the source files into categories
+# additionally, we store headers just for convenience.
+
 target_sources(steelc_core PRIVATE
     # ast/
     "ast/ast.h"
@@ -132,11 +135,7 @@ target_sources(steelc_core PRIVATE
     "compiler/compilation_pass.h"
     "compiler/compiler.cpp"
     "compiler/compiler.h"
-
-    # config/
-    "config/bad_arg_exception.h"
-    "config/compile_config.cpp"
-    "config/compile_config.h"
+    "compiler/compile_config.h"
 
     # error/
     "error/advice.h"

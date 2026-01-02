@@ -53,6 +53,12 @@ bool steelc_commands_impl::build_command_handler(const command_flags& flags) {
 	if (flags.has("--all")) {
 		cfg.build_all = true;
 	}
+	if (flags.has("--print-tokens")) {
+		cfg.print_tokens = true;
+	}
+	if (flags.has("--print-mir")) {
+		cfg.print_mir = true;
+	}
 	if (flags.has("--backend")) {
 		cfg.backend = flags.get_first("--backend");
 	}

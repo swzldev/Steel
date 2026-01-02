@@ -5,27 +5,15 @@
 #include <memory>
 
 #include <error/error.h>
-#include <config/compile_config.h>
 #include <ast/compilation_unit.h>
 #include <modules/module_manager.h>
+#include <compiler/compile_config.h>
 #include <codegen/codegen_result.h>
 #include <codegen/codegen_config.h>
 
 class source_file;
 
 class compiler {
-public:
-#if defined(DEBUG) || defined(_DEBUG)
-	static constexpr bool DBG_MODE = true;
-#else
-	static constexpr bool DBG_MODE = false;
-#endif
-
-	// these flags are mostly meant for debugging purposes
-	static constexpr bool PRINT_SRC = false || DBG_MODE;
-	static constexpr bool PRINT_TOKENS = false || DBG_MODE;
-	static constexpr bool PRINT_MIR = false || DBG_MODE;
-
 public:
 	compiler(std::vector<source_file> sources)
 		: sources(sources) {

@@ -19,4 +19,8 @@ public:
 	// build options
 	bool build_all = false;
 	bool no_link = false;
+
+	// compile options
+	bool print_tokens = false;
+	bool print_mir = false;
 };

@@ -7,7 +7,6 @@
 #include <string>
 
 #include <utils/console_colors.h>
-#include <config/compile_config.h>
 #include <stproj/source_file.h>
 #include <lexer/lexer.h>
 #include <lexer/token.h>
@@ -25,6 +24,7 @@
 #include <mir/mir_fwd.h>
 #include <mir/mir_module.h>
 #include <mir/pretty/mir_printer.h>
+#include <compiler/compile_config.h>
 #include <codegen/codegen.h>
 #include <codegen/codegen_result.h>
 #include <codegen/codegen_config.h>
@@ -39,15 +39,10 @@ bool compiler::compile(const compile_config& cl_cfg, codegen_config& cg_cfg) {
 		output::print("Compiling: ", console_colors::BLUE);
 		output::print("\'{}\'\n", "", file.relative_path);
 
-		if (PRINT_SRC) {
-			output::print("Source:\n");
-			output::print("{}\n\n", "", file.content);
-		}
-
 		lexer lexer(file.content, unit);
 		std::vector<token> tokens = lexer.tokenize();
 
-		if (PRINT_TOKENS) {
+		if (cl_cfg.print_tokens) {
 			output::print("Generated tokens:\n");
 			for (const auto& token : tokens) {
 				std::string type = to_string(token.type);
@@ -152,7 +147,7 @@ bool compiler::compile(const compile_config& cl_cfg, codegen_config& cg_cfg) {
 		mir_modules.push_back(mir_lowerer.lower_unit(unit));
 	}
 
-	if (PRINT_MIR) {
+	if (cl_cfg.print_mir) {
 		mir_printer printer;
 		for (const auto& mod : mir_modules) {
 			std::string mir_text = printer.print_module(mod);

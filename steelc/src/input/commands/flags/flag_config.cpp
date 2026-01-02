@@ -23,6 +23,8 @@ const flag_config* flag_config::from_command(steelc_command_id cmd_id) {
 			{
 				{ "--no-link", 0 },
 				{ "--all", 0 },
+				{ "--print-tokens", 0 },
+				{ "--print-mir", 0 },
 				{ "--backend", 1 },
 				{ "--ir-format", 1 },
 				{ "--target", 1 },
