@@ -14,7 +14,11 @@
 #include <codegen/error/codegen_exception.h>
 
 std::string name_mangler::mangle_function(const mir_function& fn_mir) {
-	return mangle_function(fn_mir.name, fn_mir.scopes, fn_mir.param_types);
+	std::vector<mir_type> param_types;
+	for (const auto& param : fn_mir.params) {
+		param_types.push_back(param.type);
+	}
+	return mangle_function(fn_mir.name, fn_mir.scopes, param_types);
 }
 std::string name_mangler::mangle_function(const mir_func_ref& fn_ref_mir) {
 	const auto& fn_type = fn_ref_mir.type.ty->as_function();

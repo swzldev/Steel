@@ -12,8 +12,21 @@
 mir_module mir_lowerer::lower_unit(std::shared_ptr<compilation_unit> unit) {
 	mir_module mm;
 	mm.meta.src_relpath = unit->source_file->relative_path;
+	mm.name = unit->source_file->name();
 	for (auto& decl : unit->declarations) {
-		if (auto fn = std::dynamic_pointer_cast<function_declaration>(decl)) {
+		if (auto mod = std::dynamic_pointer_cast<module_declaration>(decl)) {
+			// lower each declaration in the module
+			for (auto& mod_decl : mod->declarations) {
+				if (auto fn = std::dynamic_pointer_cast<function_declaration>(mod_decl)) {
+					if (fn->is_generic && !fn->is_generic_instance) {
+						// skip generic function templates
+						continue;
+					}
+					mm.functions.push_back(lower_func(fn));
+				}
+			}
+		}
+		else if (auto fn = std::dynamic_pointer_cast<function_declaration>(decl)) {
 			if (fn->is_generic && !fn->is_generic_instance) {
 				// skip generic function templates
 				continue;
@@ -33,11 +46,13 @@ mir_function mir_lowerer::lower_func(std::shared_ptr<function_declaration> func)
 		mf.scopes = std::move(func->parent_module->name_path());
 	}
 
-	// types
+	// params
 	mf.return_type = { func->return_type };
-	mf.param_types.reserve(func->parameters.size());
+	mf.params.reserve(func->parameters.size());
 	for (const auto& param : func->parameters) {
-		mf.param_types.push_back({ param->type });
+		// create values for the parameters here to be used later
+		auto pval = mf.make_value({ param->type }, param->identifier);
+		mf.params.push_back(mir_function_param{ param->type, param->identifier, pval});
 	}
 
 	// entry block

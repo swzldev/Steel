@@ -37,9 +37,9 @@ void mir_lowering_visitor::visit(std::shared_ptr<function_declaration> func) {
 
 	push_scope();
 
-	for (auto& param : func->parameters) {
-		// create a local for each parameter
-		locals_stack.back()[param->identifier] = current_func.make_value({ param->type }, param->identifier);
+	for (auto& param : current_func.params) {
+		// create local for each parameter
+		locals_stack.back()[param.name] = param.value;
 	}
 
 	// lower each statement in the function body

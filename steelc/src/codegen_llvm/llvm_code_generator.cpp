@@ -57,10 +57,18 @@ bool llvm_code_generator::supports(const std::string& ir_format) const {
 }
 
 llvm::Function* llvm_code_generator::emit_function(const mir_function& fn_mir) {
+	current_ssa.values.clear(); // reset SSA values
 	llvm::Function* fn_llvm = fn_builder.build(fn_mir, module.get());
 	current_func = fn_llvm;
 
 	//env = std::make_unique<codegen_env>(*module, *fn_llvm, builder);
+
+	// map parameter values -> llvm values
+	unsigned param_index = 0;
+	for (const auto& param : fn_mir.params) {
+		auto llvm_arg = fn_llvm->getArg(param_index);
+		current_ssa.set(param.value.get_id(), llvm_arg);
+	}
 
 	for (const auto& block : fn_mir.blocks) {
 		emit_block(block);
@@ -326,9 +334,7 @@ llvm::Value* llvm_code_generator::lower_operand(const mir_operand& op_mir) {
 			);
 		}
 		else if constexpr (std::is_same_v<T, mir_string_imm>) {
-			// create an LLVM constant string
-			// (not implemented yet)
-			return nullptr;
+			return builder.CreateGlobalStringPtr(arg.value);
 		}
 		else if constexpr (std::is_same_v<T, mir_func_ref>) {
 			std::string mangled = mangler.mangle_function(arg);

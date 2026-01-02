@@ -9,6 +9,12 @@
 #include <mir/mir_value.h>
 #include <mir/mir_block.h>
 
+struct mir_function_param {
+	mir_type type;
+	std::string name;
+	mir_value value;
+};
+
 class mir_function{
 public:
 	mir_function() = default;
@@ -27,7 +33,7 @@ public:
 	std::string name;
 	std::vector<std::string> scopes;
 	mir_type return_type;
-	std::vector<mir_type> param_types;
+	std::vector<mir_function_param> params;
 	std::vector<mir_block> blocks;
 
 private:

@@ -32,11 +32,12 @@ llvm::Function* llvm_function_builder::build(const mir_function& fn_mir, llvm::M
 		// name this pointer (if applicable)
 		arg_iter->setName(codegen_constants::THIS_PARAM_NAME);
 		++arg_iter;
-	}
-	for (const auto& param : fn_mir.param_types) {
-		arg_iter->setName(param->identifier);
+	}*/
+	auto arg_iter = fn->arg_begin();
+	for (const auto& param : fn_mir.params) {
+		arg_iter->setName(param.name);
 		++arg_iter;
-	}*/ // temporarily disabled as mir_function does not store parameter names
+	}
 
 	return fn;
 }
@@ -44,7 +45,7 @@ llvm::FunctionType* llvm_function_builder::get_llvm_fn_type(const mir_function& 
 	auto return_type = type_converter.convert(fn_mir.return_type);
 
 	llvm::FunctionType* fn_type = nullptr;
-	if (fn_mir.param_types.empty()) {
+	if (fn_mir.params.empty()) {
 		fn_type = llvm::FunctionType::get(
 			/* Return Type */ return_type,
 			/* isVarArg */ false
@@ -52,8 +53,8 @@ llvm::FunctionType* llvm_function_builder::get_llvm_fn_type(const mir_function& 
 	}
 	else {
 		std::vector<llvm::Type*> llvm_param_types;
-		for (const auto& param : fn_mir.param_types) {
-			llvm_param_types.push_back(type_converter.convert(mir_type{ param.ty }));
+		for (const auto& param : fn_mir.params) {
+			llvm_param_types.push_back(type_converter.convert(param.type));
 		}
 		fn_type = llvm::FunctionType::get(
 			/* Return Type */ return_type,
