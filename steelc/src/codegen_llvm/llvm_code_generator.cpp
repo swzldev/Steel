@@ -66,7 +66,7 @@ llvm::Function* llvm_code_generator::emit_function(const mir_function& fn_mir) {
 	// map parameter values -> llvm values
 	unsigned param_index = 0;
 	for (const auto& param : fn_mir.params) {
-		auto llvm_arg = fn_llvm->getArg(param_index);
+		auto llvm_arg = fn_llvm->getArg(param_index++);
 		current_ssa.set(param.value.get_id(), llvm_arg);
 	}
 
