@@ -28,7 +28,7 @@ void flow_analyzer::visit(std::shared_ptr<function_declaration> func) {
 
 	// check if we dont return on all code paths, and the function is not void
 	if (!current_returns && !func->return_type->is_void()) {
-		ERROR(ERR_NOT_ALL_PATHS_RETURN_VALUE, func->position);
+		ERROR(ERR_NOT_ALL_PATHS_RETURN_VALUE, func->span);
 		if (current_conditionally_returns) {
 			ADVISE(ADV_CONDITIONAL_NOT_GUARANTEED_TO_RETURN);
 		}
@@ -50,12 +50,12 @@ void flow_analyzer::visit(std::shared_ptr<code_block> block) {
 	}
 	for (; i < block->body.size(); i++) {
 		// if there are more statements, unreachable code
-		WARN(WARN_UNREACHABLE_CODE, block->body[i]->position);
+		WARN(WARN_UNREACHABLE_CODE, block->body[i]->span);
 	}
 }
 void flow_analyzer::visit(std::shared_ptr<return_statement> ret_stmt) {
 	if (!current_function && !current_constructor) {
-		ERROR(ERR_RETURN_OUTSIDE_FUNCTION, ret_stmt->position);
+		ERROR(ERR_RETURN_OUTSIDE_FUNCTION, ret_stmt->span);
 		return;
 	}
 
@@ -64,13 +64,13 @@ void flow_analyzer::visit(std::shared_ptr<return_statement> ret_stmt) {
 	current_conditionally_returns = ret_stmt->is_conditional();
 
 	if (current_constructor && ret_stmt->returns_value()) {
-		ERROR(ERR_CONSTRUCTOR_RETURNS_VALUE, ret_stmt->position);
+		ERROR(ERR_CONSTRUCTOR_RETURNS_VALUE, ret_stmt->span);
 		return;
 	}
 }
 void flow_analyzer::visit(std::shared_ptr<break_statement> brk_stmt) {
 	if (!in_loop) {
-		ERROR(ERR_BREAK_OUTSIDE_LOOP, brk_stmt->position);
+		ERROR(ERR_BREAK_OUTSIDE_LOOP, brk_stmt->span);
 		return;
 	}
 }

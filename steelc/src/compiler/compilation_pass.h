@@ -10,10 +10,10 @@
 #include <error/error_catalog.h>
 
 #define ERROR_TOKEN(code, tk, ...)          report_error_token(code, tk, __VA_ARGS__)
-#define ERROR(code, pos, ...)               report_error(code, pos, __VA_ARGS__)
+#define ERROR(code, span, ...)               report_error(code, span, __VA_ARGS__)
 #define WARN_TOKEN(code, tk, ...)           report_warning_token(code, tk, __VA_ARGS__)
-#define WARN(code, pos, ...)                report_warning(code, pos, __VA_ARGS__)
-#define ADVISE(code, pos, ...)              add_advice(code, __VA_ARGS__)
+#define WARN(code, span, ...)                report_warning(code, span, __VA_ARGS__)
+#define ADVISE(code, span, ...)              add_advice(code, __VA_ARGS__)
 
 class compilation_pass {
 public:
@@ -41,19 +41,19 @@ public:
 
 protected:
     void report_error_token(error_code code_enum, token tk, ...);
-    void report_error(error_code code_enum, position pos, ...);
+    void report_error(error_code code_enum, code_span span, ...);
 
     void report_warning_token(warning_code code_enum, token tk, ...);
-    void report_warning(warning_code code_enum, position pos, ...);
+    void report_warning(warning_code code_enum, code_span span, ...);
 
     void add_advice(advice_code code_enum, ...);
 
 private:
     error* last_error = nullptr;
 
-    void add_error(error_code code_enum, size_t line, size_t column, va_list args);
+    void add_error(error_code code_enum, position start, position end, va_list args);
 
-    void add_warning(warning_code code_enum, size_t line, size_t column, va_list args);
+    void add_warning(warning_code code_enum, position start, position end, va_list args);
 
     static std::string vformat(std::string fmt, va_list args);
 };

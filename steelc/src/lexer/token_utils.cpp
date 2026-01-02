@@ -294,14 +294,14 @@ std::string get_colored_representation(std::vector<token> tokens) {
 		token& tk = tokens[i];
 
 		// add newlines if token is on a new line
-		while (current_line < tk.pos.line) {
+		while (current_line < tk.span.start.line) {
 			representation += '\n';
 			current_line++;
 			current_col = 1;
 		}
 
 		// add spaces if token is further in the line
-		while (current_col < tk.pos.column) {
+		while (current_col < tk.span.start.column) {
 			representation += ' ';
 			current_col++;
 		}

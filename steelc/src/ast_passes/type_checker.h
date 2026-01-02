@@ -57,8 +57,8 @@ private:
 
 	bool member_access_allowed(type_ptr type);
 	bool method_access_allowed(type_ptr type);
-	bool is_valid_conversion(type_ptr from, type_ptr to, bool implicit, position pos);
-	bool is_valid_upcast(type_ptr from, type_ptr to, position pos);
+	bool is_valid_conversion(type_ptr from, type_ptr to, bool implicit, code_span span);
+	bool is_valid_upcast(type_ptr from, type_ptr to, code_span span);
 	bool is_valid_entry_point(std::shared_ptr<function_declaration> entry);
 
 	int score_candidate(std::shared_ptr<function_declaration> candidate, const std::vector<type_ptr>& arg_types);

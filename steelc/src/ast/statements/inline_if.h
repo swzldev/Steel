@@ -39,7 +39,7 @@ public:
 			std::dynamic_pointer_cast<expression>(condition->clone()),
 			std::dynamic_pointer_cast<expression>(statement->clone())
 		);
-		cloned->position = position;
+		cloned->span = span;
 		return cloned;
 	}
 

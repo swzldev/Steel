@@ -21,7 +21,7 @@ struct error_info {
 
 struct error {
 	error_info info;
-	position pos;
+	code_span span;
 	error_type type;
 	std::shared_ptr<compilation_unit> unit;
 	std::vector<advice> advices;

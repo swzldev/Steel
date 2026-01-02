@@ -13,24 +13,24 @@ void declaration_collector::visit(std::shared_ptr<function_declaration> func) {
 	// functions and constructors cannot be nested
 	if (current_function || current_constructor) {
 		if (func->is_constructor) {
-			ERROR(ERR_NESTED_CONSTRUCTOR_NOT_ALLOWED, func->position);
+			ERROR(ERR_NESTED_CONSTRUCTOR_NOT_ALLOWED, func->span);
 		}
 		else {
-			ERROR(ERR_NESTED_FUNCTION_NOT_ALLOWED, func->position);
+			ERROR(ERR_NESTED_FUNCTION_NOT_ALLOWED, func->span);
 		}
 		return;
 	}
 
 	// overrides cant be generic
 	if (func->is_generic && func->is_override) {
-		ERROR(ERR_OVERRIDE_CANT_BE_GENERIC, func->position);
+		ERROR(ERR_OVERRIDE_CANT_BE_GENERIC, func->span);
 	}
 
 	// TODO: this should be a type checker variable check
 	// void parameters are not allowed in functions & constructors
 	for (const auto& param : func->parameters) {
 		if (param->type->is_primitive() && param->type->primitive == DT_VOID) {
-			ERROR(ERR_PARAM_VOID_TYPE, func->position);
+			ERROR(ERR_PARAM_VOID_TYPE, func->span);
 			break;
 		}
 	}
@@ -39,7 +39,7 @@ void declaration_collector::visit(std::shared_ptr<function_declaration> func) {
 	if (func->is_constructor) {
 		// constructors cannot be defined outside of a type declaration
 		if (!current_type) {
-			ERROR(ERR_CONSTRUCTOR_OUTSIDE_TYPE, func->position);
+			ERROR(ERR_CONSTRUCTOR_OUTSIDE_TYPE, func->span);
 			return;
 		}
 		func->return_type = current_type->type();
@@ -47,7 +47,7 @@ void declaration_collector::visit(std::shared_ptr<function_declaration> func) {
 		// check if constructor is already defined
 		for (const auto& existing_constructor : current_type->constructors) {
 			if (existing_constructor != func && existing_constructor->parameters == func->parameters) {
-				ERROR(ERR_CONSTRUCTOR_OVERLOAD_EXISTS, func->position);
+				ERROR(ERR_CONSTRUCTOR_OVERLOAD_EXISTS, func->span);
 				return;
 			}
 		}
@@ -68,24 +68,24 @@ void declaration_collector::visit(std::shared_ptr<function_declaration> func) {
 	if (res.error != SYMBOL_OK) {
 		switch (res.error) {
 		case SYMBOL_CONFLICTS_WITH_FUNCTION: // in this case it means exact same signature
-			ERROR(ERR_FUNCTION_ALREADY_DEFINED, func->position, func->identifier.c_str());
+			ERROR(ERR_FUNCTION_ALREADY_DEFINED, func->span, func->identifier.c_str());
 			break;
 		case SYMBOL_CANNOT_OVERLOAD_BY_RETURN_TYPE:
-			ERROR(ERR_CANNOT_OVERLOAD_BY_RETURN_TYPE, func->position, func->identifier.c_str());
+			ERROR(ERR_CANNOT_OVERLOAD_BY_RETURN_TYPE, func->span, func->identifier.c_str());
 			break;
 
 		case SYMBOL_CONFLICTS_WITH_VARIABLE:
-			ERROR(ERR_NAME_CONFLICT, func->position, "function", func->identifier, "variable");
+			ERROR(ERR_NAME_CONFLICT, func->span, "function", func->identifier, "variable");
 			break;
 		case SYMBOL_CONFLICTS_WITH_TYPE:
-			ERROR(ERR_NAME_CONFLICT, func->position, "function", func->identifier, "type");
+			ERROR(ERR_NAME_CONFLICT, func->span, "function", func->identifier, "type");
 			break;
 		case SYMBOL_CONFLICTS_WITH_MODULE:
-			ERROR(ERR_NAME_CONFLICT, func->position, "function", func->identifier, "module");
+			ERROR(ERR_NAME_CONFLICT, func->span, "function", func->identifier, "module");
 			break;
 
 		default:
-			ERROR(ERR_INTERNAL_ERROR, func->position, "Declaration Collector", "Unknown error while adding function symbol");
+			ERROR(ERR_INTERNAL_ERROR, func->span, "Declaration Collector", "Unknown error while adding function symbol");
 			break;
 		}
 	}
@@ -106,13 +106,13 @@ void declaration_collector::visit(std::shared_ptr<variable_declaration> var) {
 
 	// no variables should be of type void
 	if (var->type->is_primitive() && var->type->primitive == DT_VOID) {
-		ERROR(ERR_VARIABLE_VOID_TYPE, var->position);
+		ERROR(ERR_VARIABLE_VOID_TYPE, var->span);
 		return;
 	}
 
 	// const variables must have an initializer
 	if (var->is_const && !var->initializer) {
-		ERROR(ERR_CONST_NO_INITIALIZER, var->position);
+		ERROR(ERR_CONST_NO_INITIALIZER, var->span);
 		return;
 	}
 
@@ -123,23 +123,23 @@ void declaration_collector::visit(std::shared_ptr<variable_declaration> var) {
 		if (res.error != SYMBOL_OK) {
 			switch (res.error) {
 				case SYMBOL_CONFLICTS_WITH_VARIABLE:
-					ERROR(ERR_VARIABLE_ALREADY_DECLARED_SCOPE, var->position, var->identifier.c_str());
+					ERROR(ERR_VARIABLE_ALREADY_DECLARED_SCOPE, var->span, var->identifier.c_str());
 					break;
 				case SYMBOL_CONFLICTS_WITH_FUNCTION:
-					ERROR(ERR_NAME_CONFLICT, var->position, "variable", var->identifier, "function");
+					ERROR(ERR_NAME_CONFLICT, var->span, "variable", var->identifier, "function");
 					break;
 				case SYMBOL_CONFLICTS_WITH_TYPE:
-					ERROR(ERR_NAME_CONFLICT, var->position, "variable", var->identifier, "type");
+					ERROR(ERR_NAME_CONFLICT, var->span, "variable", var->identifier, "type");
 					break;
 				case SYMBOL_CONFLICTS_WITH_ENUM:
-					ERROR(ERR_NAME_CONFLICT, var->position, "variable", var->identifier, "enum");
+					ERROR(ERR_NAME_CONFLICT, var->span, "variable", var->identifier, "enum");
 					break;
 				case SYMBOL_CONFLICTS_WITH_MODULE:
-					ERROR(ERR_NAME_CONFLICT, var->position, "variable", var->identifier, "module");
+					ERROR(ERR_NAME_CONFLICT, var->span, "variable", var->identifier, "module");
 					break;
 
 				default:
-					ERROR(ERR_INTERNAL_ERROR, var->position, "Declaration Collector", "Unknown error while adding variable symbol");
+					ERROR(ERR_INTERNAL_ERROR, var->span, "Declaration Collector", "Unknown error while adding variable symbol");
 					break;
 			}
 		}
@@ -155,57 +155,57 @@ void declaration_collector::visit(std::shared_ptr<type_declaration> decl) {
 	if (res.error != SYMBOL_OK) {
 		switch (res.error) {
 			case SYMBOL_CONFLICTS_WITH_TYPE:
-				ERROR(ERR_TYPE_ALREADY_DEFINED, decl->position, decl->name().c_str());
+				ERROR(ERR_TYPE_ALREADY_DEFINED, decl->span, decl->name().c_str());
 				break;
 
 			case SYMBOL_CONFLICTS_WITH_VARIABLE:
-				ERROR(ERR_NAME_CONFLICT, decl->position, "type", decl->name(), "variable");
+				ERROR(ERR_NAME_CONFLICT, decl->span, "type", decl->name(), "variable");
 				break;
 			case SYMBOL_CONFLICTS_WITH_FUNCTION:
-				ERROR(ERR_NAME_CONFLICT, decl->position, "type", decl->name(), "function");
+				ERROR(ERR_NAME_CONFLICT, decl->span, "type", decl->name(), "function");
 				break;
 			case SYMBOL_CONFLICTS_WITH_ENUM:
-				ERROR(ERR_NAME_CONFLICT, decl->position, "type", decl->name(), "enum");
+				ERROR(ERR_NAME_CONFLICT, decl->span, "type", decl->name(), "enum");
 				break;
 			case SYMBOL_CONFLICTS_WITH_MODULE:
-				ERROR(ERR_NAME_CONFLICT, decl->position, "type", decl->name(), "module");
+				ERROR(ERR_NAME_CONFLICT, decl->span, "type", decl->name(), "module");
 				break;
 
 			default:
-				ERROR(ERR_INTERNAL_ERROR, decl->position, "Declaration Collector", "Unknown error while adding type symbol");
+				ERROR(ERR_INTERNAL_ERROR, decl->span, "Declaration Collector", "Unknown error while adding type symbol");
 				break;
 		}
 	}
 
 	// types cannot be nested (yet)
 	if (current_type || current_function || current_constructor) {
-		ERROR(ERR_NESTED_TYPE_DECLARATION_NOT_ALLOWED, decl->position);
+		ERROR(ERR_NESTED_TYPE_DECLARATION_NOT_ALLOWED, decl->span);
 		return;
 	}
 
 	// structs cannot contain methods
 	if (decl->type_kind == CT_STRUCT && !decl->methods.empty()) {
-		ERROR(ERR_STRUCT_CONTAINS_METHOD, decl->position);
+		ERROR(ERR_STRUCT_CONTAINS_METHOD, decl->span);
 		return;
 	}
 
 	// structs and interfaces cannot be derived
 	if (decl->type_kind == CT_STRUCT && !decl->base_types.empty()) {
-		ERROR(ERR_STRUCT_IS_DERIVED, decl->position);
+		ERROR(ERR_STRUCT_IS_DERIVED, decl->span);
 		return;
 	}
 	else if (decl->type_kind == CT_INTERFACE && !decl->base_types.empty()) {
-		ERROR(ERR_INTERFACE_IS_DERIVED, decl->position);
+		ERROR(ERR_INTERFACE_IS_DERIVED, decl->span);
 		return;
 	}
 
 	// interfaces cannot contain constructors or member variables
 	if (decl->type_kind == CT_INTERFACE && !decl->constructors.empty()) {
-		ERROR(ERR_INTERFACE_CONTAINS_CONSTRUCTOR, decl->position);
+		ERROR(ERR_INTERFACE_CONTAINS_CONSTRUCTOR, decl->span);
 		return;
 	}
 	if (decl->type_kind == CT_INTERFACE && !decl->fields.empty()) {
-		ERROR(ERR_INTERFACE_CONTAINS_MEMBER_VAR, decl->position);
+		ERROR(ERR_INTERFACE_CONTAINS_MEMBER_VAR, decl->span);
 		return;
 	}
 
@@ -280,31 +280,31 @@ void declaration_collector::visit(std::shared_ptr<enum_declaration> enm) {
 	if (res.error != SYMBOL_OK) {
 		switch (res.error) {
 		case SYMBOL_CONFLICTS_WITH_ENUM:
-			ERROR(ERR_ENUM_ALREADY_DEFINED, enm->position, enm->identifier);
+			ERROR(ERR_ENUM_ALREADY_DEFINED, enm->span, enm->identifier);
 			break;
 
 		case SYMBOL_CONFLICTS_WITH_VARIABLE:
-			ERROR(ERR_NAME_CONFLICT, enm->position, "enum", enm->identifier, "variable");
+			ERROR(ERR_NAME_CONFLICT, enm->span, "enum", enm->identifier, "variable");
 			break;
 		case SYMBOL_CONFLICTS_WITH_FUNCTION:
-			ERROR(ERR_NAME_CONFLICT, enm->position, "enum", enm->identifier, "function");
+			ERROR(ERR_NAME_CONFLICT, enm->span, "enum", enm->identifier, "function");
 			break;
 		case SYMBOL_CONFLICTS_WITH_TYPE:
-			ERROR(ERR_NAME_CONFLICT, enm->position, "enum", enm->identifier, "type");
+			ERROR(ERR_NAME_CONFLICT, enm->span, "enum", enm->identifier, "type");
 			break;
 		case SYMBOL_CONFLICTS_WITH_MODULE:
-			ERROR(ERR_NAME_CONFLICT, enm->position, "enum", enm->identifier, "module");
+			ERROR(ERR_NAME_CONFLICT, enm->span, "enum", enm->identifier, "module");
 			break;
 
 		default:
-			ERROR(ERR_INTERNAL_ERROR, enm->position, "Declaration Collector", "Unknown error while adding enum symbol");
+			ERROR(ERR_INTERNAL_ERROR, enm->span, "Declaration Collector", "Unknown error while adding enum symbol");
 			break;
 		}
 	}
 
 	// enums cannot be nested
 	if (current_type || current_function || current_constructor) {
-		ERROR(ERR_NESTED_ENUM_NOT_ALLOWED, enm->position);
+		ERROR(ERR_NESTED_ENUM_NOT_ALLOWED, enm->span);
 		return;
 	}
 
@@ -312,7 +312,7 @@ void declaration_collector::visit(std::shared_ptr<enum_declaration> enm) {
 	std::unordered_set<std::string> option_names;
 	for (const auto& option : enm->options) {
 		if (option_names.find(option->identifier) != option_names.end()) {
-			ERROR(ERR_ENUM_OPTION_ALREADY_DEFINED, option->position, option->identifier.c_str(), enm->name().c_str());
+			ERROR(ERR_ENUM_OPTION_ALREADY_DEFINED, option->span, option->identifier.c_str(), enm->name().c_str());
 			return;
 		}
 		option_names.insert(option->identifier);
@@ -325,7 +325,7 @@ void declaration_collector::visit(std::shared_ptr<enum_declaration> enm) {
 void declaration_collector::visit(std::shared_ptr<import_statement> import_stmt) {
 	// ensure top-level
 	if (!current_module->is_global() || current_type || current_function || current_constructor || !sym_table->in_global_scope()) {
-		ERROR(ERR_IMPORT_BAD_POS, import_stmt->position);
+		ERROR(ERR_IMPORT_BAD_POS, import_stmt->span);
 		return;
 	}
 

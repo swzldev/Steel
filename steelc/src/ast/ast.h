@@ -46,20 +46,20 @@ template<typename T, typename... Args>
 inline std::shared_ptr<T> make_ast(token& ast_token, Args... args) {
 	static_assert(std::is_base_of<ast_node, T>::value, "T must derive from ast_node");
 	std::shared_ptr<T> node = std::make_shared<T>(std::forward<Args>(args)...);
-	node->position = ast_token.pos;
+	node->span = ast_token.span;
 	return node;
 }
 template<typename T, typename... Args>
-inline std::shared_ptr<T> make_ast(position position, Args... args) {
+inline std::shared_ptr<T> make_ast(code_span span, Args... args) {
 	static_assert(std::is_base_of<ast_node, T>::value, "T must derive from ast_node");
 	std::shared_ptr<T> node = std::make_shared<T>(std::forward<Args>(args)...);
-	node->position = position;
+	node->span = span;
 	return node;
 }
 template<typename T, typename... Args>
 inline std::shared_ptr<T> make_ast(Args... args) {
 	static_assert(std::is_base_of<ast_node, T>::value, "T must derive from ast_node");
 	std::shared_ptr<T> node = std::make_shared<T>(std::forward<Args>(args)...);
-	node->position = { 0, 0 };
+	node->span = code_span();
 	return node;
 }

@@ -40,7 +40,7 @@ public:
 			type,
 			identifier
 		);
-		cloned->position = position;
+		cloned->span = span;
 		if (initializer) {
 			cloned->initializer = std::dynamic_pointer_cast<expression>(initializer->clone());
 		}

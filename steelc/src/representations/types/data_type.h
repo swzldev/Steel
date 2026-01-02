@@ -44,10 +44,10 @@ enum data_type_modifier {
 class data_type : public iclonable<data_type>, public std::enable_shared_from_this<data_type> {
 public:
 	data_type()
-		: primitive(DT_UNKNOWN), modifiers(DTM_NONE), position(0, 0) {
+		: primitive(DT_UNKNOWN), modifiers(DTM_NONE) {
 	}
 	data_type(data_type_kind primitive)
-		: primitive(primitive), modifiers(DTM_NONE), position(0, 0) {
+		: primitive(primitive), modifiers(DTM_NONE) {
 	}
 
 	// static method to get primitive data type as a type_ptr
@@ -150,5 +150,5 @@ public:
 	data_type_kind primitive; 
 	std::vector<data_type_modifier> modifiers;
 	std::vector<type_ptr> generic_args;
-	position position;
+	code_span span;
 };

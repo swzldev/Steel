@@ -52,10 +52,13 @@ bool compiler::compile(const compile_config& cl_cfg, codegen_config& cg_cfg) {
 			for (const auto& token : tokens) {
 				std::string type = to_string(token.type);
 				std::string value = token.value;
-				std::string line = std::to_string(token.pos.line);
-				std::string col = std::to_string(token.pos.column);
 
-				output::print("[ {}, \"{}\", ln: {}, col: {}]\n", "", type, value, line, col);
+				std::string sline = std::to_string(token.span.start.line);
+				std::string scol = std::to_string(token.span.start.column);
+				std::string eline = std::to_string(token.span.end.line);
+				std::string ecol = std::to_string(token.span.end.column);
+
+				output::print("[ {}, \"{}\", start: ({}, {}), end: ({}, {})]\n", "", type, value, sline, scol, eline, ecol);
 			}
 			output::print("\n");
 		}

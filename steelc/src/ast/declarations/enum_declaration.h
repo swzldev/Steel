@@ -45,7 +45,7 @@ public:
 
 	ast_ptr clone() const override {
 		auto cloned = std::make_shared<enum_declaration>(identifier, options);
-		cloned->position = position;
+		cloned->span = span;
 		cloned->base_type = base_type;
 		return cloned;
 	}

@@ -26,7 +26,7 @@ public:
 			cast_type,
 			std::dynamic_pointer_cast<expression>(expr->clone())
 		);
-		cloned->position = position;
+		cloned->span = span;
 		return cloned;
 	}
 

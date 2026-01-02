@@ -30,6 +30,8 @@ std::vector<token> lexer::tokenize() {
 				word.clear();
 			}
 
+			position start = { line, column };
+
 			// multi line comment, skip to closing */
 			i += 2;
 			column += 2;
@@ -45,7 +47,7 @@ std::vector<token> lexer::tokenize() {
 			}
 			if (i + 1 >= source.length()) {
 				// unterminated comment
-				ERROR(ERR_UNTERMINATED_COMMENT, { line, column });
+				ERROR(ERR_UNTERMINATED_COMMENT, code_span(start, { line, column }));
 				return tokens;
 			}
 			// skip closing */
@@ -153,11 +155,12 @@ std::vector<token> lexer::tokenize() {
 }
 
 bool lexer::check_for_number(std::string& src, size_t& index) {
-	size_t col_start = column;
 	std::string literal;
 	bool seen_dot = false;
 
 	token_type literal_type = TT_INTEGER_LITERAL;
+
+	position start = { line, column };
 
 	while (index < src.length()) {
 		char c = src[index];
@@ -170,7 +173,8 @@ bool lexer::check_for_number(std::string& src, size_t& index) {
 		else if (c == '.') {
 			if (seen_dot) {
 				// error: multiple dots in number
-				ERROR(ERR_INVALID_FLOAT_MULTIPLE_DECIMAL, { line, column });
+				code_span span = code_span(start, { line, column });
+				ERROR(ERR_INVALID_FLOAT_MULTIPLE_DECIMAL, span);
 				return true;
 			}
 			literal_type = TT_FLOAT_LITERAL;
@@ -181,7 +185,8 @@ bool lexer::check_for_number(std::string& src, size_t& index) {
 
 			// must have digits after the dot
 			if (index >= src.length() || !isdigit(src[index])) {
-				ERROR(ERR_INVALID_FLOAT_NO_DIGITS_AFTER_DECIMAL, { line, col_start });
+				code_span span = code_span(start, { line, column });
+				ERROR(ERR_INVALID_FLOAT_NO_DIGITS_AFTER_DECIMAL, span);
 				return true;
 			}
 		}
@@ -201,6 +206,8 @@ bool lexer::check_for_char(std::string& src, size_t& index) {
 		return false;
 	}
 
+	position start = { line, column };
+
 	std::string literal;
 	size_t i = index + 1;
 	for (; src[i] != '\'' && i < src.length(); i++) {
@@ -211,25 +218,27 @@ bool lexer::check_for_char(std::string& src, size_t& index) {
 		literal += src[i];
 	}
 
+	size_t true_length = literal.length();
+
 	// ensure char literal has an end
 	if (src[i] != '\'') {
-		ERROR(ERR_UNTERMINATED_CHAR_LITERAL, { line, column });
+		code_span span = code_span(start, { line, column + true_length });
+		ERROR(ERR_UNTERMINATED_CHAR_LITERAL, span);
 	}
 
 	// parse result
-	size_t true_length = literal.length();
 	literal = parse_text_literal(literal);
 
 	// ensure that the char literal is exactly one character long
 	if (literal.length() != 1) { // 1 character
-		ERROR(ERR_TOO_MANY_CHARS_IN_CHAR_LITERAL, { line, column });
+		code_span span = code_span(start, { line, column });
+		ERROR(ERR_TOO_MANY_CHARS_IN_CHAR_LITERAL, span);
 	}
-
 	
 	// see note in check_for_string about line and column handling
 
 	// add literal token
-	add_token(literal, TT_CHAR_LITERAL, column, column);
+	add_token(literal, TT_CHAR_LITERAL, start, { line, column + i - index });
 	column += true_length + 2; // both quotes
 	index += true_length + 1; // for loop will increment one more (closing quote)
 
@@ -241,6 +250,8 @@ bool lexer::check_for_string(std::string& src, size_t& index) {
 		return false;
 	}
 
+	position start = { line, column };
+
 	std::string literal;
 	size_t i = index + 1;
 	for (; src[i] != '\"' && i < src.length(); i++) {
@@ -251,13 +262,16 @@ bool lexer::check_for_string(std::string& src, size_t& index) {
 		literal += src[i];
 	}
 
+	size_t true_length = literal.length();
+
 	// ensure string literal has an end
 	if (src[i] != '\"') {
-		ERROR(ERR_UNTERMINATED_STRING_LITERAL, { line, column });
+		position end = { line, column + true_length };
+		code_span span = code_span(start, end);
+		ERROR(ERR_UNTERMINATED_STRING_LITERAL, span);
 	}
 
 	// parse result
-	size_t true_length = literal.length();
 	literal = parse_text_literal(literal);
 
 	// important notes:
@@ -272,7 +286,7 @@ bool lexer::check_for_string(std::string& src, size_t& index) {
 	// be possible)
 
 	// add literal token
-	add_token(literal, TT_STRING_LITERAL, line, column);
+	add_token(literal, TT_STRING_LITERAL, start, { line, column + i - index });
 	column += true_length + 2; // both quotes
 	index += true_length + 1; // for loop will increment one more (closing quote)
 
@@ -283,6 +297,8 @@ std::string lexer::parse_text_literal(std::string& literal) {
 	std::string result;
 	size_t idx = 0;
 
+
+	// always safe next getter
 	auto next = [&]() -> char {
 		if (idx + 1 < literal.length()) {
 			return literal[idx + 1];
@@ -294,6 +310,9 @@ std::string lexer::parse_text_literal(std::string& literal) {
 		char c = literal[idx];
 		// catch all escape sequences here
 		if (c == '\\') {
+			// store start of escape sequence
+			position start = { line, column + idx + 1 };
+
 			char nc = next();
 			switch (nc) {
 			case 'n':
@@ -315,7 +334,8 @@ std::string lexer::parse_text_literal(std::string& literal) {
 				result += '\'';
 				break;
 			default:
-				ERROR(ERR_UNKNOWN_ESCAPE_SEQUENCE, { line, column + idx }, (std::string("\\") + nc).c_str());
+				code_span span = code_span(start, { line, column + idx + 2 });
+				ERROR(ERR_UNKNOWN_ESCAPE_SEQUENCE, span, (std::string("\\") + nc).c_str());
 				break;
 			}
 			idx++; // skip next char
@@ -342,8 +362,11 @@ void lexer::add_token(const std::string& value) {
 	}
 }
 void lexer::add_token(const std::string& value, token_type type) {
-	tokens.push_back({ value, type, line, column - value.length() });
+	position start = { line, column - value.length() };
+	position end = { line, column - 1 }; // end is the last character not the one after
+
+	tokens.push_back({ value, type, code_span(start, end) });
 }
-void lexer::add_token(const std::string& value, token_type type, size_t line, size_t col) {
-	tokens.push_back({ value, type, line, col });
+void lexer::add_token(const std::string& value, token_type type, position start, position end) {
+	tokens.push_back({ value, type, code_span(start, end) });
 }

@@ -29,7 +29,7 @@ public:
 			oparator,
 			std::dynamic_pointer_cast<expression>(operand->clone())
 		);
-		cloned->position = position;
+		cloned->span = span;
 		return cloned;
 	}
 

@@ -81,7 +81,7 @@ public:
 
 	ast_ptr clone() const override {
 		auto cloned = std::make_shared<type_declaration>(type_kind, identifier);
-		cloned->position = position;
+		cloned->span = span;
 		cloned->base_types = base_types;
 		cloned->base_type = base_type;
 		for (const auto& gen : generics) {

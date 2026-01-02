@@ -30,22 +30,39 @@ void error_printer::print_error(const error& error) {
 
 	// <file>:<line>:<col>: <message>
 	std::cerr << console_colors::MAGENTA << file_name << console_colors::RESET << ":"
-		<< console_colors::CYAN << error.pos.line << console_colors::RESET << ":"
-		<< console_colors::CYAN << error.pos.column << console_colors::RESET << ": "
+		<< console_colors::CYAN << error.span.start.line << console_colors::RESET << ":"
+		<< console_colors::CYAN << error.span.start.column << console_colors::RESET << ": "
 		<< console_colors::BOLD << error.info.message << console_colors::RESET << "\n";
 
-	if (src && error.pos.line > 0 && error.pos.line <= src->size()) {
-		int start_line = std::max(1, (int)error.pos.line - 2);
-		int end_line = error.pos.line;
+	if (src && error.span.start.line > 0 && error.span.start.line <= src->size()) {
+		int start_line = std::max(1, (int)error.span.start.line - 2);
+		int end_line = error.span.start.line;
 		int line_num_width = std::to_string(src->size()).size();
 
 		for (int i = start_line; i <= end_line; ++i) {
 			const auto& code_line = (*src)[(size_t)i - 1];
 			std::cerr << console_colors::DIM << std::setw(line_num_width) << i << " | " << console_colors::RESET << code_line << "\n";
-			if (i == error.pos.line) {
+			if (i == error.span.start.line) {
+				// calculate the length of the error span on this line
+				int span_length = 1; // default to at least 1 character
+				if (error.span.start.line == error.span.end.line) {
+					// error is on a single line, calculate actual span length
+					span_length = std::max(1, (int)(error.span.end.column - error.span.start.column));
+				}
+				
+				// leading spaces
 				std::cerr << std::setw(line_num_width) << " " << " | "
-					<< std::string(std::max(1, (int)error.pos.column - 2), ' ')
-					<< console_colors::BOLD << console_colors::RED << "^\033[0m" << console_colors::RESET << " HERE\n";
+					<< std::string(std::max(0, (int)error.span.start.column - 2), ' ');
+				
+				// indicator
+				std::cerr << console_colors::BOLD << console_colors::RED;
+				
+				// use '^' for the first character and '~' for the rest
+				std::cerr << "^";
+				if (span_length > 0) {
+					std::cerr << std::string(span_length, '~');
+				}
+				std::cerr << console_colors::RESET << " HERE\n";
 			}
 		}
 	}

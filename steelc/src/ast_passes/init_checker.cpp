@@ -69,7 +69,7 @@ void init_checker::visit(std::shared_ptr<identifier_expression> expr) {
 	}
 
 	if (initialized.find(expr->entity()->as_variable()->declaration) == initialized.end()) {
-		ERROR(ERR_UNINITIALIZED_VARIABLE, expr->position, expr->identifier.c_str());
+		ERROR(ERR_UNINITIALIZED_VARIABLE, expr->span, expr->identifier.c_str());
 		return;
 	}
 }

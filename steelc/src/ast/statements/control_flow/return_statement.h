@@ -34,7 +34,7 @@ public:
 
 	ast_ptr clone() const override {
 		auto cloned = std::make_shared<return_statement>();
-		cloned->position = position;
+		cloned->span = span;
 		if (value) {
 			cloned->value = std::dynamic_pointer_cast<expression>(value->clone());
 		}

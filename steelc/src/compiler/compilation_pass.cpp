@@ -3,26 +3,26 @@
 void compilation_pass::report_error_token(error_code code_enum, token tk, ...) {
     va_list args;
     va_start(args, tk);
-    add_error(code_enum, tk.pos.line, tk.pos.column, args);
+    add_error(code_enum, tk.span.start, tk.span.end, args);
     va_end(args);
 }
-void compilation_pass::report_error(error_code code_enum, position pos, ...) {
+void compilation_pass::report_error(error_code code_enum, code_span span, ...) {
     va_list args;
-    va_start(args, pos);
-    add_error(code_enum, pos.line, pos.column, args);
+    va_start(args, span);
+    add_error(code_enum, span.start, span.end, args);
     va_end(args);
 }
 
 void compilation_pass::report_warning_token(warning_code code_enum, token tk, ...) {
     va_list args;
     va_start(args, tk);
-    add_warning(code_enum, tk.pos.line, tk.pos.column, args);
+    add_warning(code_enum, tk.span.start, tk.span.end, args);
     va_end(args);
 }
-void compilation_pass::report_warning(warning_code code_enum, position pos, ...) {
+void compilation_pass::report_warning(warning_code code_enum, code_span span, ...) {
     va_list args;
-    va_start(args, pos);
-    add_warning(code_enum, pos.line, pos.column, args);
+    va_start(args, span);
+    add_warning(code_enum, span.start, span.end, args);
     va_end(args);
 }
 
@@ -40,17 +40,17 @@ void compilation_pass::add_advice(advice_code code_enum, ...) {
 	last_error->advices.push_back({ last_error, info, });
 }
 
-void compilation_pass::add_error(error_code code_enum, size_t line, size_t column, va_list args) {
+void compilation_pass::add_error(error_code code_enum, position start, position end, va_list args) {
     error_info info = error_catalog::get_error_info(code_enum);
     info.message = vformat(info.message, args);
-    errors.push_back({ info, { line, column }, ERR_ERROR, pass_unit });
+    errors.push_back({ info, { start, end }, ERR_ERROR, pass_unit });
 	last_error = &errors.back();
 }
 
-void compilation_pass::add_warning(warning_code code_enum, size_t line, size_t column, va_list args) {
+void compilation_pass::add_warning(warning_code code_enum, position start, position end, va_list args) {
     error_info info = error_catalog::get_warning_info(code_enum);
     info.message = vformat(info.message, args);
-    warnings.push_back({ info, { line, column }, ERR_WARNING, pass_unit });
+    warnings.push_back({ info, { start, end }, ERR_WARNING, pass_unit });
 }
 
 std::string compilation_pass::vformat(std::string fmt, va_list args) {

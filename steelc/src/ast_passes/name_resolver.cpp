@@ -39,14 +39,14 @@ void name_resolver::visit(std::shared_ptr<function_declaration> func) {
 			if (res.error != SYMBOL_OK) {
 				switch (res.error) {
 				case SYMBOL_CONFLICTS_WITH_GENERIC:
-					ERROR(ERR_DUPLICATE_GENERIC, func->position, generic->identifier.c_str());
+					ERROR(ERR_DUPLICATE_GENERIC, func->span, generic->identifier.c_str());
 					continue;
 				case SYMBOL_CONFLICTS_WITH_VARIABLE:
 					// we know they have the same name with this error so we can use this sneaky trick to name both
-					ERROR(ERR_GENERIC_SHADOWS_VARIABLE, func->position, generic->identifier.c_str(), generic->identifier.c_str());
+					ERROR(ERR_GENERIC_SHADOWS_VARIABLE, func->span, generic->identifier.c_str(), generic->identifier.c_str());
 					continue;
 				default:
-					ERROR(ERR_INTERNAL_ERROR, func->position, "Name Resolver", "Unknown error while adding generic parameter");
+					ERROR(ERR_INTERNAL_ERROR, func->span, "Name Resolver", "Unknown error while adding generic parameter");
 					continue;
 				}
 			}
@@ -58,20 +58,20 @@ void name_resolver::visit(std::shared_ptr<function_declaration> func) {
 			if (res.error != SYMBOL_OK) {
 				switch (res.error) {
 				case SYMBOL_CONFLICTS_WITH_GENERIC:
-					ERROR(ERR_VARIABLE_SHADOWS_GENERIC, func->position, param->identifier.c_str(), param->identifier.c_str());
+					ERROR(ERR_VARIABLE_SHADOWS_GENERIC, func->span, param->identifier.c_str(), param->identifier.c_str());
 					continue;
 				case SYMBOL_CONFLICTS_WITH_VARIABLE:
 					// only possible if the conflicting variable is another parameter
 					// so we know its this error
-					ERROR(ERR_DUPLICATE_PARAMETER, func->position, param->identifier.c_str());
+					ERROR(ERR_DUPLICATE_PARAMETER, func->span, param->identifier.c_str());
 					continue;
 				case SYMBOL_CONFLICTS_WITH_FUNCTION:
 					// im not sure if this is possible, but we'll add it just in case
-					ERROR(ERR_NAME_CONFLICT, func->position, "parameter", param->identifier.c_str(), "function");
+					ERROR(ERR_NAME_CONFLICT, func->span, "parameter", param->identifier.c_str(), "function");
 					continue;
 				// we dont need to check other cases as they are impossible since parameters will always be scoped
 				default:
-					ERROR(ERR_INTERNAL_ERROR, func->position, "Name Resolver", "Unknown error while adding parameter");
+					ERROR(ERR_INTERNAL_ERROR, func->span, "Name Resolver", "Unknown error while adding parameter");
 					continue;
 				}
 			}
@@ -101,15 +101,15 @@ void name_resolver::visit(std::shared_ptr<variable_declaration> var) {
 		if (res.error != SYMBOL_OK) {
 			switch (res.error) {
 			case SYMBOL_CONFLICTS_WITH_VARIABLE:
-				ERROR(ERR_VARIABLE_ALREADY_DECLARED_SCOPE, var->position, var->identifier.c_str());
+				ERROR(ERR_VARIABLE_ALREADY_DECLARED_SCOPE, var->span, var->identifier.c_str());
 				break;
 			case SYMBOL_CONFLICTS_WITH_GENERIC:
 				// we know both have same name so use same string
-				ERROR(ERR_VARIABLE_SHADOWS_GENERIC, var->position, var->identifier.c_str(), var->identifier.c_str());
+				ERROR(ERR_VARIABLE_SHADOWS_GENERIC, var->span, var->identifier.c_str(), var->identifier.c_str());
 				break;
 
 			default:
-				ERROR(ERR_INTERNAL_ERROR, var->position, "Declaration Collector", "Unknown error while adding variable symbol");
+				ERROR(ERR_INTERNAL_ERROR, var->span, "Declaration Collector", "Unknown error while adding variable symbol");
 				break;
 			}
 		}
@@ -161,7 +161,7 @@ void name_resolver::visit(std::shared_ptr<identifier_expression> expr) {
 	if (entity.ambiguous()) {
 		auto names = entity.results_names();
 		std::string names_str = string_utils::vec_to_string(names);
-		ERROR(ERR_NAME_COLLISION, expr->position, expr->identifier.c_str(), names_str.c_str());
+		ERROR(ERR_NAME_COLLISION, expr->span, expr->identifier.c_str(), names_str.c_str());
 		return;
 	}
 	else if (entity.found()) {
@@ -169,7 +169,7 @@ void name_resolver::visit(std::shared_ptr<identifier_expression> expr) {
 		return;
 	}
 
-	ERROR(ERR_UNKNOWN_IDENTIFIER, expr->position, expr->identifier.c_str());
+	ERROR(ERR_UNKNOWN_IDENTIFIER, expr->span, expr->identifier.c_str());
 }
 void name_resolver::visit(std::shared_ptr<member_expression> expr) {
 	// we CAN resolve member expressions here but ONLY static ones
@@ -179,7 +179,7 @@ void name_resolver::visit(std::shared_ptr<member_expression> expr) {
 	if (expr->is_static_access()) {
 		auto entity = expr->object->entity(*sym_table);
 		if (!entity) {
-			ERROR(ERR_STATIC_ACCESS_INVALID, expr->position, entity->kind_string().c_str(), entity->name().c_str());
+			ERROR(ERR_STATIC_ACCESS_INVALID, expr->span, entity->kind_string().c_str(), entity->name().c_str());
 			return;
 		}
 		else if (entity == entity::UNRESOLVED) {
@@ -196,14 +196,14 @@ void name_resolver::visit(std::shared_ptr<member_expression> expr) {
 			if (result.ambiguous()) {
 				auto names = result.results_names();
 				std::string names_str = string_utils::vec_to_string(names);
-				ERROR(ERR_NAME_COLLISION, expr->position, expr->member.c_str(), names_str.c_str());
+				ERROR(ERR_NAME_COLLISION, expr->span, expr->member.c_str(), names_str.c_str());
 				return;
 			}
 			else if (result.found()) {
 				expr->entity_ref = result.first()->ref();
 			}
 			else {
-				ERROR(ERR_NO_MEMBER_WITH_NAME_MODULE, expr->position, mod->full_name(), expr->member.c_str());
+				ERROR(ERR_NO_MEMBER_WITH_NAME_MODULE, expr->span, mod->full_name(), expr->member.c_str());
 				return;
 			}
 		}
@@ -221,21 +221,21 @@ void name_resolver::visit(std::shared_ptr<member_expression> expr) {
 					//expr->entity_ref = variable_entity::make(field);
 				}
 				else {
-					ERROR(ERR_STATIC_ACCESS_NONSTATIC_MEMBER, expr->position, expr->member.c_str());
+					ERROR(ERR_STATIC_ACCESS_NONSTATIC_MEMBER, expr->span, expr->member.c_str());
 					return;
 				}
 			}
 		}
 		// other
 		else {
-			ERROR(ERR_STATIC_ACCESS_INVALID, expr->position, entity->kind_string().c_str(), entity->name().c_str());
+			ERROR(ERR_STATIC_ACCESS_INVALID, expr->span, entity->kind_string().c_str(), entity->name().c_str());
 			return;
 		}
 	}
 }
 void name_resolver::visit(std::shared_ptr<this_expression> expr) {
 	if (!current_type && !current_func && !current_ctor) {
-		ERROR(ERR_THIS_OUTSIDE_NONSTATIC_METHOD, expr->position);
+		ERROR(ERR_THIS_OUTSIDE_NONSTATIC_METHOD, expr->span);
 		return;
 	}
 	expr->parent_type = current_type->type();
@@ -255,7 +255,7 @@ void name_resolver::visit(std::shared_ptr<function_call> func_call) {
 
 		// ast node doesnt refer to an entity
 		if (!entity) {
-			ERROR(ERR_CALL_ON_NON_FUNCTION, func_call->position, func_call->identifier.c_str());
+			ERROR(ERR_CALL_ON_NON_FUNCTION, func_call->span, func_call->identifier.c_str());
 			return;
 		}
 		// ast node does refer to an entity but its unresolved
@@ -266,12 +266,12 @@ void name_resolver::visit(std::shared_ptr<function_call> func_call) {
 
 		switch (entity->kind()) {
 		case ENTITY_VARIABLE: {
-			ERROR(ERR_STATIC_ACCESS_INVALID, func_call->position, entity->kind_string().c_str(), entity->name().c_str());
+			ERROR(ERR_STATIC_ACCESS_INVALID, func_call->span, entity->kind_string().c_str(), entity->name().c_str());
 			return;
 		}
 		// function::function()
 		case ENTITY_FUNCTION: {
-			ERROR(ERR_STATIC_ACCESS_INVALID, func_call->position, entity->kind_string().c_str(), entity->name().c_str());
+			ERROR(ERR_STATIC_ACCESS_INVALID, func_call->span, entity->kind_string().c_str(), entity->name().c_str());
 			return;
 		}
 		// type::function()
@@ -290,7 +290,7 @@ void name_resolver::visit(std::shared_ptr<function_call> func_call) {
 			auto result = symbols.lookup(func_call->identifier);
 			// no matches AT ALL
 			if (result.no_match()) {
-				ERROR(ERR_UNKNOWN_FUNCTION, func_call->position, func_call->identifier.c_str());
+				ERROR(ERR_UNKNOWN_FUNCTION, func_call->span, func_call->identifier.c_str());
 				return;
 			}
 
@@ -301,7 +301,7 @@ void name_resolver::visit(std::shared_ptr<function_call> func_call) {
 				}
 				else {
 					// might change this in the future, e.g. for function pointer variables
-					ERROR(ERR_CALL_ON_NON_FUNCTION, func_call->position, func_call->identifier.c_str());
+					ERROR(ERR_CALL_ON_NON_FUNCTION, func_call->span, func_call->identifier.c_str());
 					return;
 				}
 			}
@@ -314,7 +314,7 @@ void name_resolver::visit(std::shared_ptr<function_call> func_call) {
 
 			// matches - but none with correct param/generic count
 			if (candidates.empty()) {
-				ERROR(ERR_NO_MATCHING_FUNCTION, func_call->position, func_call->identifier.c_str());
+				ERROR(ERR_NO_MATCHING_FUNCTION, func_call->span, func_call->identifier.c_str());
 				return;
 			}
 
@@ -339,7 +339,7 @@ void name_resolver::visit(std::shared_ptr<function_call> func_call) {
 		if (type.ambiguous()) {
 			auto names = type.results_names();
 			std::string names_str = string_utils::vec_to_string(names);
-			ERROR(ERR_NAME_COLLISION, func_call->position, func_call->identifier.c_str(), names_str.c_str());
+			ERROR(ERR_NAME_COLLISION, func_call->span, func_call->identifier.c_str(), names_str.c_str());
 			return;
 		}
 		else if (type.found() && type.first()->kind() == ENTITY_TYPE) {
@@ -354,7 +354,7 @@ void name_resolver::visit(std::shared_ptr<function_call> func_call) {
 		lookup_result result = resolver.lookup(func_call->identifier);
 		// no matches AT ALL
 		if (result.no_match()) {
-			ERROR(ERR_UNKNOWN_FUNCTION, func_call->position, func_call->identifier.c_str());
+			ERROR(ERR_UNKNOWN_FUNCTION, func_call->span, func_call->identifier.c_str());
 			return;
 		}
 
@@ -365,7 +365,7 @@ void name_resolver::visit(std::shared_ptr<function_call> func_call) {
 			}
 			else {
 				// might change this in the future, e.g. for function pointer variables
-				ERROR(ERR_CALL_ON_NON_FUNCTION, func_call->position, func_call->identifier.c_str());
+				ERROR(ERR_CALL_ON_NON_FUNCTION, func_call->span, func_call->identifier.c_str());
 				return;
 			}
 		}
@@ -378,7 +378,7 @@ void name_resolver::visit(std::shared_ptr<function_call> func_call) {
 
 		// matches - but none with correct param/generic count
 		if (candidates.empty()) {
-			ERROR(ERR_NO_MATCHING_FUNCTION, func_call->position, func_call->identifier.c_str());
+			ERROR(ERR_NO_MATCHING_FUNCTION, func_call->span, func_call->identifier.c_str());
 			return;
 		}
 

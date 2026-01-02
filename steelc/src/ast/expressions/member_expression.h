@@ -42,7 +42,7 @@ public:
 			member,
 			access_operator
 		);
-		cloned->position = position;
+		cloned->span = span;
 		cloned->resolved_type = resolved_type;
 		cloned->entity_ref = entity_ref;
 		return cloned;

@@ -32,7 +32,7 @@ public:
 
 	ast_ptr clone() const override {
 		auto cloned = std::make_shared<initializer_list>(std::vector<std::shared_ptr<expression>>{});
-		cloned->position = position;
+		cloned->span = span;
 		for (const auto& val : values) {
 			cloned->values.push_back(std::dynamic_pointer_cast<expression>(val->clone()));
 		}

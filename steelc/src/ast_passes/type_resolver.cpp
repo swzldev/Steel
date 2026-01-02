@@ -122,14 +122,14 @@ void type_resolver::resolve_type(type_ptr& type) {
 	// resolve & check generic args (if applicable)
 	if (type->generic_args.size() > 0) {
 		if (!type->is_custom()) {
-			ERROR(ERR_GENERIC_ARGS_ON_NONCUSTOM_TYPE, type->position, type->name().c_str());
+			ERROR(ERR_GENERIC_ARGS_ON_NONCUSTOM_TYPE, type->span, type->name().c_str());
 			return;
 		}
 
 		auto custom = type->as_custom();
 		if (custom->declaration) {
 			if (!custom->declaration->is_generic) {
-				ERROR(ERR_GENERIC_ARGS_ON_NONGENERIC_TYPE, type->position, type->name().c_str());
+				ERROR(ERR_GENERIC_ARGS_ON_NONGENERIC_TYPE, type->span, type->name().c_str());
 				return;
 			}
 
@@ -139,7 +139,7 @@ void type_resolver::resolve_type(type_ptr& type) {
 					if (!args.empty()) args += ", ";
 					args += arg->identifier;
 				}
-				ERROR(ERR_INCORRECT_NUMBER_OF_GENERIC_ARGS, type->position, type->name().c_str(), args.c_str());
+				ERROR(ERR_INCORRECT_NUMBER_OF_GENERIC_ARGS, type->span, type->name().c_str(), args.c_str());
 				return;
 			}
 		}
@@ -159,12 +159,12 @@ void type_resolver::resolve_custom(type_ptr& custom) {
 	if (t.ambiguous()) {
 		auto names = t.results_names(true);
 		std::string names_string = string_utils::vec_to_string(names);
-		ERROR(ERR_NAME_COLLISION, custom->position, type_name.c_str(), names_string.c_str());
+		ERROR(ERR_NAME_COLLISION, custom->span, type_name.c_str(), names_string.c_str());
 		return;
 	}
 	else if (t.no_match()) {
 		// unknown
-		ERROR(ERR_UNKNOWN_TYPE, custom->position, type_name.c_str());
+		ERROR(ERR_UNKNOWN_TYPE, custom->span, type_name.c_str());
 		return;
 	}
 
@@ -185,7 +185,7 @@ void type_resolver::resolve_custom(type_ptr& custom) {
 	}
 	// non-type (e.g. module/function)
 	default: {
-		ERROR(ERR_NOT_A_TYPE, custom->position, type_name.c_str());
+		ERROR(ERR_NOT_A_TYPE, custom->span, type_name.c_str());
 		return;
 	}
 	}

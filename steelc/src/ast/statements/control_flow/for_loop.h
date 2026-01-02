@@ -55,7 +55,7 @@ public:
 			std::dynamic_pointer_cast<expression>(increment->clone()),
 			body->clone()
 		);
-		cloned->position = position;
+		cloned->span = span;
 		return cloned;
 	}
 

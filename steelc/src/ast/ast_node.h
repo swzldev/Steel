@@ -23,7 +23,7 @@ public:
 
 	virtual ast_ptr clone() const override { return nullptr; }
 
-	position position = { 0, 0 };
+	code_span span;
 
 protected:
 	 std::string indent_s(int level) const {

@@ -54,7 +54,7 @@ data_type_kind to_primitive(token_type tt) {
 }
 const type_ptr to_data_type(token& tk) {
 	auto type = to_primitive(tk.type) != DT_UNKNOWN ? std::make_shared<data_type>(to_primitive(tk.type)) : to_data_type(tk.value);
-	type->position = tk.pos;
+	type->span = tk.span;
 	return type;
 }
 const type_ptr to_data_type(token_type tt) {
