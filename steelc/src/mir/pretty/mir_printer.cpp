@@ -15,7 +15,28 @@ std::string mir_printer::print_module(const mir_module& module) {
 std::string mir_printer::print_function(const mir_function& func) {
 	std::string result;
 
-	result += "func " + func.name + " {\n";
+	std::string full_name;
+	for (const auto& scope : func.scopes) {
+		full_name += scope + "::";
+	}
+	full_name += func.name;
+
+	std::string params = "(";
+	for (size_t pi = 0; pi < func.params.size(); pi++) {
+		const auto& param = func.params[pi];
+		if (param.name.empty()) {
+			params += type_to_str(param.type);
+		}
+		else {
+			params += type_to_str(param.type) + " " + param.name;
+		}
+		if (pi + 1 < func.params.size()) {
+			params += ", ";
+		}
+	}
+	params += ")";
+
+	result += "func " + full_name + params + " {\n";
 
 	for (const auto& block : func.blocks) {
 		result += print_block(block);
