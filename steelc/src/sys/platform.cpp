@@ -25,7 +25,7 @@ platform platform::host_platform() {
 	platform_os os = platform_os::OSX;
 #endif
 
-	return platform(arch, os);
+	return platform(arch, os, platform_abi::UNKNOWN);
 }
 
 platform_arch platform::parse_arch(const std::string& str) {
@@ -70,7 +70,7 @@ platform_arch platform::parse_arch(const std::string& str) {
 	return platform_arch::UNKNOWN;
 }
 platform_os platform::parse_os(const std::string& str) {
-	static const std::unordered_map<std::string, platform_os> arch_map = {
+	static const std::unordered_map<std::string, platform_os> os_map = {
 		// windows
 		{ "windows", platform_os::WINDOWS },
 		{ "win32", platform_os::WINDOWS },
@@ -88,9 +88,35 @@ platform_os platform::parse_os(const std::string& str) {
 	lower.resize(str.size());
 	std::transform(str.begin(), str.end(), lower.begin(), std::tolower);
 
-	auto it = arch_map.find(lower);
-	if (it != arch_map.end()) {
+	auto it = os_map.find(lower);
+	if (it != os_map.end()) {
 		return it->second;
 	}
 	return platform_os::UNKNOWN;
+}
+platform_abi platform::parse_abi(const std::string& str) {
+	static const std::unordered_map<std::string, platform_abi> abi_map = {
+		// gnu
+		{ "gnu", platform_abi::GNU },
+		{ "gnueabi", platform_abi::GNU },
+		{ "gnueabihf", platform_abi::GNU },
+
+		// musl
+		{ "musl", platform_abi::MUSL },
+		{ "musleabi", platform_abi::MUSL },
+		{ "musleabihf", platform_abi::MUSL },
+
+		// msvc
+		{ "msvc", platform_abi::MSVC },
+	};
+
+	std::string lower;
+	lower.resize(str.size());
+	std::transform(str.begin(), str.end(), lower.begin(), std::tolower);
+
+	auto it = abi_map.find(lower);
+	if (it != abi_map.end()) {
+		return it->second;
+	}
+	return platform_abi::UNKNOWN;
 }
