@@ -12,8 +12,9 @@
 #include <linking/link_data.h>
 #include <linking/link_config.h>
 #include <utils/path_utils.h>
-#include <sys/target_triple.h>
 #include <sys/host_defs.h>
+#include <sys/platform.h>
+#include <sys/target_triple.h>
 #include <sys/shell.h>
 
 namespace fs = std::filesystem;
@@ -27,12 +28,12 @@ link_result coff_linker::link(const link_data& data) {
 
 	const target_triple& tri = data.cfg.target;
 
-	std::string abi = tri.abi;
-	if (abi.empty()) {
-		output::verbose("No abi specified. Using default: msvc\n");
-		abi = "msvc";
+	platform_abi abi = tri.abi();
+	if (abi == platform_abi::UNKNOWN) {
+		output::verbose("Invalid or no abi specified. Using default (msvc).\n");
+		abi = platform_abi::MSVC;
 	}
-	else if (abi != "msvc") {
+	else if (abi != platform_abi::MSVC) {
 		return link_error{
 			.message = "The COFF linker only supports compiling for the MSVC abi"
 		};
@@ -64,21 +65,19 @@ link_result coff_linker::link(const link_data& data) {
 	}
 
 	// machine
-	std::string arch = tri.arch;
-	if (arch.empty()) {
-		std::string host_arch = get_host_arch();
-		output::verbose("No architecture specified. Using host: {}\n", console_colors::DIM, host_arch);
+	platform_arch arch = tri.arch();
+	std::string arch_str;
+	if (arch == platform_arch::UNKNOWN) {
+		platform_arch host_arch = get_host_arch();
+		arch_str = get_arch_string(host_arch);
+		output::verbose("Invalid or no architecture specified. Using host ({}).\n", console_colors::DIM, arch_str);
 		arch = host_arch;
 	}
-	if (arch == "x86_64" || arch == "amd64") {
-		args.push_back("/MACHINE:X64");
-	} else if (arch == "i686" || arch == "x86") {
-		args.push_back("/MACHINE:X86");
-	} else if (arch == "arm" || arch == "armv7" || arch == "armv7l") {
-		args.push_back("/MACHINE:ARM");
-	} else if (arch == "arm64" || arch == "aarch64") {
-		args.push_back("/MACHINE:ARM64");
+	else {
+		arch_str = get_arch_string(arch);
 	}
+	args.push_back("/MACHINE:" + arch_str);
+	
 
 	// lib paths
 	auto lib_paths = get_stdlib_paths(arch, data.cached_vars);
@@ -132,8 +131,9 @@ link_result coff_linker::link(const link_data& data) {
 #endif // STEELC_PLATFORM_WINDOWS
 }
 
-std::vector<std::string> coff_linker::get_stdlib_paths(const std::string& target_arch, vars_file& vf) {
-	std::string key = "coff_stdlib_dirs_" + target_arch;
+std::vector<std::string> coff_linker::get_stdlib_paths(platform_arch target, vars_file& vf) {
+	std::string target_str = get_arch_string(target);
+	std::string key = "coff_stdlib_dirs_" + target_str;
 	std::vector<std::string> paths;
 
 	// check if cached
@@ -152,7 +152,7 @@ std::vector<std::string> coff_linker::get_stdlib_paths(const std::string& target
 	}
 
 	// load using vcvarsall
-	auto vc_env = capture_vcvarsall(target_arch);
+	auto vc_env = capture_vcvarsall(target);
 	if (!vc_env.empty()) {
 		auto it = vc_env.find("LIB");
 		if (it != vc_env.end()) {
@@ -192,54 +192,26 @@ std::filesystem::path coff_linker::find_vcvarsall() {
 
 	return fs::path();
 }
-std::string coff_linker::get_host_target_string(const std::string& target_arch)
+std::string coff_linker::get_host_target_string(platform_arch target)
 {
-	std::string host;
-
-#if defined(STEELC_ARCH_X64)
-	host = "x64";
-#elif defined(STEELC_ARCH_X86)
-	host = "x86";
-#elif defined(STEELC_ARCH_ARM64)
-	host = "arm64";
-#elif defined(STEELC_ARCH_ARM)
-	host = "arm";
-#else
-	throw std::runtime_error("Unknown host architecture");
-#endif
-
-	std::string target;
-
-	if (target_arch == "x86_64" || target_arch == "amd64" || target_arch == "x64") {
-		target = "x64";
-	}
-	else if (target_arch == "i686" || target_arch == "x86") {
-		target = "x86";
-	}
-	else if (target_arch == "arm64" || target_arch == "aarch64") {
-		target = "arm64";
-	}
-	else if (target_arch == "arm" || target_arch == "armv7" || target_arch == "armv7l") {
-		target = "arm";
-	}
-	else {
-		throw std::runtime_error("Unsupported target architecture for vcvarsall: " + target_arch);
-	}
-
-	// native build, dont respecify target
+	platform_arch host = get_host_arch();
 	if (host == target) {
-		return host;
+		// native build, dont respecify target
+		return get_arch_string(host);
 	}
 
-	return host + "_" + target;
+	std::string host_str = get_arch_string(host);
+	std::string target_str = get_arch_string(target);
+
+	return host_str + "_" + target_str;
 }
-std::unordered_map<std::string, std::vector<std::string>> coff_linker::capture_vcvarsall(const std::string& target_arch) {
+std::unordered_map<std::string, std::vector<std::string>> coff_linker::capture_vcvarsall(platform_arch target) {
 	fs::path vcvarsall_path = find_vcvarsall();
 	if (!fs::exists(vcvarsall_path)) {
 		return {}; // failed to find
 	}
 
-	std::string host_target = get_host_target_string(target_arch);
+	std::string host_target = get_host_target_string(target);
 
 	std::string command = "call \"" + vcvarsall_path.string() + "\" " + host_target + " > nul 2>&1 && set";
 	std::string output = shell::exec_piped(command);
@@ -268,14 +240,17 @@ std::unordered_map<std::string, std::vector<std::string>> coff_linker::capture_v
 	return env_vars;
 }
 
-std::string coff_linker::get_host_arch() {
-#if defined(STEELC_ARCH_X64)
-	return "x86_64";
-#elif defined(STEELC_ARCH_X86)
-	return "i686";
-#elif defined(STEELC_ARCH_ARM64)
-	return "aarch64";
-#elif defined(STEELC_ARCH_ARM)
-	return "arm";
-#endif
+std::string coff_linker::get_arch_string(platform_arch arch) {
+	switch (arch) {
+	case platform_arch::X86:
+		return "x86";
+	case platform_arch::X64:
+		return "x64";
+	case platform_arch::ARM:
+		return "arm";
+	case platform_arch::ARM64:
+		return "arm64";
+	default:
+		throw std::runtime_error("Unknown platform architecture");
+	}
 }
