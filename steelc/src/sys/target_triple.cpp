@@ -2,10 +2,10 @@
 
 target_triple::target_triple(const std::string& triple_str) {
 	underlying_triple = triple_str;
-	parse_triple(triple_str);
+	parse(triple_str);
 }
 
-void target_triple::parse_triple(const std::string& triple_str) {
+void target_triple::parse(const std::string& triple_str) {
 	unsigned index = 0;
 	std::string token;
 	for (char c : triple_str) {

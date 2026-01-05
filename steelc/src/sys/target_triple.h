@@ -11,6 +11,8 @@ class target_triple {
 public:
 	explicit target_triple(const std::string& triple_str);
 
+	void parse(const std::string& triple_str);
+
 	// the underlying triple string
 	std::string underlying_triple;
 
@@ -20,7 +22,4 @@ public:
 	std::string vendor;
 	std::string os;
 	std::string abi;
-
-private:
-	void parse_triple(const std::string& triple_str);
 };
