@@ -1,4 +1,4 @@
-<h1 align="left">Steel<br/><img src=".\assets\logo-red-png.png" alt="Logo" align="right" height="230px"></h1>
+<h1 align="left">Steel<br/><img src=".\assets\logo-red-png-1080px.png" alt="Logo" align="right" height="230px"></h1>
 <p align="left">
     <img src="https://img.shields.io/badge/status-in_development-purple" alt="Status: In development">
     <img src="https://img.shields.io/badge/latest_version-0.6.0-yellow" alt="Latest: 0.6.0">
