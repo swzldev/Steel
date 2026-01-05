@@ -96,18 +96,35 @@ platform_os platform::parse_os(const std::string& str) {
 }
 platform_abi platform::parse_abi(const std::string& str) {
 	static const std::unordered_map<std::string, platform_abi> abi_map = {
-		// gnu
+		// GNU libc (Linux x86/x86-64)
 		{ "gnu", platform_abi::GNU },
-		{ "gnueabi", platform_abi::GNU },
-		{ "gnueabihf", platform_abi::GNU },
 
-		// musl
+		// GNU libc - ARM32 variants
+		{ "gnueabi", platform_abi::ARM_EABI_SOFT },
+		{ "gnueabihf", platform_abi::ARM_EABI_HARD },
+
+		// MUSL libc (Linux x86/x86-64)
 		{ "musl", platform_abi::MUSL },
-		{ "musleabi", platform_abi::MUSL },
-		{ "musleabihf", platform_abi::MUSL },
 
-		// msvc
+		// MUSL libc - ARM32 variants
+		{ "musleabi", platform_abi::ARM_EABI_SOFT },
+		{ "musleabihf", platform_abi::ARM_EABI_HARD },
+
+		// MSVC (Windows)
 		{ "msvc", platform_abi::MSVC },
+
+		// Apple / Darwin
+		{ "apple", platform_abi::APPLE },
+		{ "darwin", platform_abi::APPLE },
+
+		// BSD variants
+		{ "freebsd", platform_abi::BSD },
+		{ "openbsd", platform_abi::BSD },
+		{ "netbsd", platform_abi::BSD },
+
+		// ARM64 / AArch64
+		{ "aarch64", platform_abi::ARM64_AAPCS },
+		{ "aarch64_be", platform_abi::ARM64_AAPCS },
 	};
 
 	std::string lower;

@@ -27,9 +27,26 @@ enum class platform_os {
 enum class platform_abi {
 	UNKNOWN,
 
-	GNU,
-	MUSL,
-	MSVC,
+	// Linux / Unix
+	GNU,            // glibc, x86/x86-64, general ARM32 soft/hard float handled separately
+	MUSL,           // musl libc
+	UCLIBC,         // uClibc
+
+	// Windows
+	MSVC,           // Microsoft Visual C++
+
+	// Apple platforms
+	APPLE,          // macOS, iOS, Darwin
+
+	// BSD variants
+	BSD,            // FreeBSD, OpenBSD, NetBSD
+
+	// ARM32
+	ARM_EABI_SOFT,  // soft-float
+	ARM_EABI_HARD,  // hard-float
+
+	// ARM64
+	ARM64_AAPCS,    // 64-bit ARM, always hard-float
 };
 
 class platform {
