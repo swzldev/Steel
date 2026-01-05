@@ -3,6 +3,8 @@
 #include <string>
 #include <vector>
 
+#include <sys/platform.h>
+
 // target_triple
 //
 // this class wraps a target triple string
@@ -14,12 +16,20 @@ public:
 	void parse(const std::string& triple_str);
 
 	// the underlying triple string
-	std::string underlying_triple;
+	std::string string;
 
-	// these fields may be empty if the target triple
+	// these strings may be empty if the target triple
 	// does not specify them
-	std::string arch;
-	std::string vendor;
-	std::string os;
-	std::string abi;
+	std::string arch_str;
+	std::string os_str;
+	std::string abi_str;
+
+	inline platform_arch arch() const { return arch_cache; }
+	inline platform_os os() const { return os_cache; }
+	inline platform_abi abi() const { return abi_cache; }
+
+private:
+	platform_arch arch_cache = platform_arch::UNKNOWN;
+	platform_os os_cache = platform_os::UNKNOWN;
+	platform_abi abi_cache = platform_abi::UNKNOWN;
 };
