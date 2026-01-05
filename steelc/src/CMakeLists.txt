@@ -98,6 +98,7 @@ target_sources(steelc_core PRIVATE
     "codegen/codegen.cpp"
     "codegen/codegen.h"
     "codegen/codegen_config.h"
+    "codegen/codegen_info.h"
     "codegen/codegen_result.h"
     "codegen/code_artifact.h"
     "codegen/icode_generator.h"

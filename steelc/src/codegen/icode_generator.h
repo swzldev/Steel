@@ -2,6 +2,7 @@
 
 #include <codegen/codegen_result.h>
 #include <codegen/codegen_config.h>
+#include <codegen/codegen_info.h>
 #include <mir/mir_module.h>
 
 // icode_generator
@@ -13,9 +14,8 @@ class icode_generator {
 public:
 	virtual ~icode_generator() = default;
 
+	virtual codegen_info info() = 0;
+
 	// generate a codegen result from a mir_module
 	virtual codegen_result emit(const mir_module& module, const codegen_config& cfg) = 0;
-
-	virtual std::string default_ir_format() const = 0;
-	virtual bool supports(const std::string& ir_format) const = 0;
 };
