@@ -13,6 +13,8 @@
 // and properties
 
 enum class codegen_capability {
+	// can generate intermediate representation files
+	CAN_GENERATE_IR,
 	// can generate native object files
 	CAN_GENERATE_NATIVE_OBJECT,
 };
