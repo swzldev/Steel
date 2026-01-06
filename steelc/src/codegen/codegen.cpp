@@ -26,16 +26,14 @@ bool codegen::validate_backend(const std::string& backend) {
 	auto gens = get_generators();
 	return gens.find(backend) != gens.end();
 }
-bool codegen::validate_ir_format(const std::string& backend, const std::string& format) {
-	if (!validate_backend(backend)) return false;
-
-	return get_generators()[backend]->supports(format);
-}
-
-std::string codegen::default_ir_format(const std::string& backend) {
-	if (!validate_backend(backend)) return "<unknown>";
-
-	return get_generators()[backend]->default_ir_format();
+bool codegen::backend_info(const std::string& backend, codegen_info* result) {
+	auto gens = get_generators();
+	auto it = gens.find(backend);
+	if (it != gens.end()) {
+		*result = it->second->info();
+		return true;
+	}
+	return false;
 }
 
 codegen_result codegen::generate(size_t index) {
