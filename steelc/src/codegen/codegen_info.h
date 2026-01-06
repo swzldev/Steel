@@ -45,7 +45,6 @@ public:
 
 	std::string default_ir_format;
 	std::vector<std::string> supported_ir_formats;
-	std::vector<std::string> supported_native_formats;
 
 private:
 	template<typename T>
