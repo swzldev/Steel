@@ -15,7 +15,7 @@
 </p>
 
 <!-- we have to use markdown here as github doesn't support styled html blockquotes -->
-> [!IMPORTANT]
+> [!WARNING]
 > Steel is currently in pre-release, this means many features are not fully functional and may contain plenty of bugs, this version is not meant to be used for any real projects, everything is subject to change at any time.
 
 <h2>Features</h2>
