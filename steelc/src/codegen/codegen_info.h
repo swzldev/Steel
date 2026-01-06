@@ -43,6 +43,10 @@ public:
 	std::vector<platform_os> supported_oses;
 	std::vector<platform_abi> supported_abis;
 
+	std::string default_ir_format;
+	std::vector<std::string> supported_ir_formats;
+	std::vector<std::string> supported_native_formats;
+
 private:
 	template<typename T>
 	inline bool contains(const std::vector<T>& vec, T val) const {
