@@ -9,13 +9,21 @@
 
 #include <codegen/icode_generator.h>
 #include <codegen/codegen_result.h>
+#include <codegen/codegen_info.h>
 #include <codegen/codegen_config.h>
 #include <codegen/naming/name_mangler.h>
+#include <codegen/sys/system_formats.h>
 #include <codegen_llvm/type_handling/llvm_type_converter.h>
 #include <codegen_llvm/builders/llvm_function_builder.h>
 #include <codegen_llvm/builders/llvm_expression_builder.h>
 #include <codegen_llvm/writers/llvm_writer.h>
 #include <codegen_llvm/writers/llvm_native_writer.h>
+
+// llvm_code_generator
+//
+// this is the built in and default LLVM based code generator for steelc
+//
+// codegen steps: mir -> llvm IR (bitcode/asm) -> native object
 
 namespace llvm {
 	class Function;
@@ -34,10 +42,6 @@ struct ssa_scope {
 	}
 };
 
-// llvm_code_generator
-//
-// this is the built in and default LLVM based code generator for steelc
-
 class llvm_code_generator : public icode_generator {
 private:
 	static constexpr auto BITCODE_FORMAT = "llvm-bc";
@@ -51,12 +55,41 @@ public:
 		expression_builder(builder) {
 	}
 
-	codegen_result emit(const mir_module& mod_mir, const codegen_config& cfg) override;
+	codegen_info info() override {
+		static codegen_info info{
+			.name = "LLVM Code Generator",
+			.description = "Generates LLVM IR and native objects using the LLVM framework",
 
-	std::string default_ir_format() const override {
-		return BITCODE_FORMAT;
+			.capabilities = {
+				codegen_capability::CAN_GENERATE_IR,
+				codegen_capability::CAN_GENERATE_NATIVE_OBJECT
+			},
+
+			.supported_architectures = {
+				platform_arch::X86,
+				platform_arch::X64,
+				platform_arch::ARM,
+				platform_arch::ARM64
+			},
+			.supported_oses = {
+				platform_os::LINUX,
+				platform_os::WINDOWS,
+				platform_os::OSX
+			},
+			.supported_abis = {
+				platform_abi::GNU,
+				platform_abi::MSVC,
+				platform_abi::APPLE,
+			},
+
+			.supported_ir_formats = {
+				BITCODE_FORMAT, // default
+				ASSEMBLY_FORMAT
+			},
+		};
 	}
-	bool supports(const std::string& ir_format) const override;
+
+	codegen_result emit(const mir_module& mod_mir, const codegen_config& cfg) override;
 
 private:
 	llvm::LLVMContext context;
