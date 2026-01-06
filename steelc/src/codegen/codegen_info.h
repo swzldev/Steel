@@ -43,7 +43,8 @@ public:
 	std::vector<platform_os> supported_oses;
 	std::vector<platform_abi> supported_abis;
 
-	std::string default_ir_format;
+	// note: supported_ir_formats[0] is considered the default IR format
+	// empty and unused if !capable_of(CAN_GENERATE_IR)
 	std::vector<std::string> supported_ir_formats;
 
 private:
