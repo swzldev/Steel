@@ -24,6 +24,7 @@ public:
 	inline bool capable_of(codegen_capability cap) const {
 		return contains(capabilities, cap);
 	}
+
 	inline bool supports_arch(platform_arch arch) const {
 		return contains(supported_architectures, arch);
 	}
@@ -32,6 +33,10 @@ public:
 	}
 	inline bool supports_abi(platform_abi abi) const {
 		return contains(supported_abis, abi);
+	}
+
+	inline bool supports_ir_format(const std::string& format) const {
+		return contains(supported_ir_formats, format);
 	}
 
 	std::string name;
