@@ -21,6 +21,7 @@
 #include <codegen/code_artifact.h>
 #include <codegen/codegen_config.h>
 #include <linking/link_config.h>
+#include <sys/platform.h>
 
 class project_builder {
 public:
@@ -43,6 +44,7 @@ private:
 
 	std::string backend;
 	std::string ir_format;
+	platform target_platform;
 
 	std::chrono::high_resolution_clock::time_point build_start;
 	std::chrono::high_resolution_clock::time_point compile_start;
