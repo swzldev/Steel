@@ -39,8 +39,10 @@ private:
 	build_config build_cfg;
 	std::unique_ptr<stproj_file> project_file;
 	std::unique_ptr<code_outputter> outputter;
-	std::filesystem::path cache_path;
 	vars_file cached_vars;
+
+	std::string backend;
+	std::string ir_format;
 
 	std::chrono::high_resolution_clock::time_point build_start;
 	std::chrono::high_resolution_clock::time_point compile_start;

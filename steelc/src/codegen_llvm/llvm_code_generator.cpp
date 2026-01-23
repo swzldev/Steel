@@ -48,14 +48,6 @@ codegen_result llvm_code_generator::emit(const mir_module& mod_mir, const codege
 	return result;
 }
 
-bool llvm_code_generator::supports(const std::string& ir_format) const {
-	if (ir_format == "llvm-bc" ||
-		ir_format == "llvm-asm") {
-		return true;
-	}
-	return false;
-}
-
 llvm::Function* llvm_code_generator::emit_function(const mir_function& fn_mir) {
 	current_ssa.values.clear(); // reset SSA values
 	llvm::Function* fn_llvm = fn_builder.build(fn_mir, module.get());
