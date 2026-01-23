@@ -19,6 +19,8 @@ public:
 		return platform(arch_cache, os_cache, abi_cache);
 	}
 
+	static target_triple host_triple();
+
 	// the underlying triple string
 	std::string string;
 

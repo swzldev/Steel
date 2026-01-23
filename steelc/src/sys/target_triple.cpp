@@ -45,3 +45,13 @@ void target_triple::parse(const std::string& triple_str) {
 		// can ignore it
 	}
 }
+
+target_triple target_triple::host_triple() {
+	platform host = platform::host_platform();
+
+	// construct triple string from host platform
+	std::string triple_str = platform::to_string(host.arch) + "-"
+		+ platform::to_string(host.os) + "-"
+		+ platform::to_string(host.abi);
+	return target_triple(triple_str);
+}
