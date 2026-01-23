@@ -15,6 +15,10 @@ public:
 
 	void parse(const std::string& triple_str);
 
+	inline platform as_platform() const {
+		return platform(arch_cache, os_cache, abi_cache);
+	}
+
 	// the underlying triple string
 	std::string string;
 
