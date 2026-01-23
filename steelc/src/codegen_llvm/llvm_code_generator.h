@@ -56,7 +56,7 @@ public:
 	}
 
 	codegen_info info() override {
-		static codegen_info info{
+		return {
 			.name = "LLVM Code Generator",
 			.description = "Generates LLVM IR and native objects using the LLVM framework",
 
