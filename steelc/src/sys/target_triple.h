@@ -11,6 +11,7 @@
 
 class target_triple {
 public:
+	target_triple() = default;
 	explicit target_triple(const std::string& triple_str);
 
 	void parse(const std::string& triple_str);
