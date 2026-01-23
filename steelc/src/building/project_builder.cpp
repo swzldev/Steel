@@ -289,7 +289,7 @@ std::string project_builder::get_artifact_path(const code_artifact& artifact, bo
 }
 
 build_cache_file project_builder::load_cache() {
-	cache_path = path_utils::normalize(project_file->parent_path() / build_cfg.build_cache_file);
+	auto cache_path = path_utils::normalize(project_file->parent_path() / build_cfg.build_cache_file);
 	output::verbose("Loading build cache at: \'{}\'\n", console_colors::DIM, cache_path.string());
 	// load existing cache
 	if (std::filesystem::exists(cache_path)) {
@@ -306,6 +306,7 @@ build_cache_file project_builder::load_cache() {
 	return build_cache_file{};
 }
 void project_builder::save_cache(build_cache_file& cache) const {
+	auto cache_path = path_utils::normalize(project_file->parent_path() / build_cfg.build_cache_file);
 	if (cache.outdated()) {
 		cache.upgrade();
 	}
@@ -453,28 +454,60 @@ code_artifact project_builder::load_artifact_from_metadata(const artifact_metada
 }
 
 bool project_builder::validate_config() {
+	codegen_info b_info{};
+
 	// validate backend and format
 	{
-		std::string& backend = build_cfg.backend;
-		std::string& ir_format = build_cfg.ir_format;
+		backend = build_cfg.backend;
+		ir_format = build_cfg.ir_format;
 
 		if (!codegen::validate_backend(backend)) {
-			output::err("Unknown codegen backend specified: {}\n", console_colors::BOLD + console_colors::RED, backend);
+			output::err("Error: Unknown codegen backend specified: {}\n", console_colors::BOLD + console_colors::RED, backend);
 			return false;
 		}
-		if (ir_format.empty()) {
-			ir_format = codegen::default_ir_format(backend);
-			output::verbose("Using default backend format: \'{}\'\n", console_colors::DIM, ir_format);
-		}
-		if (!codegen::validate_ir_format(backend, ir_format)) {
-			output::err("IR format \'{}\' is not supported by backend \'{}\'\n", console_colors::BOLD + console_colors::RED, ir_format, backend);
+		
+		if (!codegen::backend_info(backend, &b_info)) {
+			// shouldnt happen since we validated above (but just in case)
+			output::err("Error: Failed to retrieve backend info for: {}\n", console_colors::BOLD + console_colors::RED, backend);
 			return false;
+		}
+
+		if (b_info.capable_of(codegen_capability::CAN_GENERATE_IR)) {
+			if (ir_format.empty()) {
+				// use default
+				std::string def_format = b_info.supported_ir_formats[0];
+				output::verbose("Using default IR format ({}).\n", console_colors::YELLOW, def_format);
+			}
+			else {
+				// validate
+				if (!b_info.supports_ir_format(ir_format)) {
+					output::err("Error: Backend '{}' does not support IR format '{}'.\n", console_colors::BOLD + console_colors::RED, backend, ir_format);
+					return false;
+				}
+			}
+		}
+		else if (!ir_format.empty()) {
+			output::print("Warn: IR format '{}' specified, but the backend '{}' does not produce IR.\n", console_colors::YELLOW, ir_format, backend);
 		}
 	}
 
 	// validate target
 	{
+		target_triple tt = target_triple(build_cfg.target_triple);
 
+		// validate arch and os
+		if (tt.arch() == platform_arch::UNKNOWN) {
+			output::err("Error: Unknown target architecture '{}'.\n", console_colors::BOLD + console_colors::RED, tt.arch_str);
+			return false;
+		}
+		if (tt.os() == platform_os::UNKNOWN) {
+			output::err("Error: Unknown target operating system '{}'.\n", console_colors::BOLD + console_colors::RED, tt.os_str);
+			return false;
+		}
+		if (tt.abi() == platform_abi::UNKNOWN) {
+			output::err("Error: Unknown target ABI '{}'.\n", console_colors::BOLD + console_colors::RED, tt.abi_str);
+			return false;
+		}
 	}
 
 	return true;
