@@ -51,6 +51,7 @@ enum class platform_abi {
 
 class platform {
 public:
+	platform() = default;
 	platform(platform_arch arch, platform_os os, platform_abi abi)
 		: arch(arch), os(os), abi(abi) {
 	}
@@ -61,7 +62,7 @@ public:
 	static platform_os parse_os(const std::string& str);
 	static platform_abi parse_abi(const std::string& str);
 
-	platform_arch arch;
-	platform_os os;
-	platform_abi abi;
+	platform_arch arch = platform_arch::UNKNOWN;
+	platform_os os = platform_os::UNKNOWN;
+	platform_abi abi = platform_abi::UNKNOWN;
 };
