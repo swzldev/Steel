@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <unordered_map>
 
 // platform
 //
@@ -62,7 +63,16 @@ public:
 	static platform_os parse_os(const std::string& str);
 	static platform_abi parse_abi(const std::string& str);
 
+	static std::string to_string(platform_arch arch);
+	static std::string to_string(platform_os os);
+	static std::string to_string(platform_abi abi);
+
 	platform_arch arch = platform_arch::UNKNOWN;
 	platform_os os = platform_os::UNKNOWN;
 	platform_abi abi = platform_abi::UNKNOWN;
+
+private:
+	static std::unordered_map<std::string, platform_arch> get_arch_map();
+	static std::unordered_map<std::string, platform_os> get_os_map();
+	static std::unordered_map<std::string, platform_abi> get_abi_map();
 };

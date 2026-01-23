@@ -29,7 +29,78 @@ platform platform::host_platform() {
 }
 
 platform_arch platform::parse_arch(const std::string& str) {
-	static const std::unordered_map<std::string, platform_arch> arch_map = {
+	auto arch_map = get_arch_map();
+
+	std::string lower;
+	lower.resize(str.size());
+	std::transform(str.begin(), str.end(), lower.begin(), std::tolower);
+
+	auto it = arch_map.find(str);
+	if (it != arch_map.end()) {
+		return it->second;
+	}
+	return platform_arch::UNKNOWN;
+}
+platform_os platform::parse_os(const std::string& str) {
+	auto os_map = get_os_map();
+
+	std::string lower;
+	lower.resize(str.size());
+	std::transform(str.begin(), str.end(), lower.begin(), std::tolower);
+
+	auto it = os_map.find(lower);
+	if (it != os_map.end()) {
+		return it->second;
+	}
+	return platform_os::UNKNOWN;
+}
+platform_abi platform::parse_abi(const std::string& str) {
+	auto abi_map = get_abi_map();
+
+	std::string lower;
+	lower.resize(str.size());
+	std::transform(str.begin(), str.end(), lower.begin(), std::tolower);
+
+	auto it = abi_map.find(lower);
+	if (it != abi_map.end()) {
+		return it->second;
+	}
+	return platform_abi::UNKNOWN;
+}
+
+std::string platform::to_string(platform_arch arch) {
+	if (arch == platform_arch::UNKNOWN) {
+		return "unknown";
+	}
+	for (const auto& pair : get_arch_map()) {
+		if (pair.second == arch) {
+			return pair.first;
+		}
+	}
+}
+std::string platform::to_string(platform_os os) {
+	if (os == platform_os::UNKNOWN) {
+		return "unknown";
+	}
+	for (const auto& pair : get_os_map()) {
+		if (pair.second == os) {
+			return pair.first;
+		}
+	}
+}
+std::string platform::to_string(platform_abi abi) {
+	if (abi == platform_abi::UNKNOWN) {
+		return "unknown";
+	}
+	for (const auto& pair : get_abi_map()) {
+		if (pair.second == abi) {
+			return pair.first;
+		}
+	}
+}
+
+std::unordered_map<std::string, platform_arch> platform::get_arch_map() {
+	return {
 		// x86
 		{ "x86", platform_arch::X86 },
 		{ "i386", platform_arch::X86 },
@@ -58,19 +129,9 @@ platform_arch platform::parse_arch(const std::string& str) {
 		{ "arm64", platform_arch::ARM64 },
 		{ "aarch64", platform_arch::ARM64 },
 	};
-
-	std::string lower;
-	lower.resize(str.size());
-	std::transform(str.begin(), str.end(), lower.begin(), std::tolower);
-
-	auto it = arch_map.find(str);
-	if (it != arch_map.end()) {
-		return it->second;
-	}
-	return platform_arch::UNKNOWN;
 }
-platform_os platform::parse_os(const std::string& str) {
-	static const std::unordered_map<std::string, platform_os> os_map = {
+std::unordered_map<std::string, platform_os> platform::get_os_map() {
+	return {
 		// windows
 		{ "windows", platform_os::WINDOWS },
 		{ "win32", platform_os::WINDOWS },
@@ -83,19 +144,9 @@ platform_os platform::parse_os(const std::string& str) {
 		{ "osx", platform_os::OSX },
 		{ "macos", platform_os::OSX },
 	};
-
-	std::string lower;
-	lower.resize(str.size());
-	std::transform(str.begin(), str.end(), lower.begin(), std::tolower);
-
-	auto it = os_map.find(lower);
-	if (it != os_map.end()) {
-		return it->second;
-	}
-	return platform_os::UNKNOWN;
 }
-platform_abi platform::parse_abi(const std::string& str) {
-	static const std::unordered_map<std::string, platform_abi> abi_map = {
+std::unordered_map<std::string, platform_abi> platform::get_abi_map() {
+	return {
 		// GNU libc (Linux x86/x86-64)
 		{ "gnu", platform_abi::GNU },
 
@@ -126,14 +177,4 @@ platform_abi platform::parse_abi(const std::string& str) {
 		{ "aarch64", platform_abi::ARM64_AAPCS },
 		{ "aarch64_be", platform_abi::ARM64_AAPCS },
 	};
-
-	std::string lower;
-	lower.resize(str.size());
-	std::transform(str.begin(), str.end(), lower.begin(), std::tolower);
-
-	auto it = abi_map.find(lower);
-	if (it != abi_map.end()) {
-		return it->second;
-	}
-	return platform_abi::UNKNOWN;
 }
