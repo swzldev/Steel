@@ -17,7 +17,7 @@ public:
 	void parse(const std::string& triple_str);
 
 	inline platform as_platform() const {
-		return platform(arch_cache, os_cache, abi_cache);
+		return platform(arch_cache, vendor_cache, os_cache, abi_cache);
 	}
 
 	static target_triple host_triple();
