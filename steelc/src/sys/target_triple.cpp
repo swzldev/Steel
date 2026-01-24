@@ -30,6 +30,7 @@ void target_triple::parse(const std::string& triple_str) {
 
 	if (components.size() >= 2) {
 		vendor_str = components[1];
+		vendor_cache = platform::parse_vendor(components[1]);
 	}
 
 	if (components.size() >= 3) {
@@ -48,6 +49,7 @@ target_triple target_triple::host_triple() {
 
 	// construct triple string from host platform
 	std::string triple_str = platform::to_string(host.arch) + "-"
+		+ platform::to_string(host.vendor) + "-"
 		+ platform::to_string(host.os) + "-"
 		+ platform::to_string(host.abi);
 	return target_triple(triple_str);
