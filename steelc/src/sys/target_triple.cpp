@@ -33,7 +33,7 @@ void target_triple::parse(const std::string& triple_str) {
 	auto os = platform::parse_os(components[1]);
 	if (os != platform_os::UNKNOWN) {
 		// vendor omitted
-		vendor_cache = platform_vendor::UNKNOWN;
+		vendor_cache = platform::default_vendor_for_os(os);
 		vendor_str = "";
 
 		os_cache = os;
