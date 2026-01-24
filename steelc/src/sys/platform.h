@@ -60,8 +60,8 @@ enum class platform_abi {
 class platform {
 public:
 	platform() = default;
-	platform(platform_arch arch, platform_os os, platform_abi abi)
-		: arch(arch), os(os), abi(abi) {
+	platform(platform_arch arch, platform_vendor vendor, platform_os os, platform_abi abi)
+		: arch(arch), vendor(vendor), os(os), abi(abi) {
 	}
 
 	static platform host_platform();
