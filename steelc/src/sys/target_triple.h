@@ -33,12 +33,13 @@ public:
 	std::string abi_str;
 
 	inline platform_arch arch() const { return arch_cache; }
-	// note: vendor is not parsed into an enum
+	inline platform_vendor vendor() const { return vendor_cache; }
 	inline platform_os os() const { return os_cache; }
 	inline platform_abi abi() const { return abi_cache; }
 
 private:
 	platform_arch arch_cache = platform_arch::UNKNOWN;
+	platform_vendor vendor_cache = platform_vendor::UNKNOWN;
 	platform_os os_cache = platform_os::UNKNOWN;
 	platform_abi abi_cache = platform_abi::UNKNOWN;
 };
