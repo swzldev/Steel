@@ -28,10 +28,12 @@ public:
 	// these strings may be empty if the target triple
 	// does not specify them
 	std::string arch_str;
+	std::string vendor_str;
 	std::string os_str;
 	std::string abi_str;
 
 	inline platform_arch arch() const { return arch_cache; }
+	// note: vendor is not parsed into an enum
 	inline platform_os os() const { return os_cache; }
 	inline platform_abi abi() const { return abi_cache; }
 
