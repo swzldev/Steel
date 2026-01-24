@@ -42,4 +42,6 @@ private:
 	platform_vendor vendor_cache = platform_vendor::UNKNOWN;
 	platform_os os_cache = platform_os::UNKNOWN;
 	platform_abi abi_cache = platform_abi::UNKNOWN;
+
+	void finalize();
 };

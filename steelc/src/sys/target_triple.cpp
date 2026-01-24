@@ -71,3 +71,10 @@ target_triple target_triple::host_triple() {
 		+ platform::to_string(host.abi);
 	return target_triple(triple_str);
 }
+
+void target_triple::finalize() {
+	// fill abi if missing
+	if (abi_cache == platform_abi::UNKNOWN && abi_str.empty()) {
+		abi_cache = platform::default_abi_for_os(os_cache);
+	}
+}
