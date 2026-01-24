@@ -59,6 +59,8 @@ void target_triple::parse(const std::string& triple_str) {
 		abi_str = components[idx];
 		abi_cache = platform::parse_abi(components[idx]);
 	}
+
+	finalize();
 }
 
 target_triple target_triple::host_triple() {
