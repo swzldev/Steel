@@ -23,26 +23,23 @@ void target_triple::parse(const std::string& triple_str) {
 	if (components.empty()) return; // nothing to parse
 	size_t num_components = components.size();
 
-	// force first to be arch
-	if (num_components >= 1) {
+	if (components.size() >= 1) {
 		arch_str = components[0];
 		arch_cache = platform::parse_arch(components[0]);
 	}
 
-	// for the rest we can just attempt to parse
-	// and set if successful
-	for (size_t i = 0; i < num_components; i++) {
-		// priority: os -> abi -> vendor
-		if (auto os = platform::parse_os(components[i]); os != platform_os::UNKNOWN) {
-			os_str = components[i];
-			os_cache = os;
-		}
-		else if (auto abi = platform::parse_abi(components[i]); abi != platform_abi::UNKNOWN) {
-			abi_str = components[i];
-			abi_cache = abi;
-		}
-		// vendor is not really necessary so for now we
-		// can ignore it
+	if (components.size() >= 2) {
+		vendor_str = components[1];
+	}
+
+	if (components.size() >= 3) {
+		os_str = components[2];
+		os_cache = platform::parse_os(components[2]);
+	}
+
+	if (components.size() >= 4) {
+		abi_str = components[3];
+		abi_cache = platform::parse_abi(components[3]);
 	}
 }
 
