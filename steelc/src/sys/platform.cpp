@@ -20,15 +20,18 @@ platform platform::host_platform() {
 #if defined(STEELC_PLATFORM_WINDOWS)
 	platform_os os = platform_os::WINDOWS;
 	platform_abi abi = platform_abi::MSVC;
+	platform_vendor vendor = platform_vendor::PC;
 #elif defined(STEELC_PLATFORM_LINUX)
 	platform_os os = platform_os::LINUX;
 	platform_abi abi = platform_abi::GNU;
+	platform_vendor vendor = platform_vendor::UNKNOWN;
 #elif defined(STEELC_PLATFORM_OSX)
 	platform_os os = platform_os::OSX;
 	platform_abi abi = platform_abi::APPLE;
+	platform_vendor vendor = platform_vendor::APPLE;
 #endif
 
-	return platform(arch, os, abi);
+	return platform(arch, vendor, os, abi);
 }
 
 platform_arch platform::parse_arch(const std::string& str) {
