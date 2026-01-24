@@ -23,24 +23,41 @@ void target_triple::parse(const std::string& triple_str) {
 	if (components.empty()) return; // nothing to parse
 	size_t num_components = components.size();
 
+	// arch always first
 	if (components.size() >= 1) {
 		arch_str = components[0];
 		arch_cache = platform::parse_arch(components[0]);
 	}
 
-	if (components.size() >= 2) {
-		vendor_str = components[1];
-		vendor_cache = platform::parse_vendor(components[1]);
+	size_t idx = 1;
+	auto os = platform::parse_os(components[1]);
+	if (os != platform_os::UNKNOWN) {
+		// vendor omitted
+		vendor_cache = platform_vendor::UNKNOWN;
+		vendor_str = "";
+
+		os_cache = os;
+		os_str = components[idx];
+		idx++;
+	}
+	else {
+		// vendor is present
+		vendor_str = components[idx];
+		vendor_cache = platform::parse_vendor(components[idx]);
+		idx++;
+
+		// also parse os
+		if (idx < components.size()) {
+			os_str = components[idx];
+			os_cache = platform::parse_os(components[idx]);
+			idx++;
+		}
 	}
 
-	if (components.size() >= 3) {
-		os_str = components[2];
-		os_cache = platform::parse_os(components[2]);
-	}
-
-	if (components.size() >= 4) {
-		abi_str = components[3];
-		abi_cache = platform::parse_abi(components[3]);
+	// parse abi/env
+	if (idx < components.size()) {
+		abi_str = components[idx];
+		abi_cache = platform::parse_abi(components[idx]);
 	}
 }
 
