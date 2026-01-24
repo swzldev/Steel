@@ -44,6 +44,19 @@ platform_arch platform::parse_arch(const std::string& str) {
 	}
 	return platform_arch::UNKNOWN;
 }
+platform_vendor platform::parse_vendor(const std::string& str) {
+	auto arch_map = get_vendor_map();
+
+	std::string lower;
+	lower.resize(str.size());
+	std::transform(str.begin(), str.end(), lower.begin(), std::tolower);
+
+	auto it = arch_map.find(str);
+	if (it != arch_map.end()) {
+		return it->second;
+	}
+	return platform_vendor::UNKNOWN;
+}
 platform_os platform::parse_os(const std::string& str) {
 	auto os_map = get_os_map();
 
@@ -77,6 +90,16 @@ std::string platform::to_string(platform_arch arch) {
 	}
 	for (const auto& pair : get_arch_map()) {
 		if (pair.second == arch) {
+			return pair.first;
+		}
+	}
+}
+std::string platform::to_string(platform_vendor vendor) {
+	if (vendor == platform_vendor::UNKNOWN) {
+		return "unknown";
+	}
+	for (const auto& pair : get_vendor_map()) {
+		if (pair.second == vendor) {
 			return pair.first;
 		}
 	}
@@ -131,6 +154,12 @@ std::unordered_map<std::string, platform_arch> platform::get_arch_map() {
 		// arm64
 		{ "arm64", platform_arch::ARM64 },
 		{ "aarch64", platform_arch::ARM64 },
+	};
+}
+std::unordered_map<std::string, platform_vendor> platform::get_vendor_map() {
+	return {
+		{ "pc", platform_vendor::PC },
+		{ "apple", platform_vendor::APPLE },
 	};
 }
 std::unordered_map<std::string, platform_os> platform::get_os_map() {

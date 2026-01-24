@@ -17,6 +17,13 @@ enum class platform_arch {
 	ARM64,
 };
 
+enum class platform_vendor {
+	UNKNOWN,
+
+	PC,
+	APPLE,
+};
+
 enum class platform_os {
 	UNKNOWN,
 
@@ -60,19 +67,23 @@ public:
 	static platform host_platform();
 
 	static platform_arch parse_arch(const std::string& str);
+	static platform_vendor parse_vendor(const std::string& str);
 	static platform_os parse_os(const std::string& str);
 	static platform_abi parse_abi(const std::string& str);
 
 	static std::string to_string(platform_arch arch);
+	static std::string to_string(platform_vendor vendor);
 	static std::string to_string(platform_os os);
 	static std::string to_string(platform_abi abi);
 
 	platform_arch arch = platform_arch::UNKNOWN;
+	platform_vendor vendor = platform_vendor::UNKNOWN;
 	platform_os os = platform_os::UNKNOWN;
 	platform_abi abi = platform_abi::UNKNOWN;
 
 private:
 	static std::unordered_map<std::string, platform_arch> get_arch_map();
+	static std::unordered_map<std::string, platform_vendor> get_vendor_map();
 	static std::unordered_map<std::string, platform_os> get_os_map();
 	static std::unordered_map<std::string, platform_abi> get_abi_map();
 };
