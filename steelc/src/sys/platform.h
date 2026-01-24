@@ -76,6 +76,9 @@ public:
 	static std::string to_string(platform_os os);
 	static std::string to_string(platform_abi abi);
 
+	static platform_vendor default_vendor_for_os(platform_os os);
+	static platform_abi default_abi_for_os(platform_os os);
+
 	platform_arch arch = platform_arch::UNKNOWN;
 	platform_vendor vendor = platform_vendor::UNKNOWN;
 	platform_os os = platform_os::UNKNOWN;

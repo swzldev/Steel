@@ -128,6 +128,29 @@ std::string platform::to_string(platform_abi abi) {
 	}
 }
 
+platform_vendor platform::default_vendor_for_os(platform_os os) {
+	switch (os) {
+	case platform_os::WINDOWS:
+		return platform_vendor::PC;
+	case platform_os::OSX:
+		return platform_vendor::APPLE;
+	default:
+		return platform_vendor::UNKNOWN;
+	}
+}
+platform_abi platform::default_abi_for_os(platform_os os) {
+	switch (os) {
+	case platform_os::WINDOWS:
+		return platform_abi::MSVC;
+	case platform_os::OSX:
+		return platform_abi::APPLE;
+	case platform_os::LINUX:
+		return platform_abi::GNU;
+	default:
+		return platform_abi::UNKNOWN;
+	}
+}
+
 std::unordered_map<std::string, platform_arch> platform::get_arch_map() {
 	return {
 		// x86
