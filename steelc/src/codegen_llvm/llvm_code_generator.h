@@ -115,7 +115,7 @@ private:
 	// artifact generators
 	code_artifact generate_bitcode_artifact(const mir_module& mod_mir);
 	code_artifact generate_asm_artifact(const mir_module& mod_mir);
-	code_artifact generate_native_object_artifact(const mir_module& mod_mir);
+	bool generate_native_object_artifact(const mir_module& mod_mir, code_artifact& out);
 
 	template<typename T>
 	struct always_false : std::false_type {};

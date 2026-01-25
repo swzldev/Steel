@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <variant>
+#include <vector>
 
 #include <llvm/IR/LLVMContext.h>
 #include <llvm/IR/Module.h>
@@ -43,7 +44,11 @@ codegen_result llvm_code_generator::emit(const mir_module& mod_mir, const codege
 	}
 
 	// native object file
-	result.artifacts.push_back(generate_native_object_artifact(mod_mir));
+	code_artifact obj_artifact;
+	if (generate_native_object_artifact(mod_mir, obj_artifact)) {
+		result.artifacts.push_back(obj_artifact);
+	}
+	else throw codegen_exception("Failed to generate native object: " + nwriter->get_error());
 
 	return result;
 }
@@ -377,16 +382,23 @@ code_artifact llvm_code_generator::generate_asm_artifact(const mir_module& mod_m
 		.text = writer->write_asm()
 	};
 }
-code_artifact llvm_code_generator::generate_native_object_artifact(const mir_module& mod_mir) {
+bool llvm_code_generator::generate_native_object_artifact(const mir_module& mod_mir, code_artifact& out) {
 	std::string fmt = system_formats::get_object_format();
-	std::string ext = system_formats::get_object_extension();
-	return code_artifact{
+	std::string ext = system_formats::get_object_extension(); 
+
+	std::vector<uint8_t> obj_bytes;
+	if (!nwriter->write_object(obj_bytes)) {
+		return false;
+	}
+
+	out = code_artifact{
 		.kind = ARTIFACT_OBJECT,
 		.src_relpath = mod_mir.meta.src_relpath,
 		.name = mod_mir.name,
 		.extension = ext,
 		.format = fmt,
 		.is_binary = true,
-		.bytes = nwriter->write_object()
+		.bytes = obj_bytes
 	};
+	return true;
 }
