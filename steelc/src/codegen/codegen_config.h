@@ -3,6 +3,8 @@
 #include <string>
 #include <unordered_map>
 
+#include <sys/target_triple.h>
+
 // codegen_config
 //
 // configuration options for code generation
@@ -14,8 +16,8 @@ struct codegen_config {
 	std::string ir_format = ""; // empty = backend default
 
 	// target options
-	std::string target_triple = "";								// target triple (e.g. x86_64-pc-linux-gnu)
-	std::string cpu = "";										// target CPU (e.g. x86-64)
+	target_triple target;
+	std::string cpu = "generic";								// target CPU
 	std::unordered_map<std::string, std::string> features;		// target features (e.g. +sse2, -avx)
 
 	// optimization options
