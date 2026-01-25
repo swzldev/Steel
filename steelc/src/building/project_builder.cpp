@@ -496,8 +496,8 @@ bool project_builder::validate_config() {
 	// validate target
 	{
 		if (build_cfg.target_triple.empty()) {
-			output::verbose("No target triple specified, using host.\n", console_colors::YELLOW);
 			target = target_triple::host_triple();
+			output::print("Warn: No target triple specified, using host ({}).\n", console_colors::YELLOW, target.stringify());
 		}
 		else {
 			// parse provided target triple
