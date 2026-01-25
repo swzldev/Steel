@@ -22,7 +22,7 @@
 
 using namespace llvm;
 
-std::vector<uint8_t> llvm_native_writer::write_object() {
+bool llvm_native_writer::write_object(std::vector<uint8_t>& output_buffer) {
     // safe to recall
     InitializeAllTargets();
     InitializeAllTargetMCs();
@@ -33,10 +33,11 @@ std::vector<uint8_t> llvm_native_writer::write_object() {
     Triple triple(target.stringify());
     module->setTargetTriple(triple);
 
-    std::string error;
+    std::string err;
     const Target* target = TargetRegistry::lookupTarget(triple, error);
     if (!target) {
-        throw std::runtime_error(error);
+        error = err;
+        return false;
     }
 
     TargetOptions opts;
@@ -50,7 +51,8 @@ std::vector<uint8_t> llvm_native_writer::write_object() {
         )
     );
     if (!tm) {
-        throw std::runtime_error("Failed to create TargetMachine");
+		error = "Could not create target machine";
+        return false;
     }
 
     module->setDataLayout(tm->createDataLayout());
@@ -61,10 +63,12 @@ std::vector<uint8_t> llvm_native_writer::write_object() {
 
     legacy::PassManager pm;
     if (tm->addPassesToEmitFile(pm, os, nullptr, CodeGenFileType::ObjectFile)) {
-        throw std::runtime_error("Target cannot emit object files");
+		error = "TargetMachine can't emit object file";
+		return false;
     }
 
     pm.run(*module);
 
-    return std::vector<uint8_t>(buffer.begin(), buffer.end());
+    output_buffer.assign(buffer.begin(), buffer.end());
+    return true;
 }

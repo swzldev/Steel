@@ -20,10 +20,16 @@ public:
 		: module(module), target(target) {
 	}
 
-	std::vector<uint8_t> write_object();
+	bool write_object(std::vector<uint8_t>& output_buffer);
+
+	inline std::string get_error() const {
+		return error;
+	}
 
 private:
 	llvm::Module* module;
 	target_triple target;
 	std::string cpu;
+
+	std::string error;
 };
