@@ -18,6 +18,8 @@
 #include <llvm/Target/TargetOptions.h>
 #include <llvm/IR/LegacyPassManager.h>
 
+#include <sys/target_triple.h>
+
 using namespace llvm;
 
 std::vector<uint8_t> llvm_native_writer::write_object() {
@@ -27,16 +29,8 @@ std::vector<uint8_t> llvm_native_writer::write_object() {
     InitializeAllAsmParsers();
     InitializeAllAsmPrinters();
 
-    // default for empty configurations
-    if (target_triple.empty()) {
-		target_triple = sys::getDefaultTargetTriple();
-    }
-    if (cpu.empty()) {
-        cpu = "generic";
-	}
-
     // setup target
-    Triple triple(target_triple);
+    Triple triple(target.string);
     module->setTargetTriple(triple);
 
     std::string error;
