@@ -163,10 +163,10 @@ std::unordered_map<std::string, platform_arch> platform::get_arch_map() {
 		{ "ia32", platform_arch::X86 },
 
 		// x64
-		{ "x64", platform_arch::X64 },
-		{ "amd64", platform_arch::X64 },
-		{ "x86-64", platform_arch::X64 },
 		{ "x86_64", platform_arch::X64 },
+		{ "x86-64", platform_arch::X64 },
+		{ "amd64", platform_arch::X64 },
+		{ "x64", platform_arch::X64 },
 
 		// arm
 		{ "arm", platform_arch::ARM },
