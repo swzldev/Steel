@@ -37,6 +37,11 @@ public:
 	inline platform_os os() const { return os_cache; }
 	inline platform_abi abi() const { return abi_cache; }
 
+	inline bool arch_explicit() const { return !arch_str.empty(); }
+	inline bool vendor_explicit() const { return !vendor_str.empty(); }
+	inline bool os_explicit() const { return !os_str.empty(); }
+	inline bool abi_explicit() const { return !abi_str.empty(); }
+
 private:
 	platform_arch arch_cache = platform_arch::UNKNOWN;
 	platform_vendor vendor_cache = platform_vendor::UNKNOWN;
