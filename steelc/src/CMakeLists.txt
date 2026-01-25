@@ -283,6 +283,7 @@ target_sources(steelc_core PRIVATE
     "sys/target_triple.h"
 
     # utils/
+    "utils/command_builder.h"
     "utils/console_colors.cpp"
     "utils/console_colors.h"
     "utils/iclonable.h"
@@ -301,6 +302,7 @@ PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}/../lib"
 )
 
-target_link_libraries(steelc_core PUBLIC
+target_link_libraries(steelc_core
+PUBLIC
     ${LLVM_LIBS}
 )
