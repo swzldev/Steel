@@ -22,6 +22,7 @@
 #include <codegen/codegen_config.h>
 #include <linking/link_config.h>
 #include <sys/platform.h>
+#include <sys/target_triple.h>
 
 class project_builder {
 public:
@@ -44,7 +45,7 @@ private:
 
 	std::string backend;
 	std::string ir_format;
-	platform target_platform;
+	target_triple target;
 
 	std::chrono::high_resolution_clock::time_point build_start;
 	std::chrono::high_resolution_clock::time_point compile_start;
