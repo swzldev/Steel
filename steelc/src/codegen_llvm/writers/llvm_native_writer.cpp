@@ -30,7 +30,7 @@ std::vector<uint8_t> llvm_native_writer::write_object() {
     InitializeAllAsmPrinters();
 
     // setup target
-    Triple triple(target.string);
+    Triple triple(target.stringify());
     module->setTargetTriple(triple);
 
     std::string error;
