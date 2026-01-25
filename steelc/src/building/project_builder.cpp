@@ -31,6 +31,8 @@
 #include <linking/linker.h>
 #include <stproj/source_file.h>
 #include <stproj/stproj_file.h>
+#include <sys/target_triple.h>
+#include <sys/platform.h>
 
 static inline uint64_t now_unix_ms() {
 	return static_cast<uint64_t>(
@@ -495,27 +497,25 @@ bool project_builder::validate_config() {
 	{
 		if (build_cfg.target_triple.empty()) {
 			output::verbose("No target triple specified, using host.\n", console_colors::YELLOW);
-			target_platform = platform::host_platform();
+			target = target_triple::host_triple();
 		}
 		else {
-			// parse and validate provided target triple
-			target_triple tt = target_triple(build_cfg.target_triple);
+			// parse provided target triple
+			target = target_triple(build_cfg.target_triple);
+		}
 
-			// validate arch, os, abi
-			if (tt.arch() == platform_arch::UNKNOWN) {
-				output::err("Error: Unknown target architecture '{}'.\n", console_colors::BOLD + console_colors::RED, tt.arch_str);
-				return false;
-			}
-			if (tt.os() == platform_os::UNKNOWN) {
-				output::err("Error: Unknown target operating system '{}'.\n", console_colors::BOLD + console_colors::RED, tt.os_str);
-				return false;
-			}
-			if (tt.abi() == platform_abi::UNKNOWN) {
-				output::err("Error: Unknown target ABI '{}'.\n", console_colors::BOLD + console_colors::RED, tt.abi_str);
-				return false;
-			}
-
-			target_platform = tt.as_platform();
+		// validate arch, os, abi
+		if (target.arch() == platform_arch::UNKNOWN) {
+			output::err("Error: Unknown target architecture '{}'.\n", console_colors::BOLD + console_colors::RED, target.arch_str);
+			return false;
+		}
+		if (target.os() == platform_os::UNKNOWN) {
+			output::err("Error: Unknown target operating system '{}'.\n", console_colors::BOLD + console_colors::RED, target.os_str);
+			return false;
+		}
+		if (target.abi() == platform_abi::UNKNOWN) {
+			output::err("Error: Unknown target ABI '{}'.\n", console_colors::BOLD + console_colors::RED, target.abi_str);
+			return false;
 		}
 	}
 
@@ -524,11 +524,11 @@ bool project_builder::validate_config() {
 
 codegen_config project_builder::generate_codegen_config() const {
 	return codegen_config{
-		.backend = build_cfg.backend,
-		.ir_format = build_cfg.ir_format,
+		.backend = backend,
+		.ir_format = ir_format,
 
-		.target_triple = build_cfg.target_triple,
-		.cpu = "",
+		.target = target,
+		.cpu = "generic", // generic for now
 		.features = {},
 
 		.optimization_level = 2, // default optimization level
@@ -540,6 +540,6 @@ link_config project_builder::generate_link_config() const {
 	return link_config{
 		.output_dir = path_utils::normalize(get_output_dir()).string(),
 		.output_name = project_filename(),
-		.target = target_triple(build_cfg.target_triple),
+		.target = target,
 	};
 }
