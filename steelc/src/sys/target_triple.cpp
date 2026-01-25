@@ -74,6 +74,13 @@ target_triple target_triple::host_triple() {
 	return target_triple(triple_str);
 }
 
+std::string target_triple::stringify() const {
+	return platform::to_string(arch_cache) + "-"
+		+ platform::to_string(vendor_cache) + "-"
+		+ platform::to_string(os_cache) + "-"
+		+ platform::to_string(abi_cache);
+}
+
 void target_triple::finalize() {
 	// fill abi if missing
 	if (abi_cache == platform_abi::UNKNOWN && abi_str.empty()) {

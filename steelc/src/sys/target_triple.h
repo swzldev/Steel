@@ -24,6 +24,9 @@ public:
 
 	// the underlying triple string
 	std::string string;
+	// reconstruct the triple string from components
+	// (includes implicit components)
+	std::string stringify() const;
 
 	// these strings may be empty if the target triple
 	// does not specify them
