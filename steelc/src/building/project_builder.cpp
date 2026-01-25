@@ -511,7 +511,8 @@ bool project_builder::validate_config() {
 		}
 		// dont care about vendor
 		if (target.os() == platform_os::UNKNOWN) {
-			output::err("Error: Unknown or unsupported target operating system '{}'.\n", console_colors::BOLD + console_colors::RED, target.os_str);
+			if (!target.os_explicit()) output::err("Error: No operating system specified in target triple.\n");
+			else output::err("Error: Unknown or unsupported target operating system '{}'.\n", console_colors::BOLD + console_colors::RED, target.os_str);
 			return false;
 		}
 		if (target.abi() == platform_abi::UNKNOWN && target.abi_explicit()) {
