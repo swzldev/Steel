@@ -509,6 +509,7 @@ bool project_builder::validate_config() {
 			output::err("Error: Unknown or unsupported target architecture '{}'.\n", console_colors::BOLD + console_colors::RED, target.arch_str);
 			return false;
 		}
+		// dont care about vendor
 		if (target.os() == platform_os::UNKNOWN) {
 			output::err("Error: Unknown or unsupported target operating system '{}'.\n", console_colors::BOLD + console_colors::RED, target.os_str);
 			return false;
