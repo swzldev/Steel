@@ -12,9 +12,9 @@
 #include <linking/link_data.h>
 #include <linking/link_config.h>
 #include <utils/path_utils.h>
+#include <utils/command_builder.h>
 #include <sys/host_defs.h>
 #include <sys/platform.h>
-#include <sys/target_triple.h>
 #include <sys/shell.h>
 
 namespace fs = std::filesystem;
@@ -26,11 +26,16 @@ link_result coff_linker::link(const link_data& data) {
 	};
 #else
 
-	const target_triple& tri = data.cfg.target;
+	const target_triple& target = data.cfg.target;
 
-	platform_abi abi = tri.abi();
-	if (abi == platform_abi::UNKNOWN) {
-		output::verbose("Invalid or no abi specified. Using default (msvc).\n");
+	platform_abi abi = target.abi();
+	if (abi == platform_abi::UNKNOWN && target.abi_explicit()) {
+		return link_error{
+			.message = "Invalid abi specified for target triple: " + target.string
+		};
+	}
+	else if (abi == platform_abi::UNKNOWN) {
+		output::verbose("No abi specified. Using default (msvc).\n");
 		abi = platform_abi::MSVC;
 	}
 	else if (abi != platform_abi::MSVC) {
@@ -52,38 +57,43 @@ link_result coff_linker::link(const link_data& data) {
 		};
 	}
 
-	std::vector<std::string> args;
+	command_builder cb(sys_linker->executable_path);
 
 	// output file
 	fs::path out_path = fs::path(data.cfg.output_dir) / (data.cfg.output_name + ".exe");
 	out_path = path_utils::normalize(fs::weakly_canonical(out_path));
-	args.push_back("/OUT:" + out_path.string());
+	cb << "/OUT:" + out_path.string();
 
 	// add inputs
 	for (const auto& obj_path : data.object_files) {
-		args.push_back(obj_path);
+		cb << obj_path;
 	}
 
 	// machine
-	platform_arch arch = tri.arch();
+	platform_arch arch = target.arch();
 	std::string arch_str;
-	if (arch == platform_arch::UNKNOWN) {
+	if (arch == platform_arch::UNKNOWN && target.arch_explicit()) {
+		return link_error{
+			.message = "Invalid architecture specified for target triple: " + target.string
+		};
+	}
+	else if (arch == platform_arch::UNKNOWN) {
 		platform_arch host_arch = get_host_arch();
 		arch_str = get_arch_string(host_arch);
-		output::verbose("Invalid or no architecture specified. Using host ({}).\n", console_colors::DIM, arch_str);
+		output::verbose("No architecture specified. Using host ({}).\n", console_colors::DIM, arch_str, "\n");
 		arch = host_arch;
 	}
 	else {
 		arch_str = get_arch_string(arch);
 	}
-	args.push_back("/MACHINE:" + arch_str);
+	cb << "/MACHINE:" + arch_str;
 	
 
 	// lib paths
 	auto lib_paths = get_stdlib_paths(arch, data.cached_vars);
 	if (!lib_paths.empty()) {
 		for (const auto& lp : lib_paths) {
-			args.push_back("/LIBPATH:" + lp);
+			cb << "/LIBPATH:" + lp;
 		}
 	}
 	else {
@@ -91,27 +101,16 @@ link_result coff_linker::link(const link_data& data) {
 	}
 
 	// subsystem (always console for now)
-	args.push_back("/SUBSYSTEM:CONSOLE");
+	cb << "/SUBSYSTEM:CONSOLE";
 
 	// for now link in release using static crt
-	args.push_back("libcmt.lib");
-	args.push_back("libvcruntime.lib");
-	args.push_back("libucrt.lib");
-	args.push_back("kernel32.lib");
+	cb << "libcmt.lib" << "libvcruntime.lib" << "libucrt.lib" << "kernel32.lib";
 
 	// suppress logo
-	args.push_back("/NOLOGO");
-
-	std::string command = "\"" + sys_linker->executable_path + "\"";
-	for (const auto& arg : args) {
-		if (arg.find(' ') != std::string::npos) {
-			command += " \"" + arg + "\"";
-		}
-		else command += " " + arg;
-	}
+	cb << "/NOLOGO";
 
 	// execute linker
-	int ec = shell::exec("\"" + command + "\"");
+	int ec = shell::exec("\"" + cb.build() + "\"");
 	if (ec != 0) {
 		return link_error{
 			.message = "Linker failed with exit code: " + std::to_string(ec)
