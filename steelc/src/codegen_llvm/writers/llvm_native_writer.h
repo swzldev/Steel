@@ -7,6 +7,7 @@
 #include <llvm/IR/Module.h>
 
 #include <codegen/code_artifact.h>
+#include <sys/target_triple.h>
 
 // llvm_native_writer
 //
@@ -15,14 +16,14 @@
 
 class llvm_native_writer {
 public:
-	llvm_native_writer(llvm::Module* module, const std::string& target_tri, const std::string& cpu)
-		: module(module), target_triple(target_tri), cpu(cpu) {
+	llvm_native_writer(llvm::Module* module, const target_triple& target, const std::string& cpu)
+		: module(module), target(target) {
 	}
 
 	std::vector<uint8_t> write_object();
 
 private:
 	llvm::Module* module;
-	std::string target_triple;
+	target_triple target;
 	std::string cpu;
 };
