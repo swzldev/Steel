@@ -24,7 +24,7 @@
 codegen_result llvm_code_generator::emit(const mir_module& mod_mir, const codegen_config& cfg) {
 	module = std::make_unique<llvm::Module>(mod_mir.name, context);
 	writer = std::make_unique<llvm_writer>(module.get());
-	nwriter = std::make_unique<llvm_native_writer>(module.get(), cfg.target_triple, cfg.cpu);
+	nwriter = std::make_unique<llvm_native_writer>(module.get(), cfg.target, cfg.cpu);
 
 	for (const auto& fn : mod_mir.functions) {
 		emit_function(fn);
