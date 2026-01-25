@@ -506,15 +506,15 @@ bool project_builder::validate_config() {
 
 		// validate arch, os, abi
 		if (target.arch() == platform_arch::UNKNOWN) {
-			output::err("Error: Unknown target architecture '{}'.\n", console_colors::BOLD + console_colors::RED, target.arch_str);
+			output::err("Error: Unknown or unsupported target architecture '{}'.\n", console_colors::BOLD + console_colors::RED, target.arch_str);
 			return false;
 		}
 		if (target.os() == platform_os::UNKNOWN) {
-			output::err("Error: Unknown target operating system '{}'.\n", console_colors::BOLD + console_colors::RED, target.os_str);
+			output::err("Error: Unknown or unsupported target operating system '{}'.\n", console_colors::BOLD + console_colors::RED, target.os_str);
 			return false;
 		}
-		if (target.abi() == platform_abi::UNKNOWN) {
-			output::err("Error: Unknown target ABI '{}'.\n", console_colors::BOLD + console_colors::RED, target.abi_str);
+		if (target.abi() == platform_abi::UNKNOWN && target.abi_explicit()) {
+			output::err("Error: Unknown or unsupported target ABI '{}'.\n", console_colors::BOLD + console_colors::RED, target.abi_str);
 			return false;
 		}
 	}
