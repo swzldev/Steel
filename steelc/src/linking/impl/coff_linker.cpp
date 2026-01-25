@@ -28,6 +28,12 @@ link_result coff_linker::link(const link_data& data) {
 
 	const target_triple& target = data.cfg.target;
 
+	if (target.os() != platform_os::WINDOWS) {
+		return link_error{
+			.message = "The COFF linker only supports linking for Windows targets"
+		};
+	}
+
 	platform_abi abi = target.abi();
 	if (abi == platform_abi::UNKNOWN && target.abi_explicit()) {
 		return link_error{
