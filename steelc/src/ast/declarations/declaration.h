@@ -11,9 +11,11 @@ enum decleration_modifier {
 	DM_NONE = 0,
 };
 
+class compilation_unit;
+
 class declaration : public ast_node {
 public:
-	unsigned int owning_unit_id = 0;
+	std::weak_ptr<compilation_unit> owning_unit = nullptr;
 	std::shared_ptr<module_entity> parent_module = nullptr;
 	declaration_modifiers mods = DM_NONE;
 	std::string filename;

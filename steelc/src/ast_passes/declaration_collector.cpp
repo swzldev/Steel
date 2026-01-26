@@ -92,7 +92,7 @@ void declaration_collector::visit(std::shared_ptr<function_declaration> func) {
 	func->func_ref = entity_ref(res.eid);
 
 	// set parent module (even for methods, for now anyway) & owning unit
-	func->owning_unit_id = unit->unit_id;
+	func->owning_unit = unit;
 	func->parent_module = current_module;
 
 	if (func->body) {
@@ -148,7 +148,7 @@ void declaration_collector::visit(std::shared_ptr<variable_declaration> var) {
 	}
 
 	// set parent module & owning unit
-	var->owning_unit_id = unit->unit_id;
+	var->owning_unit = unit;
 	var->parent_module = current_module;
 }
 void declaration_collector::visit(std::shared_ptr<type_declaration> decl) {
@@ -212,7 +212,7 @@ void declaration_collector::visit(std::shared_ptr<type_declaration> decl) {
 	}
 
 	// set parent module (may be null) & owning unit
-	decl->owning_unit_id = unit->unit_id;
+	decl->owning_unit = unit;
 	decl->parent_module = current_module;
 
 	current_type = decl;
@@ -244,7 +244,7 @@ void declaration_collector::visit(std::shared_ptr<module_declaration> mod) {
 	module_path.push_back(mod->name);
 
 	// set owning unit (of this specific declaration node)
-	mod->owning_unit_id = unit->unit_id;
+	mod->owning_unit = unit;
 
 	// set the parent module (again, only for this specific declaration node)
 	// since technically, actual modules may be shared across multiple files
@@ -326,7 +326,7 @@ void declaration_collector::visit(std::shared_ptr<enum_declaration> enm) {
 	}
 
 	// set parent module & owning unit
-	enm->owning_unit_id = unit->unit_id;
+	enm->owning_unit = unit;
 	enm->parent_module = current_module;
 }
 
