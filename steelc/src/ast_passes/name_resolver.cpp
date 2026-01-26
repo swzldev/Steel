@@ -314,6 +314,12 @@ void name_resolver::visit(std::shared_ptr<function_call> func_call) {
 
 			// matches - but none with correct param/generic count
 			if (candidates.empty()) {
+				// correct param count, incorrect generic count
+				if (filter.filter_by_param_count(func_call->args.size()).size() > 0) {
+					ERROR(ERR_NO_MATCHING_FUNCTION_GENERIC, func_call->span, func_call->identifier.c_str(), (int)func_call->generic_args.size());
+					return;
+				}
+
 				ERROR(ERR_NO_MATCHING_FUNCTION, func_call->span, func_call->identifier.c_str());
 				return;
 			}
@@ -378,6 +384,12 @@ void name_resolver::visit(std::shared_ptr<function_call> func_call) {
 
 		// matches - but none with correct param/generic count
 		if (candidates.empty()) {
+			// correct param count, incorrect generic count
+			if (filter.filter_by_param_count(func_call->args.size()).size() > 0) {
+				ERROR(ERR_NO_MATCHING_FUNCTION_GENERIC, func_call->span, func_call->identifier.c_str(), (int)func_call->generic_args.size());
+				return;
+			}
+
 			ERROR(ERR_NO_MATCHING_FUNCTION, func_call->span, func_call->identifier.c_str());
 			return;
 		}

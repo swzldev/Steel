@@ -149,6 +149,7 @@ enum error_code {
     ERR_CALL_ON_NON_FUNCTION,
     ERR_FIELD_CANNOT_BE_OWN_TYPE,
     ERR_MEMBER_ACCESS_NOT_ON_VARIABLE,
+    ERR_NO_MATCHING_FUNCTION_GENERIC,
 };
 
 enum warning_code {
@@ -312,6 +313,7 @@ struct error_catalog {
             {"S153", "Cannot call non-function"},
             {"S154", "The recursive field '%s' of type '%s' has infinite size"},
             {"S155", "Non-static member access only allowed on variables"},
+            {"S156", "No overload of function '%s' accepts %i generic argument(s)"},
         };
         return errors[code - 1 /* -1 to avoid ERR_SUCCESS */];
     }
