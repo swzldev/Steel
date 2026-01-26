@@ -13,28 +13,21 @@ mir_module mir_lowerer::lower_unit(std::shared_ptr<compilation_unit> unit) {
 	mir_module mm;
 	mm.meta.src_relpath = unit->source_file->relative_path;
 	mm.name = unit->source_file->name();
-	for (auto& decl : unit->declarations) {
-		if (auto mod = std::dynamic_pointer_cast<module_declaration>(decl)) {
-			// lower each declaration in the module
-			for (auto& mod_decl : mod->declarations) {
-				if (auto fn = std::dynamic_pointer_cast<function_declaration>(mod_decl)) {
-					if (fn->is_generic && !fn->is_generic_instance) {
-						// skip generic function templates
-						continue;
-					}
-					mm.functions.push_back(lower_func(fn));
-				}
-			}
+	
+	lower_functions(unit->declarations, mm);
+
+	return mm;
+}
+
+void mir_lowerer::lower_functions(const std::vector<ast_ptr>& decls, mir_module& mm) {
+	for (auto& decl : decls) {
+		if (auto mod = ast_ptr_cast<module_declaration>(decl)) {
+			lower_functions(mod->declarations, mm);
 		}
-		else if (auto fn = std::dynamic_pointer_cast<function_declaration>(decl)) {
-			if (fn->is_generic && !fn->is_generic_instance) {
-				// skip generic function templates
-				continue;
-			}
-			mm.functions.push_back(lower_func(fn));
+		else if (auto func = ast_ptr_cast<function_declaration>(decl)) {
+			mm.functions.push_back(lower_func(func));
 		}
 	}
-	return mm;
 }
 
 mir_function mir_lowerer::lower_func(std::shared_ptr<function_declaration> func) {
