@@ -25,12 +25,20 @@ void mir_lowerer::lower_functions(const std::vector<ast_ptr>& decls, mir_module&
 			lower_functions(mod->declarations, mm);
 		}
 		else if (auto func = ast_ptr_cast<function_declaration>(decl)) {
+			if (func->is_generic && !func->is_generic_instance) {
+				continue; // skip generic function templates
+			}
+
 			mm.functions.push_back(lower_func(func));
 		}
 	}
 }
 
 mir_function mir_lowerer::lower_func(std::shared_ptr<function_declaration> func) {
+	if (func->is_generic && !func->is_generic_instance) {
+		throw std::runtime_error("Cannot lower generic function templates");
+	}
+
 	mir_function mf;
 
 	// naming
