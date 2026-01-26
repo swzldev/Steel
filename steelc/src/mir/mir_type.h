@@ -6,10 +6,11 @@
 // mir_type
 //
 // represents a language type, used in MIR instructions and operands
-// currently this is just a wrapper around type_ptr
+// since we already have a robust type system thats constructed during
+// semantic analysis, we can just use that here
 
 struct mir_type {
-	type_ptr ty; // change this in the future
+	type_ptr ty;
 
 	bool operator ==(const mir_type& other) const {
 		return *ty == other.ty;
