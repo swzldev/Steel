@@ -7,14 +7,15 @@
 
 #include <ast/ast_visitor.h>
 #include <compiler/compilation_pass.h>
+#include <compiler/compilation_ctx.h>
 #include <modules/module_manager.h>
 #include <symbolics/symbol_table.h>
 #include <representations/entities/module_entity.h>
 
 class declaration_collector : public ast_visitor, public compilation_pass {
 public:
-	declaration_collector(std::shared_ptr<compilation_unit> unit, module_manager& module_manager)
-		: module_manager(module_manager), sym_table(&module_manager.get_global_module()->symbols()), compilation_pass(unit) {
+	declaration_collector(std::shared_ptr<compilation_unit> unit, compilation_ctx& ctx)
+		: unit(unit), module_manager(ctx.module_manager), sym_table(&module_manager.get_global_module()->symbols()), compilation_pass(unit) {
 		current_module = module_manager.get_global_module();
 	}
 
@@ -29,6 +30,7 @@ public:
 	void visit(std::shared_ptr<import_statement> import_stmt) override;
 
 private:
+	std::shared_ptr<compilation_unit> unit;
 	symbol_table* sym_table;
 	module_manager& module_manager;
 
