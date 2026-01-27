@@ -9,6 +9,40 @@
 #include <ast_lowering/mir_lowering_visitor.h>
 #include <representations/entities/module_entity.h>
 
+std::vector<mir_module> mir_lowerer::lower_all(const std::vector<std::shared_ptr<compilation_unit>>& units) {
+	lowered.clear();
+
+	// lower each unit
+	for (auto& unit : units) {
+		auto& mod = get_module(unit);
+		lower_functions(unit->declarations, mod);
+	}
+
+	// lower instantiated generics
+	std::shared_ptr<function_declaration> func;
+	while (ctx.inst_worklist.dequeue(func)) {
+		if (func->is_generic && !func->is_generic_instance) continue;
+
+		auto& mod = get_module(func->owning_unit.lock());
+		mod.functions.push_back(lower_func(func));
+	}
+
+	// return lowered modules
+	std::vector<mir_module> out;
+	out.reserve(lowered.size());
+	for (auto& [_, m] : lowered) out.push_back(std::move(m));
+	return out;
+}
+
+mir_module& mir_lowerer::get_module(const std::shared_ptr<compilation_unit>& unit) {
+	if (lowered.find(unit->unit_id) != lowered.end()) {
+		return lowered[unit->unit_id];
+	}
+	mir_module mm{};
+	lowered[unit->unit_id] = mm;
+	return lowered[unit->unit_id];
+}
+
 mir_module mir_lowerer::lower_unit(std::shared_ptr<compilation_unit> unit) {
 	mir_module mm;
 	mm.meta.src_relpath = unit->source_file->relative_path;
