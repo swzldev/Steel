@@ -9,15 +9,16 @@
 #include <ast/ast_visitor.h>
 #include <ast/ast_fwd.h>
 #include <compiler/compilation_pass.h>
+#include <compiler/compilation_ctx.h>
 #include <symbolics/symbol_table.h>
 #include <modules/module_manager.h>
 #include <representations/entities/module_entity.h>
 
 class type_checker : public ast_visitor, public compilation_pass {
 public:
-	type_checker(std::shared_ptr<compilation_unit> unit, module_manager& module_manager)
-		: compilation_pass(unit), module_manager(module_manager) {
-		active_symbols = &module_manager.get_global_module()->symbols();
+	type_checker(std::shared_ptr<compilation_unit> unit, compilation_ctx& ctx)
+		: compilation_pass(unit), ctx(ctx) {
+		active_symbols = &ctx.module_manager.get_global_module()->symbols();
 	}
 
 	void visit(std::shared_ptr<function_declaration> func) override;
@@ -43,7 +44,7 @@ public:
 
 private:
 	const symbol_table* active_symbols;
-	module_manager& module_manager;
+	compilation_ctx& ctx;
 	std::shared_ptr<function_declaration> current_function = nullptr;
 
 	std::unordered_map<std::shared_ptr<function_declaration>, std::map<std::vector<type_ptr>, std::shared_ptr<function_declaration>>> generic_function_instances;

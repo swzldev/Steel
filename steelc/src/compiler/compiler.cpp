@@ -6,6 +6,7 @@
 #include <memory>
 #include <string>
 
+#include <compiler/compilation_ctx.h>
 #include <utils/console_colors.h>
 #include <stproj/source_file.h>
 #include <lexer/lexer.h>
@@ -32,6 +33,8 @@
 #include <output/output.h>
 
 bool compiler::compile(const compile_config& cl_cfg, codegen_config& cg_cfg) {
+	compilation_ctx ctx(module_manager);
+
 	for (auto& file : sources) {
 		auto unit = std::make_shared<compilation_unit>();
 		unit->source_file = std::make_shared<source_file>(file);
@@ -75,7 +78,7 @@ bool compiler::compile(const compile_config& cl_cfg, codegen_config& cg_cfg) {
 
 		// AST creation complete, collect symbols for each file
 		// and map to the modules for later symbol resolution
-		declaration_collector collector(unit, module_manager);
+		declaration_collector collector(unit, ctx);
 		unit->accept(collector);
 		if (collector.has_errors()) {
 			const auto& errs = collector.get_errors();
@@ -90,7 +93,7 @@ bool compiler::compile(const compile_config& cl_cfg, codegen_config& cg_cfg) {
 	for (auto& unit : compilation_units) {
 		// the import resolver identifies import statements and
 		// adds them to the units import table (imports are file wide)
-		import_resolver import_resolver(unit, module_manager);
+		import_resolver import_resolver(unit, ctx);
 		unit->accept(import_resolver);
 		if (import_resolver.has_errors()) {
 			const auto& errs = import_resolver.get_errors();
@@ -98,7 +101,7 @@ bool compiler::compile(const compile_config& cl_cfg, codegen_config& cg_cfg) {
 		}
 
 		// the type resolver resolves explicit known typenames e.g. 'int'
-		type_resolver type_resolver(unit, module_manager);
+		type_resolver type_resolver(unit, ctx);
 		unit->accept(type_resolver);
 		if (type_resolver.has_errors()) {
 			const auto& errs = type_resolver.get_errors();
@@ -106,14 +109,14 @@ bool compiler::compile(const compile_config& cl_cfg, codegen_config& cg_cfg) {
 		}
 
 		// the name resolver resolves all identifiers to their declarations
-		name_resolver name_resolver(unit, module_manager);
+		name_resolver name_resolver(unit, ctx);
 		unit->accept(name_resolver);
 		if (name_resolver.has_errors()) {
 			const auto& errs = name_resolver.get_errors();
 			errors.insert(errors.end(), errs.begin(), errs.end());
 		}
 
-		type_checker type_checker(unit, module_manager);
+		type_checker type_checker(unit, ctx);
 		unit->accept(type_checker);
 		if (type_checker.has_errors()) {
 			const auto& errs = type_checker.get_errors();
@@ -140,12 +143,8 @@ bool compiler::compile(const compile_config& cl_cfg, codegen_config& cg_cfg) {
 	}
 
 	// lower ast to mir
-	std::vector<mir_module> mir_modules;
-	mir_modules.reserve(compilation_units.size());
-	for (auto& unit : compilation_units) {
-		mir_lowerer mir_lowerer;
-		mir_modules.push_back(mir_lowerer.lower_unit(unit));
-	}
+	mir_lowerer mir_lowerer(ctx);
+	std::vector<mir_module> mir_modules = mir_lowerer.lower_all(compilation_units);
 
 	if (cl_cfg.print_mir) {
 		mir_printer printer;

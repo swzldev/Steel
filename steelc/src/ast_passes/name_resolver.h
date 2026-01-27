@@ -7,6 +7,7 @@
 #include <ast/ast_visitor.h>
 #include <ast/compilation_unit.h>
 #include <compiler/compilation_pass.h>
+#include <compiler/compilation_ctx.h>
 #include <symbolics/symbol_table.h>
 #include <symbolics/symbol_resolver.h>
 #include <modules/module_manager.h>
@@ -15,8 +16,8 @@
 
 class name_resolver : public ast_visitor, public compilation_pass {
 public:
-	name_resolver(std::shared_ptr<compilation_unit> unit, module_manager& module_manager)
-		: module_manager(module_manager), compilation_pass(unit) {
+	name_resolver(std::shared_ptr<compilation_unit> unit, compilation_ctx& ctx)
+		: module_manager(ctx.module_manager), compilation_pass(unit) {
 		resolver.import_tbl = std::make_shared<import_table>(unit->import_tbl);
 		resolver.current_module = module_manager.get_global_module();
 		sym_table = &module_manager.get_global_module()->symbols();

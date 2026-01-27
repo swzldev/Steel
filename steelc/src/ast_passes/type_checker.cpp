@@ -41,12 +41,12 @@ void type_checker::visit(std::shared_ptr<function_declaration> func) {
 
 	if (is_valid_entry_point(func)) {
 		// check for entry point overloads
-		if (module_manager.entry_point) {
+		if (ctx.module_manager.entry_point) {
 			ERROR(ERR_ENTRY_OVERLOADED, func->span, language_constants::ENTRY_POINT);
 			return;
 		}
 		else {
-			module_manager.entry_point = func;
+			ctx.module_manager.entry_point = func;
 			func->is_entry_point = true;
 		}
 	}
@@ -1017,7 +1017,8 @@ std::shared_ptr<function_declaration> type_checker::unbox_generic_func(std::shar
 	auto new_func = std::dynamic_pointer_cast<function_declaration>(func->clone());
 	new_func->is_generic_instance = true;
 
-	// cache instance
+	// cache instance & add to worklist
+	ctx.inst_worklist.enqueue(new_func);
 	generic_function_instances[func][types] = new_func;
 
 	// substitute concrete types in place

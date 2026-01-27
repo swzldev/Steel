@@ -15,7 +15,7 @@
 class declaration_collector : public ast_visitor, public compilation_pass {
 public:
 	declaration_collector(std::shared_ptr<compilation_unit> unit, compilation_ctx& ctx)
-		: unit(unit), module_manager(ctx.module_manager), sym_table(&module_manager.get_global_module()->symbols()), compilation_pass(unit) {
+		: unit(unit), module_manager(ctx.module_manager), sym_table(&ctx.module_manager.get_global_module()->symbols()), compilation_pass(unit) {
 		current_module = module_manager.get_global_module();
 	}
 
