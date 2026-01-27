@@ -40,6 +40,8 @@ public:
 			type,
 			identifier
 		);
+		cloned->owning_unit = owning_unit;
+		cloned->parent_module = parent_module;
 		cloned->span = span;
 		if (initializer) {
 			cloned->initializer = std::dynamic_pointer_cast<expression>(initializer->clone());
