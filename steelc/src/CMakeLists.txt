@@ -132,11 +132,13 @@ target_sources(steelc_core PRIVATE
     "codegen_llvm/writers/llvm_writer.h"
 
     # compiler/
+    "compiler/compilation_ctx.h"
     "compiler/compilation_pass.cpp"
     "compiler/compilation_pass.h"
     "compiler/compiler.cpp"
     "compiler/compiler.h"
     "compiler/compile_config.h"
+    "compiler/instantiation_worklist.h"
 
     # error/
     "error/advice.h"
