@@ -18,7 +18,7 @@ std::string name_mangler::mangle_function(const mir_function& fn_mir) {
 	for (const auto& param : fn_mir.params) {
 		param_types.push_back(param.type);
 	}
-	return mangle_function(fn_mir.name, fn_mir.scopes, param_types);
+	return mangle_function(fn_mir.name, fn_mir.scopes, fn_mir.generic_args, param_types);
 }
 std::string name_mangler::mangle_function(const mir_func_ref& fn_ref_mir) {
 	const auto& fn_type = fn_ref_mir.type.ty->as_function();
@@ -31,14 +31,15 @@ std::string name_mangler::mangle_function(const mir_func_ref& fn_ref_mir) {
 		param_types.push_back(mir_type{ pty });
 	}
 
-	return mangle_function(fn_ref_mir.name, fn_ref_mir.scopes, param_types);
+	return mangle_function(fn_ref_mir.name, fn_ref_mir.scopes, fn_ref_mir.generic_args, param_types);
 }
 
-std::string name_mangler::mangle_function(const std::string& name, const std::vector<std::string>& scopes, const std::vector<mir_type>& param_types) {
-	// no mangle for bare-bone functions
+std::string name_mangler::mangle_function(const std::string& name, const std::vector<std::string>& scopes, const std::vector<mir_type>& generic_args, const std::vector<mir_type>& param_types) {
+	/*// no mangle for bare-bone functions
 	if (scopes.empty()) {
 		return name;
-	}
+	}*/
+	// ^^ temporalily always mangle
 
 	std::string mangled = "_Z";
 
@@ -59,20 +60,14 @@ std::string name_mangler::mangle_function(const std::string& name, const std::ve
 		mangled += "E";
 	}
 
-	// currently this no longer works as function mir does not store
-	// generics - will have to deal with this later
-
 	// mangle generic params (if applicable)
-	//if (func_ast->is_generic) {
-	//	if (!func_ast->is_generic_instance) {
-	//		throw codegen_exception("Attempted to mangle non-monomorphized function");
-	//	}
-	//	mangled += "I"; // start of generic args
-	//	for (const auto& gen_arg : func_ast->generics) {
-	//		mangled += mangle_type(gen_arg->substitution);
-	//	}
-	//	mangled += "E"; // end of generic args
-	//}
+	if (generic_args.size() > 0) {
+		mangled += "I"; // start of generic args
+		for (const auto& gen_arg : generic_args) {
+			mangled += mangle_type(gen_arg);
+		}
+		mangled += "E"; // end of generic args
+	}
 
 	// mangle parameter types
 	for (const auto& pty : param_types) {

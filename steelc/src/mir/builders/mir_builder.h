@@ -43,7 +43,7 @@ public:
 	mir_operand build_const_string(const std::string& value, mir_type type);
 
 	// functions
-	mir_operand build_call(const std::vector<std::string>& scopes, const std::string& name, std::vector<mir_operand> args, mir_type func_type, const std::string& result_name = "");
+	mir_operand build_call(const std::vector<std::string>& scopes, const std::string& name, const std::vector<mir_type>& generic_args, std::vector<mir_operand> args, mir_type func_type, const std::string& result_name = "");
 
 	// type handling
 	mir_value build_cast(mir_operand value, mir_type target_type, const std::string& result_name = "");

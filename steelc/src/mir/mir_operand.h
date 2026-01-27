@@ -32,6 +32,7 @@ struct mir_string_imm {
 
 struct mir_func_ref {
 	mir_type type; // function type not return type
+	std::vector<mir_type> generic_args;
 	std::string name;
 	std::vector<std::string> scopes;
 };

@@ -103,6 +103,7 @@ public:
 	bool is_generic_instance = false;
 	bool is_entry_point = false;
 	bool implicitly_returns = false;
+	std::vector<type_ptr> generic_args; // if applicable
 	std::shared_ptr<type_declaration> parent_type = nullptr;
 	std::shared_ptr<function_declaration> overridden_function = nullptr;
 	entity_ref func_ref;

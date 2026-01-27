@@ -33,6 +33,7 @@ public:
 	std::string name;
 	std::vector<std::string> scopes;
 	mir_type return_type;
+	std::vector<mir_type> generic_args;
 	std::vector<mir_function_param> params;
 	std::vector<mir_block> blocks;
 

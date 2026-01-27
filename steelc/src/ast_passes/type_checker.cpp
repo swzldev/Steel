@@ -1016,6 +1016,7 @@ std::shared_ptr<function_declaration> type_checker::unbox_generic_func(std::shar
 	// clone
 	auto new_func = std::dynamic_pointer_cast<function_declaration>(func->clone());
 	new_func->is_generic_instance = true;
+	new_func->generic_args = types;
 
 	// cache instance & add to worklist
 	ctx.inst_worklist.enqueue(new_func);

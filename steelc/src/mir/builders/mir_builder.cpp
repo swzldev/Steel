@@ -77,13 +77,13 @@ mir_operand mir_builder::build_const_string(const std::string& value, mir_type t
 	};
 }
 
-mir_operand mir_builder::build_call(const std::vector<std::string>& scopes, const std::string& name, std::vector<mir_operand> args, mir_type func_type, const std::string& result_name) {
+mir_operand mir_builder::build_call(const std::vector<std::string>& scopes, const std::string& name, const std::vector<mir_type>& generic_args, std::vector<mir_operand> args, mir_type func_type, const std::string& result_name) {
 	if (!func_type.ty->is_function()) {
 		throw std::runtime_error("Function type provided to build_call is not a function type");
 	}
 
 	// insert function as first operand
-	args.insert(args.begin(), mir_func_ref{ func_type, name, scopes });
+	args.insert(args.begin(), mir_func_ref{ func_type, generic_args, name, scopes });
 
 	// create call instruction
 	mir_value result = create_ssa_value(mir_type{ func_type.ty->as_function()->get_return_type() }, result_name);

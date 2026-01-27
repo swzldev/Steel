@@ -81,6 +81,14 @@ mir_function mir_lowerer::lower_func(std::shared_ptr<function_declaration> func)
 		mf.scopes = std::move(func->parent_module->name_path());
 	}
 
+	// generics
+	if (func->is_generic && func->is_generic_instance) {
+		mf.generic_args.reserve(func->generic_args.size());
+		for (const auto& arg : func->generic_args) {
+			mf.generic_args.push_back({ arg });
+		}
+	}
+
 	// params
 	mf.return_type = { func->return_type };
 	mf.params.reserve(func->parameters.size());

@@ -102,15 +102,23 @@ void mir_lowering_visitor::visit(std::shared_ptr<cast_expression> expr) {
 void mir_lowering_visitor::visit(std::shared_ptr<function_call> func_call) {
 	// lower each argument
 	std::vector<mir_operand> arg_operands;
+	arg_operands.reserve(func_call->args.size());
 	for (auto& arg_expr : func_call->args) {
 		mir_operand arg_op = accept(arg_expr);
 		arg_operands.push_back(arg_op);
+	}
+
+	std::vector<mir_type> generic_arg_types;
+	generic_arg_types.reserve(func_call->generic_args.size());
+	for (auto& gen_arg : func_call->generic_args) {
+		generic_arg_types.push_back(mir_type{ gen_arg });
 	}
 
 	// build the call instruction
 	mir_operand call_result = builder.build_call(
 		func_call->declaration->parent_module->name_path(),
 		func_call->identifier,
+		generic_arg_types,
 		arg_operands,
 		mir_type{ func_call->declaration->type() } // declaration type for function type not return type
 	);
@@ -139,7 +147,7 @@ void mir_lowering_visitor::visit(std::shared_ptr<literal> literal) {
 	}
 	else if (ty->is_floating_point()) {
 		double val_float = std::stoll(literal->value);
-		result = builder.build_const_int(
+		result = builder.build_const_float(
 			val_float,
 			mir_type{ ty }
 		);

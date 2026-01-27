@@ -18,7 +18,7 @@ public:
 	std::string mangle_function(const mir_func_ref& fn_ref_mir);
 
 private:
-	std::string mangle_function(const std::string& name, const std::vector<std::string>& scopes, const std::vector<mir_type>& param_types);
+	std::string mangle_function(const std::string& name, const std::vector<std::string>& scopes, const std::vector<mir_type>& generic_args, const std::vector<mir_type>& param_types);
 
 	std::string mangle_text(const std::string& text);
 	std::string mangle_type(const mir_type& ty);
